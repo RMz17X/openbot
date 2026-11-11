@@ -47,13 +47,13 @@ if printf '%s\n' "$staged_paths" | grep -Fxq package.json; then
 fi
 
 # The iPhone app has its own version, in app.json, and its own notes: the Mobile tab of /changelog.
-if printf '%s\n' "$staged_paths" | grep -Fxq apps/mobile/app.json; then
+if [ -f apps/mobile/app.json ] && printf '%s\n' "$staged_paths" | grep -Fxq apps/mobile/app.json; then
   echo "Checking the mobile release notes..."
   bun scripts/check-release-notes.ts --staged --mobile
 fi
 
 # An over-the-air update has its own section, such as "## [1.4.8.1]", and no version change.
-if printf '%s\n' "$staged_paths" | grep -Fxq apps/mobile/CHANGELOG.md; then
+if [ -f apps/mobile/CHANGELOG.md ] && printf '%s\n' "$staged_paths" | grep -Fxq apps/mobile/CHANGELOG.md; then
   echo "Checking the mobile OTA release notes..."
   bun scripts/check-release-notes.ts --staged --ota
 fi

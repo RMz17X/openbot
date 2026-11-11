@@ -47,8 +47,7 @@ export function surfacesForFiles(files: string[]): VerificationSurface[] {
     if (file.startsWith("src/main/") || file.startsWith("src/backend/") || file.startsWith("scripts/")) {
       surfaces.add("desktop");
     }
-    if (file.startsWith("apps/mobile/")) surfaces.add("mobile");
-    if (file.startsWith("apps/auth-api/") || file.startsWith("apps/site-router/")) surfaces.add("api");
+    if (file.startsWith("apps/auth-api/")) surfaces.add("api");
     if (file.startsWith("remote/")) surfaces.add("remote");
     if (file.startsWith("packages/contracts/")) surfaces.add("contracts");
     if (file.startsWith("docs/") || file === "README.md") surfaces.add("docs");
@@ -62,15 +61,9 @@ function isTestFile(file: string): boolean {
 
 function isDesktopTest(file: string): boolean {
   if (!isTestFile(file)) return false;
-  return [
-    "src/backend/",
-    "src/main/",
-    "src/preload/",
-    "src/renderer/",
-    "scripts/",
-    "packages/logging/",
-    "apps/mobile/src/",
-  ].some((prefix) => file.startsWith(prefix));
+  return ["src/backend/", "src/main/", "src/preload/", "src/renderer/", "scripts/", "packages/logging/"].some(
+    (prefix) => file.startsWith(prefix),
+  );
 }
 
 function isDelegatedTest(file: string): boolean {

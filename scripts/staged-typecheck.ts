@@ -16,7 +16,6 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, posix, relative, resolve } from "node:path";
-import { MOBILE_CODEGEN_INPUTS } from "./mobile-codegen";
 
 const ROOT = resolve(import.meta.dirname, "..");
 
@@ -26,13 +25,8 @@ const SELECTS_ALL = /^(tsconfig[^/]*\.json|package\.json|bun\.lock)$/;
 // Imports across project folders that no `include` or package dependency shows. Find them with a
 // search for `from "../` paths that leave a project folder.
 const RELATIVE_IMPORTS: Record<string, string[]> = {
-  // Tests in `scripts` import mobile models; `stripe-flows-e2e.ts` imports the account Worker;
-  // `mobile-ota-lib.ts` imports the object formats of the update Worker.
-  "typecheck:node": ["apps/mobile/src", "apps/auth-api/src", "apps/mobile-updates/src"],
-  // The update Worker's E2E script runs the publish code.
-  "typecheck:updates": ["scripts/mobile-ota-lib.ts"],
-  // The account Worker routes hosted sites with the site router.
-  "typecheck:api": ["apps/site-router/src"],
+  // `stripe-flows-e2e.ts` imports the account Worker.
+  "typecheck:node": ["apps/auth-api/src"],
   // `Conversation.stories.tsx` reads pasted files with the preload helper.
   "typecheck:renderer": ["src/preload/clipboard-files.ts"],
   // `.storybook/preview.tsx` imports the renderer i18n context.
@@ -141,9 +135,8 @@ function selectTypechecks(paths: string[]): Map<string, string> {
   for (const path of paths) {
     for (const project of all) {
       if (selected.has(project.script)) continue;
-      const mobileCodegen = project.script === "typecheck:mobile" && MOBILE_CODEGEN_INPUTS.includes(path);
       const visible = TYPE_INPUT.test(path) && project.roots.some((root) => contains(root, path));
-      if (SELECTS_ALL.test(path) || mobileCodegen || visible) selected.set(project.script, path);
+      if (SELECTS_ALL.test(path) || visible) selected.set(project.script, path);
     }
   }
   // Keep the order of `package.json`.

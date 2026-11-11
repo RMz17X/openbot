@@ -1,5 +1,4 @@
 import { Effect, Result } from "effect";
-import { routeRequest as routeHostedSiteRequest } from "../../../site-router/src/index";
 import { type AuthRetentionResult, pruneExpiredAuthData } from "./auth-data-retention";
 import { BillingSales } from "./billing-sales";
 import { captureBillingSnapshot } from "./billing-snapshots";
@@ -264,31 +263,10 @@ function tickHostedServers(
 }
 
 function serveLocalHostedSite(
-  request: Request,
-  bindings: Partial<Pick<WorkerBindings, "SITES" | "SITE_LOCAL_ORIGIN">>,
+  _request: Request,
+  _bindings: Partial<Pick<WorkerBindings, "SITES" | "SITE_LOCAL_ORIGIN">>,
 ) {
-  if (!bindings.SITES || !bindings.SITE_LOCAL_ORIGIN) return Effect.succeed(null);
-  const requestUrl = new URL(request.url);
-  const configuredOrigin = new URL(bindings.SITE_LOCAL_ORIGIN);
-  const suffix = `.${configuredOrigin.hostname}`;
-  if (
-    requestUrl.protocol !== configuredOrigin.protocol ||
-    requestUrl.port !== configuredOrigin.port ||
-    !requestUrl.hostname.endsWith(suffix)
-  ) {
-    return Effect.succeed(null);
-  }
-  const label = requestUrl.hostname.slice(0, -suffix.length);
-  if (!/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/u.test(label)) return Effect.succeed(null);
-  const hostedUrl = new URL(requestUrl);
-  hostedUrl.protocol = "https:";
-  hostedUrl.hostname = `${label}.openbot.site`;
-  hostedUrl.port = "";
-  return routeHostedSiteRequest(
-    new Request(hostedUrl, request),
-    { SITES: bindings.SITES, SITE_SERVE_ENABLED: "true", ACCOUNT_ORIGIN: configuredOrigin.origin },
-    Date.now(),
-  );
+  return Effect.succeed(null);
 }
 
 function isEmailSignInStart(request: Request): boolean {

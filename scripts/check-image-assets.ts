@@ -11,8 +11,6 @@ const ALLOWED_DIRECTORIES = [
   "src/renderer/stories/assets/",
   // Images that shared UI (`@openbot/ui`) bundles for the desktop and web apps.
   "packages/ui/src/assets/",
-  // Expo icons and splash screens.
-  "apps/mobile/assets/",
   // Public site files, news and guide art, and guide images.
   "apps/auth-api/public/",
   "apps/auth-api/content-art/",

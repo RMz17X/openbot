@@ -168,7 +168,7 @@ import {
   WORKSPACE_DIRECTORY_CAPABILITY,
   WORKSPACE_DIRECTORY_ROUTES,
 } from "@openbot/contracts/team-protocol/workspace-directory-v1";
-import { runTeamEffect } from "@openbot/team-client";
+import { createHttpTeamPeer, runTeamEffect } from "@openbot/team-client";
 import { bytesToBase64 } from "@openbot/team-client/base64";
 import { createRemoteBrowserView, type RemoteBrowserView } from "@openbot/team-client/browser-view";
 import { verifyEd25519Base64Url } from "@openbot/team-client/ed25519";
@@ -511,8 +511,10 @@ export class WebHostConnectionError extends Error {
   }
 }
 
+const useDirect = import.meta.env.VITE_OPENBOT_DIRECT_HOST === "1";
+
 interface WebConnectionDependencies {
-  createPeer: typeof createRemoteTeamPeer;
+  createPeer: typeof createRemoteTeamPeer | typeof createHttpTeamPeer;
   acquireHostLock: typeof acquireWebHostLock;
   /** The channel between the tabs of the account. Without one, this tab keeps no status connections. */
   openHostChannel?: (accountId: string) => BroadcastChannel | null;
@@ -550,7 +552,7 @@ export function createWebWorkspaceRuntime(
   events: WebRuntimeEvents,
   accountFetch: typeof fetch,
   dependencies: WebConnectionDependencies = {
-    createPeer: createRemoteTeamPeer,
+    createPeer: useDirect ? createHttpTeamPeer : createRemoteTeamPeer,
     acquireHostLock: acquireWebHostLock,
     openHostChannel: openWebHostChannel,
   },

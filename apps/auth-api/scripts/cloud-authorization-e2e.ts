@@ -7,7 +7,6 @@ import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { Effect } from "effect";
-import { routeRequest } from "../../site-router/src/index";
 import { BillingSales } from "../src/server/billing-sales";
 import { enforceMarketplaceIngress } from "../src/server/marketplace-request-policy";
 import { RemoteControlPlane } from "../src/server/remote-control-plane";
@@ -521,62 +520,6 @@ async function aCheckoutReturnStaysOnTheAccountSite() {
   }
 }
 
-async function aSiteServesOnlyItsOwnFiles() {
-  const hostname = "demo.openbot.site";
-  const prefix = "sites/site-1/deployments/deployment-1/";
-  const manifest = {
-    version: 1,
-    status: "active",
-    siteId: "site-1",
-    deploymentId: "deployment-1",
-    expiresAt: Date.UTC(2027, 0, 1),
-    spaFallback: false,
-    files: { "index.html": { key: `${prefix}index.html`, size: 5, mimeType: "text/html" } },
-  };
-  const object = (key: string, text: string): R2ObjectBody => ({
-    key,
-    version: "1",
-    size: text.length,
-    etag: "etag",
-    httpEtag: '"etag"',
-    checksums: { toJSON: () => ({}) },
-    uploaded: new Date(0),
-    storageClass: "Standard",
-    writeHttpMetadata: () => {},
-    get body() {
-      return new Response(text).body ?? new ReadableStream();
-    },
-    bodyUsed: false,
-    arrayBuffer: () => new Response(text).arrayBuffer(),
-    bytes: () => new Response(text).bytes(),
-    text: () => Promise.resolve(text),
-    json: <T>(): Promise<T> => Promise.resolve(JSON.parse(text)),
-    blob: () => new Response(text).blob(),
-  });
-  const reads: string[] = [];
-  const env = {
-    SITE_SERVE_ENABLED: "true",
-    SITES: {
-      get: async (key: string) => {
-        reads.push(String(key));
-        if (key === `routes/${hostname}.json`) return object(key, JSON.stringify(manifest));
-        if (key === `${prefix}index.html`) return object(key, "hello");
-        return null;
-      },
-    },
-  };
-  const status = async (path: string) =>
-    (await Effect.runPromise(routeRequest(new Request(`https://${hostname}${path}`), env, Date.UTC(2026, 9, 17))))
-      .status;
-  check("a site serves its own file", (await status("/")) === 200);
-  for (const path of ["/constructor", "/__proto__", "/toString"]) {
-    reads.length = 0;
-    const result = await status(path);
-    const outside = reads.filter((key) => !key.startsWith("routes/") && !key.startsWith("blocks/"));
-    check(`a site has no file at ${path}`, result === 404 && outside.length === 0, { status: result, outside });
-  }
-}
-
 // A client sets `X-Forwarded-For` itself. A new value for each request must not give it a new limit.
 async function aRateLimitIgnoresForwardedFor() {
   const keys: string[] = [];
@@ -637,7 +580,6 @@ const scenarios = [
   anOldInviteOfAFormerAdminCloses,
   theJwksNeverPublishesAPrivateKey,
   aCheckoutReturnStaysOnTheAccountSite,
-  aSiteServesOnlyItsOwnFiles,
   aRateLimitIgnoresForwardedFor,
 ];
 for (const scenario of scenarios) {
