@@ -41,3 +41,6 @@ libxcb1
 libxfixes3
 libxrandr2
 libxtst6
+# The Computer Use driver.
+libxi6
+libxkbcommon0
