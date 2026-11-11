@@ -1,0 +1,38 @@
+[Unit]
+Description=OpenBot Server
+Documentation=https://github.com/nightly-labs/openbot
+Wants=network-online.target
+After=network-online.target
+
+# Prevent restart loops: stop restarting if the service crashes more than 5 times in 300 seconds
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=@SERVICE_USER@
+
+# Headless server environment
+Environment=OPENBOT_SERVER=1
+Environment=XDG_RUNTIME_DIR=/run/openbot
+
+# Runtime directory for control sockets and temporary files
+RuntimeDirectory=openbot
+RuntimeDirectoryMode=0700
+
+# Service lifecycle commands
+ExecStart=/opt/OpenBot/hosted/openbot-hosted-server
+ExecStop=/opt/OpenBot/hosted/openbot-hosted-server --stop
+
+# Restart policy: restart on failure with delay, avoiding infinite crash loops
+Restart=on-failure
+RestartSec=10s
+TimeoutStopSec=60s
+
+# Process security and resource controls
+MemoryMax=90%
+OOMScoreAdjust=-500
+OOMPolicy=continue
+
+[Install]
+WantedBy=multi-user.target
