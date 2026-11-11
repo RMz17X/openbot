@@ -27,12 +27,6 @@
   padding-top: 2px;
 }
 
-.window-rail-logo .app-logo {
-  display: block;
-  width: var(--openbot-icon-lg);
-  height: var(--openbot-icon-lg);
-}
-
 .window-rail-logo-link {
   display: flex;
   border-radius: var(--openbot-radius-logo);
