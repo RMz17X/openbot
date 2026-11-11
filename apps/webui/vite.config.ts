@@ -2,7 +2,7 @@ import { fileURLToPath } from "node:url";
 import solidPlugin from "@solidjs/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, type Plugin } from "vite";
-import { lazyLanguageCatalogs } from "../../packages/i18n/src/vite-plugin.ts";
+import { lazyLanguageCatalogs } from "../../packages/i18n/src/vite-plugin";
 
 /**
  * The web client component. The same mapping the account Worker uses, so both builds run the same

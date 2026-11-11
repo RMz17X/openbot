@@ -84,7 +84,12 @@ function version(json: string | undefined): string | undefined {
   return typeof value === "string" ? value : undefined;
 }
 
-const nextVersion = version(staged ? show(`:${versionFile}`) : readFileSync(versionFile, "utf8"));
+const stagedVersionContent = staged ? show(`:${versionFile}`) : undefined;
+if (staged && stagedVersionContent === undefined) {
+  // The version file was deleted in the index.
+  process.exit(0);
+}
+const nextVersion = version(stagedVersionContent ?? readFileSync(versionFile, "utf8"));
 if (nextVersion === undefined) {
   process.stderr.write(`${versionFile} has no version.\n`);
   process.exit(1);
