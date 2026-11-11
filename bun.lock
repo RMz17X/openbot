@@ -265,6 +265,32 @@
         "vite": "catalog:",
       },
     },
+    "apps/webui": {
+      "name": "@openbot/webui",
+      "version": "0.0.0",
+      "dependencies": {
+        "@fontsource-variable/inter": "catalog:",
+        "@openbot/brand": "workspace:*",
+        "@openbot/contracts": "workspace:*",
+        "@openbot/i18n": "workspace:*",
+        "@openbot/team-client": "workspace:*",
+        "@openbot/telemetry": "workspace:*",
+        "@openbot/ui": "workspace:*",
+        "@openbot/user-errors": "workspace:*",
+        "@solidjs/web": "catalog:",
+        "effect": "catalog:",
+        "katex": "catalog:",
+        "solid-js": "2.0.0-rc.18",
+      },
+      "devDependencies": {
+        "@solidjs/vite-plugin": "catalog:",
+        "@tailwindcss/vite": "catalog:",
+        "@types/node": "catalog:",
+        "tailwindcss": "catalog:",
+        "typescript": "catalog:",
+        "vite": "catalog:",
+      },
+    },
     "packages/brand": {
       "name": "@openbot/brand",
       "version": "0.0.0",
@@ -1176,6 +1202,8 @@
     "@openbot/ui": ["@openbot/ui@workspace:packages/ui"],
 
     "@openbot/user-errors": ["@openbot/user-errors@workspace:packages/user-errors"],
+
+    "@openbot/webui": ["@openbot/webui@workspace:apps/webui"],
 
     "@openbot/whatsapp": ["@openbot/whatsapp@workspace:packages/whatsapp"],
 
