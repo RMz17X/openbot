@@ -3,7 +3,7 @@
 import type { ComputerUsePermissionApp, MacPermissionId } from "@openbot/contracts/ipc";
 import { sourceText } from "@openbot/i18n/source";
 import { Effect, Schema } from "effect";
-import type { BrowserWindow, NativeImage } from "electron";
+import type { NativeImage } from "electron";
 import { causeHelpers } from "../backend/effect-boundary";
 import { applicationBundleName } from "./computer-use-permission-app";
 
@@ -21,6 +21,22 @@ export interface PermissionHelpWindow {
 }
 
 /**
+ * A no-op permission help window that satisfies `PermissionHelpWindow` for a server build with no screen.
+ */
+export function createNoopPermissionHelpWindow(): PermissionHelpWindow {
+  let destroyed = false;
+  return {
+    show: () => {},
+    close: () => {
+      destroyed = true;
+    },
+    isDestroyed: () => destroyed,
+    on: () => () => {},
+    webContents: { id: -1 },
+  };
+}
+
+/**
  * The part of a sender the drag uses. A real `WebContents` answers all of it, and naming only this
  * much keeps the sender check testable without an assertion.
  */
@@ -29,7 +45,7 @@ export interface PermissionAppDragSender {
   startDrag(item: { file: string; icon: NativeImage | string }): void;
 }
 
-export interface ComputerUsePermissionHelpWindowOptions<W extends PermissionHelpWindow = BrowserWindow> {
+export interface ComputerUsePermissionHelpWindowOptions<W extends PermissionHelpWindow = PermissionHelpWindow> {
   createWindow: () => W;
   loadWindow: (window: W, permission: MacPermissionId, sunshine: boolean) => Promise<void>;
   /** The bundle the user drags into the list, or `null` where there is none to drag. */
@@ -48,7 +64,7 @@ export interface ComputerUsePermissionHelpWindowOptions<W extends PermissionHelp
  * load is still running would otherwise end with the window showing the permission they left: the
  * older call finds the generation moved and stops before it shows anything.
  */
-export class ComputerUsePermissionHelpWindowController<W extends PermissionHelpWindow = BrowserWindow> {
+export class ComputerUsePermissionHelpWindowController<W extends PermissionHelpWindow = PermissionHelpWindow> {
   readonly #options: ComputerUsePermissionHelpWindowOptions<W>;
   #window: W | null = null;
   #generation = 0;

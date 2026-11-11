@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#0a0a0a" />
+    <title>OpenBot</title>
+    <!--
+      The saved theme before the first paint. Without it, the page paints dark until the code of
+      the web client runs. The script is the same one the Worker route sends in its head.
+    -->
+    <script>
+      try {
+        let scheme = localStorage.getItem("openbot.web.appearance");
+        if (scheme === "system") {
+          scheme = matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+        }
+        if (scheme === "light" || scheme === "dark") {
+          document.documentElement.dataset.openbotColorScheme = scheme;
+        }
+      } catch {
+        // A browser that blocks storage keeps the dark default.
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>
+      <p>This page needs JavaScript.</p>
+    </noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
