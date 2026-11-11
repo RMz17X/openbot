@@ -213,9 +213,12 @@ import {
   createClaudeUserSetupPreferenceStore,
 } from "./claude-user-setup-preference-store";
 import { createComputerIdle } from "./computer-idle";
-import { ComputerUseHighlightController } from "./computer-use-highlight-window";
+import { ComputerUseHighlightController, createNoopHighlightOverlayWindow } from "./computer-use-highlight-window";
 import { applicationBundlePath, applicationIconName } from "./computer-use-permission-app";
-import { ComputerUsePermissionHelpWindowController } from "./computer-use-permission-help-window";
+import {
+  ComputerUsePermissionHelpWindowController,
+  createNoopPermissionHelpWindow,
+} from "./computer-use-permission-help-window";
 import {
   COMPUTER_USE_ACTION_MAX_AGE_MS,
   COMPUTER_USE_CURSOR_MAX_AGE_MS,
@@ -1107,7 +1110,8 @@ export async function createApplicationServices({
   // two lazy getters, so the gap is visible and bounded.
   let criticalActionTargets: { agents: AgentService; host: HostService; remoteServers: RemoteServerManager } | null =
     null;
-  const windowKind = aboveAppsWindowKind(Boolean(hostedServer || serverModeEnvironment || localServerChild));
+  const isServer = Boolean(hostedServer || serverModeEnvironment || localServerChild);
+  const windowKind = aboveAppsWindowKind(isServer);
   // Made here so the island menu can read it; it loads the saved language below, before the first window.
   const language = new LanguageService({
     path: join(app.getPath("userData"), LANGUAGE_PREFERENCE_FILE),
@@ -2029,45 +2033,56 @@ export async function createApplicationServices({
   // `readTarget` in the same tick, so a point in a window is placed against the same list as the rim.
   let computerUseWindows: unknown = null;
   const computerUseHighlight = new ComputerUseHighlightController({
-    createWindow: createComputerUseHighlightWindow,
-    loadWindow: loadComputerUseHighlightRenderer,
-    place: sendComputerUseHighlightPlacement,
-    displays: computerUseDisplays,
+    createWindow: isServer ? createNoopHighlightOverlayWindow : createComputerUseHighlightWindow,
+    loadWindow: isServer
+      ? async () => {}
+      : (window) => (window instanceof BrowserWindow ? loadComputerUseHighlightRenderer(window) : Promise.resolve()),
+    place: isServer
+      ? () => {}
+      : (window, placement) => {
+          if (window instanceof BrowserWindow) sendComputerUseHighlightPlacement(window, placement);
+        },
+    displays: isServer ? () => [] : computerUseDisplays,
     // `service` is built below; the controller starts only after it.
     idle: () => service.earliestRunningTurnStartedAt() === null,
     // The driver's own cursor on one screen, OpenBot's inside this overlay on more than one. The
     // runtime answers `null` for the screen it draws itself, so only one cursor is ever drawn.
-    readPointer: () => {
-      const pointer = cuaDriver.lastPointer(COMPUTER_USE_CURSOR_MAX_AGE_MS);
-      const point = pointer ? pointerOnDesktop(pointer, computerUseWindows) : null;
-      return point ? computerUseDesktopPoint(point) : null;
-    },
-    readTarget: (previous) =>
-      Effect.gen(function* () {
-        if (!cuaDriver.mcpServerForProviders()) return null;
-        // The rim marks work in progress, so it goes down with the last turn: completed, failed or
-        // cancelled. The driver's lease outlives the turn, so only an action made while a turn that
-        // still runs was running counts: a lease left by the turn before would put the rim over a
-        // turn that does not touch the desktop. Neither a lease nor an action names its agent, so the
-        // oldest running turn is the bound: a newer turn of another agent does not hide this one's
-        // rim. `service` is built below; the controller starts only after it.
-        const turnStartedAt = service.earliestRunningTurnStartedAt();
-        if (turnStartedAt === null) return null;
-        const session = liveSession(yield* computerUseReads.sessions(), (Date.now() - turnStartedAt) / 1000);
-        if (!session) return null;
-        const windows = yield* computerUseReads.listWindows();
-        computerUseWindows = windows;
-        const action = cuaDriver.lastAction(COMPUTER_USE_ACTION_MAX_AGE_MS);
-        return chooseTarget({
-          windows,
-          session,
-          action,
-          ownPid: process.pid,
-          ownCoveringWindowIds: computerUseCoveringWindowIds(),
-          previous,
-          toDesktop: computerUseDesktopRect,
-        });
-      }),
+    readPointer: isServer
+      ? () => null
+      : () => {
+          const pointer = cuaDriver.lastPointer(COMPUTER_USE_CURSOR_MAX_AGE_MS);
+          const point = pointer ? pointerOnDesktop(pointer, computerUseWindows) : null;
+          return point ? computerUseDesktopPoint(point) : null;
+        },
+    readTarget: isServer
+      ? () => Effect.succeed(null)
+      : (previous) =>
+          Effect.gen(function* () {
+            if (!cuaDriver.mcpServerForProviders()) return null;
+            // The rim marks work in progress, so it goes down with the last turn: completed, failed or
+            // cancelled. The driver's lease outlives the turn, so only an action made while a turn that
+            // still runs was running counts: a lease left by the turn before would put the rim over a
+            // turn that does not touch the desktop. Neither a lease nor an action names its agent, so
+            // the oldest running turn is the bound: a newer turn of another agent does not hide this
+            // one's rim. `service` is built below; the controller starts only after it.
+            const turnStartedAt = service.earliestRunningTurnStartedAt();
+            if (turnStartedAt === null) return null;
+            const session = liveSession(yield* computerUseReads.sessions(), (Date.now() - turnStartedAt) / 1000);
+            if (!session) return null;
+            const windows = yield* computerUseReads.listWindows();
+            computerUseWindows = windows;
+            const action = cuaDriver.lastAction(COMPUTER_USE_ACTION_MAX_AGE_MS);
+            return chooseTarget({
+              windows,
+              session,
+              action,
+              ownPid: process.pid,
+              ownCoveringWindowIds: computerUseCoveringWindowIds(),
+              previous,
+              toDesktop: computerUseDesktopRect,
+            });
+          }),
+
   });
   // Before the daemon stops, so the rim is gone rather than left over a window nothing drives, and
   // so the read connection lets its lease go while there is still a daemon to tell.
@@ -2077,28 +2092,36 @@ export async function createApplicationServices({
   });
   // The overlays are OpenBot windows, so they can mark only the display OpenBot is on. With an agent
   // display of its own, the driver works where they cannot be drawn.
-  const drawsComputerUseHighlight = !hasSeparateAgentDisplay(process.platform);
+  const drawsComputerUseHighlight = !isServer && !hasSeparateAgentDisplay(process.platform);
   const computerUsePermissionHelp = new ComputerUsePermissionHelpWindowController({
-    createWindow: () =>
-      createComputerUsePermissionHelpWindow(language.translate, () => localeDirection(language.locale)),
-    loadWindow: loadComputerUsePermissionHelpRenderer,
+    createWindow: isServer
+      ? createNoopPermissionHelpWindow
+      : () => createComputerUsePermissionHelpWindow(language.translate, () => localeDirection(language.locale)),
+    loadWindow: isServer
+      ? async () => {}
+      : (window, permission, sunshine) =>
+          window instanceof BrowserWindow
+            ? loadComputerUsePermissionHelpRenderer(window, permission, sunshine)
+            : Promise.resolve(),
     // The bundle that owns this process, which is the one macOS attributes every click and capture
     // to. In a development build that is Electron itself, and the window says so.
-    bundlePath: () => applicationBundlePath(app.getPath("exe"), process.platform),
+    bundlePath: isServer ? () => null : () => applicationBundlePath(app.getPath("exe"), process.platform),
     // `large` is 32 points, which is the size a drag image is drawn at.
     // Read out of the bundle rather than asked of macOS: `app.getFileIcon` ends the main process
     // on this Electron. The app's own icon stands in for a bundle that carries none, because a drag
     // with no image is refused and would leave the user with a card that does nothing.
-    bundleIcon: async (path) => {
-      const resources = join(path, "Contents", "Resources");
-      const names: string[] = await readdir(resources).catch(() => []);
-      const iconName = applicationIconName(path, names);
-      const icon = iconName ? nativeImage.createFromPath(join(resources, iconName)) : nativeImage.createEmpty();
-      // A bundle icon is drawn at up to 1024 points, and a drag carries the image at its own size:
-      // unresized it covers the pane the user is dragging onto.
-      return (icon.isEmpty() ? nativeImage.createFromPath(appIconPath) : icon).resize({ width: 32, height: 32 });
-    },
-    revealPath: (path) => shell.showItemInFolder(path),
+    bundleIcon: isServer
+      ? async () => ""
+      : async (path) => {
+          const resources = join(path, "Contents", "Resources");
+          const names: string[] = await readdir(resources).catch(() => []);
+          const iconName = applicationIconName(path, names);
+          const icon = iconName ? nativeImage.createFromPath(join(resources, iconName)) : nativeImage.createEmpty();
+          // A bundle icon is drawn at up to 1024 points, and a drag carries the image at its own size:
+          // unresized it covers the pane the user is dragging onto.
+          return (icon.isEmpty() ? nativeImage.createFromPath(appIconPath) : icon).resize({ width: 32, height: 32 });
+        },
+    revealPath: isServer ? () => {} : (path) => shell.showItemInFolder(path),
   });
   // An always-on-top window that outlived the quit would be the last thing on the desktop.
   teardown.push(TEARDOWN_ORDER.computerUsePermissionHelp, "the Computer Use permission help", () => {

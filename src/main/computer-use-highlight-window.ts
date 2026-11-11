@@ -5,7 +5,7 @@ import type {
 } from "@openbot/contracts/ipc";
 import { createOpenBotLogger, type Logger, toLogValue } from "@openbot/logging";
 import { Deferred, Effect, Exit, Schema } from "effect";
-import type { BrowserWindow, Rectangle } from "electron";
+import type { Rectangle } from "electron";
 import type { ComputerUseHighlightTarget } from "./computer-use-target-window";
 import type { CuaDriverFailure } from "./cua-driver-effects";
 
@@ -48,13 +48,36 @@ export interface HighlightOverlayWindow {
   isVisible(): boolean;
 }
 
+/**
+ * A no-op overlay window that satisfies `HighlightOverlayWindow` for a server build with no screen.
+ */
+export function createNoopHighlightOverlayWindow(_bounds?: Rectangle): HighlightOverlayWindow {
+  let destroyed = false;
+  let visible = false;
+  return {
+    setBounds: () => {},
+    showInactive: () => {
+      visible = true;
+    },
+    hide: () => {
+      visible = false;
+    },
+    destroy: () => {
+      destroyed = true;
+      visible = false;
+    },
+    isDestroyed: () => destroyed,
+    isVisible: () => visible,
+  };
+}
+
 /** One display, as the overlay needs it: something to tell it by, and the rectangle it covers. */
 export interface HighlightDisplay {
   id: number;
   bounds: Rectangle;
 }
 
-export interface ComputerUseHighlightControllerOptions<W extends HighlightOverlayWindow = BrowserWindow> {
+export interface ComputerUseHighlightControllerOptions<W extends HighlightOverlayWindow = HighlightOverlayWindow> {
   createWindow: (bounds: Rectangle) => W;
   loadWindow: (window: W) => Promise<void>;
   /** Sends the rim's place inside the overlay. One-way: the overlay asks for nothing. */
@@ -113,7 +136,7 @@ export interface ComputerUseHighlightControllerOptions<W extends HighlightOverla
  * Everything the controller touches is injected, so the placement rules are tested without a
  * desktop: the driver read, the window factory, the load and the send are all the caller's.
  */
-export class ComputerUseHighlightController<W extends HighlightOverlayWindow = BrowserWindow> {
+export class ComputerUseHighlightController<W extends HighlightOverlayWindow = HighlightOverlayWindow> {
   readonly #options: ComputerUseHighlightControllerOptions<W>;
   readonly #logger: Logger;
   readonly #overlays = new Map<number, Overlay<W>>();
