@@ -126,10 +126,52 @@ function toWebSocketUrl(httpBaseUrl: string, pathname: string): string {
   return url.href;
 }
 
-async function requestLoginToken(baseUrl: string, username: string, password: string): Promise<string> {
+/**
+ * The protocol headers the Team API requires on every request.
+ *
+ * `src/main/team-api-server.ts` `#protocolIssue` answers `426 client_update_required` when either
+ * header is missing, and the login route sits behind that gate. A client that talks to a local Team
+ * API therefore has to name the protocol it speaks, exactly as the desktop client does.
+ */
+export function teamProtocolHeaders(protocol: number): Record<string, string> {
+  return {
+    [TEAM_PROTOCOL_VERSION_HEADER]: String(protocol),
+    [TEAM_APP_VERSION_HEADER]: DIRECT_HOST_APP_VERSION,
+    [TEAM_CAPABILITIES_HEADER]: teamCapabilitiesForProtocol(protocol).join(","),
+  };
+}
+
+/**
+ * The app version this client claims.
+ *
+ * The Team API only checks that the header is present and not too long; the version decides the
+ * wire protocol, which the negotiation below reads from the host's compatibility response.
+ */
+const DIRECT_HOST_APP_VERSION = "0.68.0";
+
+/**
+ * Signs in with the Team API and returns a session token.
+ *
+ * The token is short lived and the caller decides where to keep it, so the browser keeps it in
+ * `sessionStorage` and no credential is ever part of a built bundle.
+ */
+export async function loginHttpTeamPeer(
+  baseUrl: string,
+  username: string,
+  password: string,
+  protocol = 9,
+): Promise<string> {
+  return requestLoginToken(baseUrl.replace(/\/+$/u, ""), username, password, protocol);
+}
+
+async function requestLoginToken(baseUrl: string, username: string, password: string, protocol = 9): Promise<string> {
   const response = await fetch(`${baseUrl}${TEAM_API_ROUTES.auth.login}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      ...teamProtocolHeaders(protocol),
+    },
     body: JSON.stringify({ username, password }),
   });
   if (!response.ok) throw new HttpPeerError("Login failed", { reference: `http/${response.status}` });
@@ -347,7 +389,7 @@ export function createHttpTeamPeer(actions: ActionsRef, options: HttpPeerOptions
 
     if (password) {
       try {
-        token = await requestLoginToken(baseUrl, username, password);
+        token = await requestLoginToken(baseUrl, username, password, negotiatedProtocol);
         return token;
       } catch (err: unknown) {
         const ref = err instanceof HttpPeerError && err.reference ? err.reference : "http/401";

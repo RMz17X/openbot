@@ -64,6 +64,7 @@
     "./rolling-price": "./src/rolling-price.tsx",
     "./error-message": "./src/error-message.ts",
     "./features/account/AccountLogin": "./src/features/account/AccountLogin.tsx",
+    "./features/account/DirectLogin": "./src/features/account/DirectLogin.tsx",
     "./features/account/LanguageWheel": "./src/features/account/LanguageWheel.tsx",
     "./features/account/AccountUpdateIsland": "./src/features/account/AccountUpdateIsland.tsx",
     "./features/account/AppLoadingScreen": "./src/features/account/AppLoadingScreen.tsx",

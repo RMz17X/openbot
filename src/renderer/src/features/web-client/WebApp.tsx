@@ -18,6 +18,7 @@ import { classifyFailure } from "@openbot/telemetry";
 import { NotificationObserver, Toaster, toast } from "@openbot/ui";
 import { AccountLogin } from "@openbot/ui/features/account/AccountLogin";
 import { AppLoadingScreen } from "@openbot/ui/features/account/AppLoadingScreen";
+import { DirectLogin } from "@openbot/ui/features/account/DirectLogin";
 import { currentText } from "@openbot/ui/text";
 import { Dynamic } from "@solidjs/web";
 import { createEffect, createSignal, createStore, onSettled, Show } from "solid-js";
@@ -41,11 +42,21 @@ import { createWebAccountCalls } from "./web-account";
 import { createWebAppearancePreference } from "./web-appearance-preference";
 import { takeWebAppStart, WEB_APP_BILLING_PARAM, type WebAppStart } from "./web-billing";
 import type { WebRuntimeFactory } from "./web-client-context";
+import { DIRECT_HOST_USERNAME, readDirectSession, signInDirect, signOutDirect } from "./web-direct-session";
 import { takeHostingReturn } from "./web-hosted-servers";
 import { createWebLanguagePreference } from "./web-language-preference";
 
 // The site loads this before it mounts `WebApp` (`apps/auth-api/src/routes/app.lazy.tsx`).
 export { loadSavedLanguage } from "./web-language-preference";
+
+/**
+ * The direct mode: the web client talks to a local Team API instead of the cloud account service.
+ *
+ * The build decides it, the same way `web-runtime.ts` decides which peer to use. With it on, the
+ * sign-in is a username and a password against the Team API, and the session is the token that
+ * the Team API issued, kept in the tab's `sessionStorage`. No credential is part of the bundle.
+ */
+const useDirect = import.meta.env.VITE_OPENBOT_DIRECT_HOST === "1";
 
 /**
  * The workspace is its own chunk, so the sign-in screen does not wait for it. Each session check
@@ -360,6 +371,23 @@ export function WebApp(props: { createRuntime?: WebRuntimeFactory } = {}) {
     const generation = sessionGeneration;
     // The workspace code loads beside the session check, not after it.
     void loadWorkspace().catch(() => undefined);
+    // The direct mode has no account service. The session is the token the Team API issued, kept
+    // in this tab, so the check reads the Team API instead of `/api/browser/session`.
+    if (useDirect) {
+      const account = await readDirectSession().catch(() => null);
+      if (!disposed && generation === sessionGeneration) {
+        sessionEnded = false;
+        // The workspace code comes first, so the workspace is ready when the account shows it.
+        if (account) await showAccount(account).catch(() => undefined);
+        if (!disposed && generation === sessionGeneration)
+          setState((draft) => {
+            draft.account = account;
+            draft.login = { status: "signed_out" };
+            draft.loaded = true;
+          });
+      }
+      return;
+    }
     try {
       const session = await request("session");
       markRemoteSync("session");
@@ -483,7 +511,32 @@ export function WebApp(props: { createRuntime?: WebRuntimeFactory } = {}) {
     });
     void followAccountAnalytics(account.analyticsEnabled).catch(() => undefined);
   }
+  /**
+   * Signs in against the Team API in the direct mode.
+   *
+   * The password is posted to the Team API and forgotten; the session token the Team API issued
+   * stays in this tab. The account then opens the workspace, exactly as a cloud sign-in does.
+   */
+  async function directSignIn(username: string, password: string): Promise<void> {
+    const generation = sessionGeneration;
+    const account = await signInDirect(username, password);
+    if (disposed || generation !== sessionGeneration) return;
+    sessionGeneration += 1;
+    sessionEnded = false;
+    await showAccount(account).catch(() => undefined);
+    if (disposed) return;
+    setState((draft) => {
+      draft.account = account;
+      draft.login = { status: "signed_out" };
+    });
+  }
   async function logout() {
+    // The direct mode has no account service to sign out of; the tab's token is the session.
+    if (useDirect) {
+      signOutDirect();
+      clearSession();
+      return;
+    }
     await request("logout", {});
     clearSession();
     channel?.postMessage("session-changed");
@@ -526,41 +579,48 @@ export function WebApp(props: { createRuntime?: WebRuntimeFactory } = {}) {
               keyed
               when={state.account?.id}
               fallback={
-                <AccountLogin
-                  variant={variant}
-                  state={state.login}
-                  onRetry={checkSession}
-                  onRequestEmailCode={start}
-                  onVerifyEmailCode={verify}
-                  onOpenCompanySignIn={() =>
-                    state.login.status === "company_sign_in" ? openCompanySignIn(state.login.email) : Promise.resolve()
-                  }
-                  onReset={async () => {
-                    clearSession();
-                    setState((draft) => {
-                      draft.resendAt = 0;
-                    });
-                  }}
-                  consent={
-                    <Show when={!analyticsAgreed()}>
-                      <AnalyticsConsentRow
-                        class="web-consent-row"
-                        checked={analyticsChoice()}
-                        agents={consentAgents}
-                        onChange={(checked) => {
-                          analyticsTouched = true;
-                          setAnalyticsChoice(checked);
-                        }}
+                <Show
+                  when={!useDirect}
+                  fallback={<DirectLogin onLogin={directSignIn} initialUsername={DIRECT_HOST_USERNAME} />}
+                >
+                  <AccountLogin
+                    variant={variant}
+                    state={state.login}
+                    onRetry={checkSession}
+                    onRequestEmailCode={start}
+                    onVerifyEmailCode={verify}
+                    onOpenCompanySignIn={() =>
+                      state.login.status === "company_sign_in"
+                        ? openCompanySignIn(state.login.email)
+                        : Promise.resolve()
+                    }
+                    onReset={async () => {
+                      clearSession();
+                      setState((draft) => {
+                        draft.resendAt = 0;
+                      });
+                    }}
+                    consent={
+                      <Show when={!analyticsAgreed()}>
+                        <AnalyticsConsentRow
+                          class="web-consent-row"
+                          checked={analyticsChoice()}
+                          agents={consentAgents}
+                          onChange={(checked) => {
+                            analyticsTouched = true;
+                            setAnalyticsChoice(checked);
+                          }}
+                        />
+                      </Show>
+                    }
+                    notice={
+                      <ConsentNotice
+                        onOpenTerms={() => window.open("/terms", "_blank", "noopener")}
+                        onOpenPrivacy={() => window.open("/privacy", "_blank", "noopener")}
                       />
-                    </Show>
-                  }
-                  notice={
-                    <ConsentNotice
-                      onOpenTerms={() => window.open("/terms", "_blank", "noopener")}
-                      onOpenPrivacy={() => window.open("/privacy", "_blank", "noopener")}
-                    />
-                  }
-                />
+                    }
+                  />
+                </Show>
               }
             >
               {(accountId) => (

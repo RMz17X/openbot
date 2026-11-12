@@ -226,6 +226,7 @@ import { currentText } from "@openbot/ui/text";
 import { referenceFrom } from "@openbot/user-errors";
 import { Effect } from "effect";
 import type { ServerAdminPort } from "../servers/servers-port";
+import { decodeDirectMember, listDirectHosts } from "./web-direct-host";
 import {
   createWebHostConnections,
   type WebHostConnections,
@@ -520,6 +521,19 @@ interface WebConnectionDependencies {
   openHostChannel?: (accountId: string) => BroadcastChannel | null;
 }
 
+/**
+ * The host lock of the direct mode.
+ *
+ * The lock exists because the cloud account service gives one session per account, so two tabs
+ * would fight over it. The direct mode has no shared session: the bearer token lives in one tab
+ * and the Team API gives each tab a session of its own, so two tabs can hold the same host without
+ * conflict. The lock also needs a secure context, which a page served over plain HTTP does not
+ * have, so it would refuse the connection outright there.
+ */
+async function acquireDirectHostLock(): Promise<() => void> {
+  return () => undefined;
+}
+
 /** The fields of a move to another model at a usage limit. */
 const USAGE_LIMIT_MOVE_FIELDS: ReadonlySet<string> = new Set([
   "agentId",
@@ -553,7 +567,7 @@ export function createWebWorkspaceRuntime(
   accountFetch: typeof fetch,
   dependencies: WebConnectionDependencies = {
     createPeer: useDirect ? createHttpTeamPeer : createRemoteTeamPeer,
-    acquireHostLock: acquireWebHostLock,
+    acquireHostLock: useDirect ? acquireDirectHostLock : acquireWebHostLock,
     openHostChannel: openWebHostChannel,
   },
 ): WebWorkspaceRuntime {
@@ -572,6 +586,16 @@ export function createWebWorkspaceRuntime(
   let sessionsEnded = false;
   const sessionActions = {
     getBootstrap: async (id: string, key: string, sessionId: string | null) => {
+      // The direct mode authenticates with a bearer session token, not with a WebRTC bootstrap
+      // ticket, so the account service is not in the path at all. The HTTP peer never asks for a
+      // ticket; this answer keeps a caller that does from reaching the account service.
+      if (useDirect) {
+        return {
+          sessionId: sessionId ?? "direct-session",
+          signalUrl: "",
+          ticket: "",
+        };
+      }
       try {
         return await runTeamEffect(directory.createBootstrap(id, key, sessionId));
       } catch (error) {
@@ -858,6 +882,13 @@ export function createWebWorkspaceRuntime(
     return runTeamEffect(readChatColors(teamApi).pipe(Effect.mapError((error) => error.cause)));
   }
   async function listMembers(): Promise<TeamMemberSummary[]> {
+    // The direct mode has no account service. The local Team API lists its own members, and it
+    // answers them in the shape the workspace reads.
+    if (useDirect) {
+      const value = await request("GET", TEAM_API_ROUTES.team.members);
+      if (!Array.isArray(value)) throw new Error(currentText().t("error.remote.invalidData"));
+      return value.map((entry) => decodeDirectMember(entry));
+    }
     // The account service has no chat colours. A failed read from the host gives the members without them.
     const [members, colors] = await Promise.all([
       runTeamEffect(directory.listMembers(requireHost().hostId)),
@@ -1317,7 +1348,12 @@ export function createWebWorkspaceRuntime(
       Effect.runPromise(respondToBrowserSecret(teamApi, input).pipe(Effect.mapError((error) => error.cause))),
     respondToTakeover: (input) =>
       Effect.runPromise(respondToBrowserTakeover(teamApi, input).pipe(Effect.mapError((error) => error.cause))),
-    listHosts: () => runTeamEffect(directory.listHosts()),
+    listHosts: async () => {
+      // The direct mode has no account service. The local Team API knows its own host, so the
+      // directory is that one host, read from the Team API itself.
+      if (useDirect) return listDirectHosts();
+      return runTeamEffect(directory.listHosts());
+    },
     leaveHost: (hostId, membershipId) => runTeamEffect(directory.leaveHost(hostId, membershipId)),
     async removeOwnedHost(hostId) {
       const response = await accountFetch(`/api/browser/v2/remote/hosts/${encodeURIComponent(hostId)}`, {
