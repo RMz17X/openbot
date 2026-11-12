@@ -1,5 +1,5 @@
 import type { AppTextKey } from "@openbot/i18n";
-import { createEffect, createSignal, For, onCleanup, onSettled, untrack } from "solid-js";
+import { createEffect, createSignal, For, onCleanup, onSettled, Show, untrack } from "solid-js";
 import { PlushLoader } from "../../plush-loader";
 import { useText } from "../../text";
 import { prefersReducedMotion } from "../../utils";
@@ -190,7 +190,7 @@ export function AppLoadingScreen(props: AppLoadingScreenProps) {
   let exitTimer: ReturnType<typeof setTimeout> | undefined;
   let rainTimer: ReturnType<typeof setTimeout> | undefined;
   let hopFrame = 0;
-  let exited = false;
+  const [exited, setExited] = createSignal(false);
   let viewsMounted = false;
   // The app is ready and the crew will hop out.
   let hopWanted = false;
@@ -205,10 +205,14 @@ export function AppLoadingScreen(props: AppLoadingScreenProps) {
   }
 
   function finishExit(): void {
-    if (exited) return;
-    exited = true;
+    if (exited()) return;
+    setExited(true);
     clearTimeout(exitTimer);
+    clearTimeout(rainTimer);
+    clearTimeout(statusTimer);
+    cancelAnimationFrame(hopFrame);
     mountViews();
+    seat?.leave();
     props.onExited?.();
   }
 
@@ -216,7 +220,12 @@ export function AppLoadingScreen(props: AppLoadingScreenProps) {
   createEffect(phase, (current) => {
     if (current !== "fade" && current !== "exit") return;
     // Without the stylesheet, or in a test DOM, the exit does not animate: end the screen now.
-    if (root && !getComputedStyle(root).animationName.includes(EXIT_ANIMATION)) queueMicrotask(finishExit);
+    if (root && !getComputedStyle(root).animationName.includes(EXIT_ANIMATION)) {
+      queueMicrotask(finishExit);
+      return;
+    }
+    const safetyTimer = setTimeout(finishExit, current === "fade" ? 400 : EXIT_LIMIT_MS);
+    return () => clearTimeout(safetyTimer);
   });
 
   createEffect(
@@ -227,7 +236,7 @@ export function AppLoadingScreen(props: AppLoadingScreenProps) {
       const quick = !seat?.playThrough() && age() < QUICK_EXIT_S;
       const hopOut = seat && !reducedMotion && seat.owns() && seat.alone() && !quick;
       const rainLeft = hopOut ? Math.max(0, MIN_RAIN_S - age()) * 1000 : 0;
-      exitTimer ??= setTimeout(finishExit, rainLeft + EXIT_LIMIT_MS);
+      exitTimer ??= setTimeout(finishExit, rainLeft + (hopOut ? EXIT_LIMIT_MS : 400));
       if (seat && !hopOut && !seat.alone()) seat.handOver();
       if (!hopOut) {
         setPhase("fade");
@@ -279,33 +288,35 @@ export function AppLoadingScreen(props: AppLoadingScreenProps) {
   }
 
   return (
-    <main
-      ref={(element) => {
-        root = element;
-      }}
-      class="app-loading"
-      style={{ "--app-loading-at": `${enterAt}s`, "--app-loading-exit-delay": `${fadeDelay()}ms` }}
-      data-scene={pileScene ? "pile" : "thinking"}
-      data-phase={phase()}
-      role="status"
-      aria-live="polite"
-      aria-busy={props.ready ? "false" : "true"}
-      onAnimationStart={handleAnimationStart}
-      onAnimationEnd={handleAnimationEnd}
-    >
-      <span class="sr-only">{props.label ?? t("webClient.loading")}</span>
-      <div class="app-loading-stage">
-        {seat ? (
-          <CrewPileStage pile={seat.pile} start={seat.start} hop={hop()} onHop={handleHop} />
-        ) : (
-          <PlushLoader layout="stack" size={THINKING_SIZE} />
-        )}
-        {!pileScene && (
-          <p class="app-loading-status">
-            {props.title ?? <For each={[status()]}>{(line) => <span class="app-loading-line">{t(line)}</span>}</For>}
-          </p>
-        )}
-      </div>
-    </main>
+    <Show when={!exited()}>
+      <main
+        ref={(element) => {
+          root = element;
+        }}
+        class="app-loading"
+        style={{ "--app-loading-at": `${enterAt}s`, "--app-loading-exit-delay": `${fadeDelay()}ms` }}
+        data-scene={pileScene ? "pile" : "thinking"}
+        data-phase={phase()}
+        role="status"
+        aria-live="polite"
+        aria-busy={props.ready ? "false" : "true"}
+        onAnimationStart={handleAnimationStart}
+        onAnimationEnd={handleAnimationEnd}
+      >
+        <span class="sr-only">{props.label ?? t("webClient.loading")}</span>
+        <div class="app-loading-stage">
+          {seat ? (
+            <CrewPileStage pile={seat.pile} start={seat.start} hop={hop()} onHop={handleHop} />
+          ) : (
+            <PlushLoader layout="stack" size={THINKING_SIZE} />
+          )}
+          {!pileScene && (
+            <p class="app-loading-status">
+              {props.title ?? <For each={[status()]}>{(line) => <span class="app-loading-line">{t(line)}</span>}</For>}
+            </p>
+          )}
+        </div>
+      </main>
+    </Show>
   );
 }
