@@ -24,6 +24,31 @@ function normalizePath(path: string): string {
   return path.replaceAll("\\", "/");
 }
 
+/**
+ * Refuses a build that would bake a credential into the bundle.
+ *
+ * The direct mode signs in from the browser: the WebUI posts the password to the Team API and
+ * keeps only the returned session token, in the tab's sessionStorage. A password in the bundle is
+ * a permanent credential in a static file every browser downloads, so the build stops when one is
+ * set. The token is a short-lived session token, so it is allowed through.
+ */
+function refuseBundledCredentials(): Plugin {
+  const forbidden = ["VITE_OPENBOT_DIRECT_HOST_PASSWORD", "VITE_OPENBOT_DIRECT_HOST_USERNAME"];
+  return {
+    name: "openbot-refuse-bundled-credentials",
+    enforce: "pre",
+    buildStart() {
+      const set = forbidden.filter((name) => (process.env[name] ?? "").trim().length > 0);
+      if (set.length === 0) return;
+      this.error(
+        `Refusing to build the WebUI: ${set.join(", ")} would be inlined into the bundle as a ` +
+          `plaintext credential. The direct mode signs in from the browser and keeps only the ` +
+          `session token, so unset these variables and let the sign-in form ask for the password.`,
+      );
+    },
+  };
+}
+
 function enOnlyLanguageCatalogs(): Plugin {
   const i18nSource = normalizePath(fileURLToPath(new URL("../../packages/i18n/src/", import.meta.url)));
   const eagerModules = new Set(["./app-catalogs", "./source-catalogs", "./format-catalogs", "./locale-loading"]);
@@ -102,6 +127,11 @@ export default defineConfig({
   define: {
     "import.meta.env.VITE_OPENBOT_DIRECT_HOST": JSON.stringify("1"),
   },
+  // The direct mode signs in from the browser: the WebUI posts the password to the Team API and
+  // keeps only the returned session token, in the tab's sessionStorage. A password baked into the
+  // bundle would be a permanent credential in a static file every browser downloads, so the build
+  // refuses to start with one set.
+  envPrefix: ["VITE_OPENBOT_DIRECT_HOST_URL"],
   optimizeDeps: {
     // bloub finds its plush images with `new URL(..., import.meta.url)`. A pre-bundle moves the
     // code away from the images, so Vite serves the package as it is.
@@ -112,6 +142,7 @@ export default defineConfig({
   esbuild: { legalComments: "eof" },
   plugins: [
     noElectronPreload(),
+    refuseBundledCredentials(),
     solidPlugin({ performanceTracks: false }),
     tailwindcss({ optimize: false }),
     enOnlyLanguageCatalogs(),

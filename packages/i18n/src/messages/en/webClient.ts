@@ -26,6 +26,8 @@ export const messages = defineMessages("webClient", {
   "webClient.directLogin.passwordRequired": "Enter your password.",
   "webClient.directLogin.failed": "Sign-in failed.",
   "webClient.directLogin.note": "The session ends with this browser tab.",
+  "webClient.directLogin.rateLimited": "Too many sign-in attempts. Wait a few minutes and try again.",
+  "webClient.directLogin.wrongPassword": "Wrong username or password.",
   "webClient.pane.navigation": "Workspace navigation",
   "webClient.pane.chat": "Chat",
   "webClient.pane.routines": "Routines",

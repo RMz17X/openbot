@@ -27,6 +27,8 @@ export const messages = {
   "webClient.directLogin.passwordRequired": "Gib dein Passwort ein.",
   "webClient.directLogin.failed": "Anmeldung fehlgeschlagen.",
   "webClient.directLogin.note": "Die Sitzung endet mit diesem Browser-Tab.",
+  "webClient.directLogin.rateLimited": "Zu viele Anmeldeversuche. Warte ein paar Minuten und versuche es erneut.",
+  "webClient.directLogin.wrongPassword": "Falscher Benutzername oder falsches Passwort.",
   "webClient.pane.navigation": "Arbeitsbereich-Navigation",
   "webClient.pane.chat": "Chat",
   "webClient.pane.routines": "Routinen",

@@ -96,13 +96,48 @@ export function getHttpPeerSessionToken(): string | null {
 
 declare const process: { env?: Record<string, string | undefined> } | undefined;
 
-function envProperty(name: string): string {
+/**
+ * The direct host settings of this build.
+ *
+ * Vite replaces `import.meta.env.SOME_NAME` at build time, but only when the member expression is
+ * written out. A lookup through a variable key (`import.meta.env[name]`) survives into the bundle
+ * as a bracket access on an object that carries no `VITE_` keys, so the value never arrives. Every
+ * setting is therefore read through its own static member expression below.
+ */
+function directHostEnv(): {
+  url: string;
+  token: string;
+  username: string;
+  password: string;
+} {
   try {
-    const meta = import.meta;
-    if (isDynamicRecord(meta) && isDynamicRecord(meta.env)) {
-      const value = meta.env[name];
-      if (isString(value)) return value;
-    }
+    return {
+      url: import.meta.env.VITE_OPENBOT_DIRECT_HOST_URL ?? "",
+      token: import.meta.env.VITE_OPENBOT_DIRECT_HOST_TOKEN ?? "",
+      username: import.meta.env.VITE_OPENBOT_DIRECT_HOST_USERNAME ?? "",
+      password: import.meta.env.VITE_OPENBOT_DIRECT_HOST_PASSWORD ?? "",
+    };
+  } catch {
+    return { url: "", token: "", username: "", password: "" };
+  }
+}
+
+function envProperty(name: string): string {
+  const env = directHostEnv();
+  switch (name) {
+    case "VITE_OPENBOT_DIRECT_HOST_URL":
+      return env.url;
+    case "VITE_OPENBOT_DIRECT_HOST_TOKEN":
+      return env.token;
+    case "VITE_OPENBOT_DIRECT_HOST_USERNAME":
+      return env.username;
+    case "VITE_OPENBOT_DIRECT_HOST_PASSWORD":
+      return env.password;
+    default:
+      break;
+  }
+  // A server-side build has no `import.meta.env`, and reads its settings from the environment.
+  try {
     if (typeof process !== "undefined" && isDynamicRecord(process) && isDynamicRecord(process.env)) {
       const value = process.env[name];
       if (isString(value)) return value;

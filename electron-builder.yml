@@ -58,6 +58,12 @@ extraResources:
   # `cpu-limit.cjs` makes os.cpus() follow the CPU limit for the Node programs of agents on a server.
   - from: resources/agent-runtime
     to: agent-runtime
+  # The web client of a headless server. The daemon serves it itself, so it travels with the app
+  # instead of with a reverse proxy that has to be installed next to it.
+  - from: apps/webui/dist
+    to: webui
+    filter:
+      - "**/*"
   - from: build/icon-production.png
     to: icons/icon-production.png
   - from: build/icon-dev.png

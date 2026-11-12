@@ -27,6 +27,8 @@ export const messages = {
   "webClient.directLogin.passwordRequired": "أدخل كلمة المرور.",
   "webClient.directLogin.failed": "فشل تسجيل الدخول.",
   "webClient.directLogin.note": "تنتهي الجلسة مع علامة تبويب المتصفح هذه.",
+  "webClient.directLogin.rateLimited": "محاولات تسجيل دخول كثيرة. انتظر بضع دقائق ثم حاول مرة أخرى.",
+  "webClient.directLogin.wrongPassword": "اسم المستخدم أو كلمة المرور غير صحيحة.",
   "webClient.pane.navigation": "التنقل في مساحة العمل",
   "webClient.pane.chat": "الدردشة",
   "webClient.pane.routines": "المهام الدورية",

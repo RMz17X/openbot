@@ -27,6 +27,9 @@ export const messages = {
   "webClient.directLogin.passwordRequired": "Escribe tu contraseña.",
   "webClient.directLogin.failed": "Error al iniciar sesión.",
   "webClient.directLogin.note": "La sesión termina con esta pestaña del navegador.",
+  "webClient.directLogin.rateLimited":
+    "Demasiados intentos de inicio de sesión. Espera unos minutos e inténtalo de nuevo.",
+  "webClient.directLogin.wrongPassword": "Nombre de usuario o contraseña incorrectos.",
   "webClient.pane.navigation": "Navegación del espacio de trabajo",
   "webClient.pane.chat": "Chat",
   "webClient.pane.routines": "Rutinas",

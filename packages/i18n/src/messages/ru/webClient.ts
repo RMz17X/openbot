@@ -27,6 +27,8 @@ export const messages = {
   "webClient.directLogin.passwordRequired": "Введите пароль.",
   "webClient.directLogin.failed": "Не удалось войти.",
   "webClient.directLogin.note": "Сеанс заканчивается вместе с этой вкладкой браузера.",
+  "webClient.directLogin.rateLimited": "Слишком много попыток входа. Подождите несколько минут и попробуйте снова.",
+  "webClient.directLogin.wrongPassword": "Неверное имя пользователя или пароль.",
   "webClient.pane.navigation": "Навигация по рабочему пространству",
   "webClient.pane.chat": "Чат",
   "webClient.pane.routines": "Автозадачи",

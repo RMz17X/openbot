@@ -27,6 +27,8 @@ export const messages = {
   "webClient.directLogin.passwordRequired": "パスワードを入力してください。",
   "webClient.directLogin.failed": "サインインに失敗しました。",
   "webClient.directLogin.note": "セッションはこのブラウザタブを閉じると終了します。",
+  "webClient.directLogin.rateLimited": "サインイン試行回数が多すぎます。数分待ってからもう一度お試しください。",
+  "webClient.directLogin.wrongPassword": "ユーザー名またはパスワードが違います。",
   "webClient.pane.navigation": "ワークスペースのナビゲーション",
   "webClient.pane.chat": "チャット",
   "webClient.pane.routines": "ルーティン",

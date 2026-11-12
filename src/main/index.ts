@@ -164,6 +164,7 @@ import { TeardownRegistry } from "./teardown-registry";
 import type { TraceFile } from "./trace-file";
 import { setIpcCallObserver } from "./trusted-ipc";
 import { UPDATE_INSTALL_TIMEOUT_MS } from "./update-service";
+import { startWebUiServer, webUiPortFromEnvironment, webUiRoot } from "./webui-server";
 import { setInitialWindowGlass, setWindowAppearance } from "./window-appearance";
 import { placeWindowButtons } from "./window-buttons";
 
@@ -1714,6 +1715,39 @@ if (!hasSingleInstanceLock) {
           );
         }
       };
+      // A server has no window to look at, so the desktop renderer is pure waste: it costs a
+      // renderer process, a GPU process and the memory of the whole renderer, and nothing reads
+      // it. The web client is the interface of a server instead, and the daemon serves it.
+      //
+      // The bridge window of the WebRTC stays: the Android app reaches the host through Signal,
+      // and the bridge is what carries that connection.
+      if (built.serverMode) {
+        const webUiRootPath = webUiRoot(process.resourcesPath);
+        const webUiPort = webUiPortFromEnvironment(process.env);
+        const webUi = await startWebUiServer({
+          teamApiPort: () => host.teamApiPort,
+          root: webUiRootPath,
+          port: webUiPort,
+          onError: (message, error) => logger.warn(message, toLogValue(error)),
+        }).catch((error: unknown) => {
+          logger.error("Unable to start the web UI server:", toLogValue(error));
+          return null;
+        });
+        if (webUi) {
+          logger.info(`The web UI server listens on port ${webUi.port}.`);
+          teardown.push(0, "the web UI server", () => webUi.stop());
+        }
+        // The agents, the routines and the messaging run without a renderer. The agent backend
+        // starts here, because no renderer tells the daemon that the workspace is ready.
+        void runCauseEffect(built.agentInitialization.start()).catch((error) => {
+          logger.error("Unable to initialize the local agent backend:", toLogValue(error));
+        });
+        powerMonitor.on("resume", () => built.messaging.resume());
+        powerMonitor.on("resume", renewHostSignal);
+        startAttempts?.finished();
+        built.startup?.rendererLoaded();
+        return;
+      }
       // Nobody looks at the window of a server, and a device that woke it waits for the publish. So a
       // server publishes now, before the window loads. A desktop publishes after its window loads, so
       // the bridge window does not compete with the first window for the CPU.

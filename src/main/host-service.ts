@@ -637,6 +637,16 @@ export class HostService extends EventEmitter<HostEvents> {
     return this.#options.remoteControlPolicy?.get() ?? { ...DEFAULT_REMOTE_CONTROL_POLICY };
   }
 
+  /**
+   * The port this computer's Team API listens on, or null before it started.
+   *
+   * The Team API takes a free loopback port, so the port changes on every start. The web UI
+   * gateway of a headless daemon forwards to it, and the gateway needs the port at request time.
+   */
+  get teamApiPort(): number | null {
+    return this.#api.port;
+  }
+
   /** The roles that may control this computer. The Team API reads it at each remote desktop request. */
   remoteControlAccess(): RemoteControlAccess {
     return this.getRemoteControlPolicy().access;

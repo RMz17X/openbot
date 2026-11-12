@@ -27,6 +27,8 @@ export const messages = {
   "webClient.directLogin.passwordRequired": "Parolanızı girin.",
   "webClient.directLogin.failed": "Giriş başarısız oldu.",
   "webClient.directLogin.note": "Oturum bu tarayıcı sekmesiyle sona erer.",
+  "webClient.directLogin.rateLimited": "Çok fazla giriş denemesi. Birkaç dakika bekleyip tekrar deneyin.",
+  "webClient.directLogin.wrongPassword": "Kullanıcı adı veya parola hatalı.",
   "webClient.pane.navigation": "Çalışma alanı gezintisi",
   "webClient.pane.chat": "Sohbet",
   "webClient.pane.routines": "Rutinler",

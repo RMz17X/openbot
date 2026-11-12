@@ -27,6 +27,8 @@ export const messages = {
   "webClient.directLogin.passwordRequired": "Voer je wachtwoord in.",
   "webClient.directLogin.failed": "Inloggen mislukt.",
   "webClient.directLogin.note": "De sessie eindigt met dit browsertabblad.",
+  "webClient.directLogin.rateLimited": "Te veel inlogpogingen. Wacht een paar minuten en probeer het opnieuw.",
+  "webClient.directLogin.wrongPassword": "Onjuiste gebruikersnaam of wachtwoord.",
   "webClient.pane.navigation": "Navigatie in werkruimte",
   "webClient.pane.chat": "Chat",
   "webClient.pane.routines": "Routines",

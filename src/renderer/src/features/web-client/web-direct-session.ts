@@ -3,10 +3,12 @@ import { isBoolean, isDynamicRecord, isString } from "@openbot/contracts/runtime
 import { TEAM_API_ROUTES } from "@openbot/contracts/team-api-routes";
 import {
   getHttpPeerSessionToken,
+  HttpPeerError,
   loginHttpTeamPeer,
   setHttpPeerSessionToken,
   teamProtocolHeaders,
 } from "@openbot/team-client";
+import { currentText } from "@openbot/ui/text";
 import { directHostBaseUrl } from "./web-direct-host";
 
 /**
@@ -78,7 +80,12 @@ export async function readDirectSession(): Promise<CentralAuthUser | null> {
  */
 export async function signInDirect(username: string, password: string): Promise<CentralAuthUser> {
   const baseUrl = directHostBaseUrl();
-  const token = await loginHttpTeamPeer(baseUrl, username, password, DIRECT_PROTOCOL);
+  let token: string;
+  try {
+    token = await loginHttpTeamPeer(baseUrl, username, password, DIRECT_PROTOCOL);
+  } catch (error: unknown) {
+    throw new Error(directLoginMessage(error));
+  }
   setHttpPeerSessionToken(token);
   const account = await readDirectSession();
   if (!account) {
@@ -86,6 +93,22 @@ export async function signInDirect(username: string, password: string): Promise<
     throw new Error("The Team API refused the session it just issued.");
   }
   return account;
+}
+
+/**
+ * The message the sign-in screen shows for a failed login.
+ *
+ * The Team API answers 429 when the same account failed too often from one address, and the
+ * plain "login failed" would ask the user to type the password again and make the lock-out
+ * worse. The reference of the peer error carries the status, so the rate limit gets its own
+ * message.
+ */
+function directLoginMessage(error: unknown): string {
+  const reference = error instanceof HttpPeerError ? error.reference : undefined;
+  if (reference === "http/429") return currentText().t("webClient.directLogin.rateLimited");
+  if (reference === "http/401" || reference === "http/403")
+    return currentText().t("webClient.directLogin.wrongPassword");
+  return error instanceof Error && error.message ? error.message : currentText().t("webClient.directLogin.failed");
 }
 
 /** Ends the session of the tab. The Team API keeps its own session record until it expires. */

@@ -27,6 +27,8 @@ export const messages = {
   "webClient.directLogin.passwordRequired": "비밀번호를 입력하세요.",
   "webClient.directLogin.failed": "로그인에 실패했습니다.",
   "webClient.directLogin.note": "이 브라우저 탭을 닫으면 세션이 종료됩니다.",
+  "webClient.directLogin.rateLimited": "로그인 시도가 너무 많습니다. 몇 분 후에 다시 시도하세요.",
+  "webClient.directLogin.wrongPassword": "사용자 이름 또는 비밀번호가 올바르지 않습니다.",
   "webClient.pane.navigation": "워크스페이스 탐색",
   "webClient.pane.chat": "채팅",
   "webClient.pane.routines": "루틴",

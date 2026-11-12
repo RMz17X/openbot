@@ -27,6 +27,8 @@ export const messages = {
   "webClient.directLogin.passwordRequired": "请输入密码。",
   "webClient.directLogin.failed": "登录失败。",
   "webClient.directLogin.note": "会话将随此浏览器标签页关闭而结束。",
+  "webClient.directLogin.rateLimited": "登录尝试次数过多。请等待几分钟后重试。",
+  "webClient.directLogin.wrongPassword": "用户名或密码错误。",
   "webClient.pane.navigation": "工作区导航",
   "webClient.pane.chat": "对话",
   "webClient.pane.routines": "自动化任务",

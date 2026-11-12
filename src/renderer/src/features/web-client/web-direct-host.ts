@@ -23,21 +23,26 @@ const DIRECT_PROTOCOL = 9;
  * the Team API's base URL. A build may name another one with `VITE_OPENBOT_DIRECT_HOST_URL`.
  */
 export function directHostBaseUrl(): string {
-  const configured = readEnv("VITE_OPENBOT_DIRECT_HOST_URL");
+  const configured = readDirectHostUrl();
   if (configured) return configured.replace(/\/+$/u, "");
   if (typeof window !== "undefined" && window.location?.origin) return window.location.origin;
   return "http://127.0.0.1:28420";
 }
 
-function readEnv(name: string): string {
+/**
+ * The configured Team API base URL.
+ *
+ * Vite replaces `import.meta.env.SOME_NAME` at build time, but only when the member expression is
+ * written out. A lookup through a variable key survives into the bundle as a bracket access on an
+ * object that carries no `VITE_` keys, so the value would never arrive. The name is therefore
+ * written out here.
+ */
+function readDirectHostUrl(): string {
   try {
-    const meta = import.meta;
-    if (isDynamicRecord(meta) && isDynamicRecord(meta.env)) {
-      const value = meta.env[name];
-      if (isString(value)) return value;
-    }
+    const value = import.meta.env.VITE_OPENBOT_DIRECT_HOST_URL;
+    if (isString(value)) return value;
   } catch {
-    // Storage unavailable
+    // A server-side build has no `import.meta.env`.
   }
   return "";
 }
