@@ -12,6 +12,15 @@ export type TeamClientFetch = typeof globalThis.fetch;
 //
 // Each module below also has its own subpath in `package.json`, so a consumer can narrow further.
 export * from "./host-key-handover";
+export type { HttpPeerOptions } from "./http-peer";
+export {
+  createHttpTeamPeer,
+  getHttpPeerSessionToken,
+  HttpPeerError,
+  loginHttpTeamPeer,
+  setHttpPeerSessionToken,
+  teamProtocolHeaders,
+} from "./http-peer";
 export { saveReviewedAgentProfile } from "./profile-save";
 export * from "./remote-directory";
 export * from "./remote-recovery";

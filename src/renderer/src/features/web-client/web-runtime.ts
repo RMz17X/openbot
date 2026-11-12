@@ -35,7 +35,6 @@ import type {
   HiddenAgentsSnapshot,
   InvitePreview,
   LocalBrowserSecretResponse,
-  PinnedMessagesSnapshot,
   QueueSnapshot,
   ReorderQueueInput,
   RespondToApprovalInput,
@@ -47,7 +46,6 @@ import type {
   SetAgentHiddenInput,
   SetAgentNotificationLevelInput,
   SetChannelImageInput,
-  SetMessagePinnedInput,
   SetMessageReactionInput,
   SidebarLayoutAction,
   SidebarLayoutSnapshot,
@@ -93,7 +91,6 @@ import {
   AGENT_FAST_MODE_ROUTES,
 } from "@openbot/contracts/team-protocol/agent-fast-mode-v1";
 import { AGENT_NOTIFICATION_LEVELS_CAPABILITY } from "@openbot/contracts/team-protocol/agent-notification-levels-v1";
-import { AGENT_SPEED_CAPABILITY, AGENT_SPEED_ROUTES } from "@openbot/contracts/team-protocol/agent-speed-v1";
 import {
   AGENT_USAGE_LIMIT_CAPABILITY,
   AGENT_USAGE_LIMIT_ROUTES,
@@ -147,11 +144,6 @@ import { TEAM_BROWSER_NAVIGATION_CAPABILITY } from "@openbot/contracts/team-prot
 import { FOCUS_USE_ROUTES } from "@openbot/contracts/team-protocol/focus-use-v1";
 import { MESSAGE_DELETE_CAPABILITY, MESSAGE_DELETE_ROUTES } from "@openbot/contracts/team-protocol/message-delete-v1";
 import {
-  decodeMessagePinsResponse,
-  MESSAGE_PINS_CAPABILITY,
-  MESSAGE_PINS_ROUTES,
-} from "@openbot/contracts/team-protocol/message-pins-v1";
-import {
   MODEL_VISIBILITY_CAPABILITY,
   MODEL_VISIBILITY_ROUTES,
 } from "@openbot/contracts/team-protocol/model-visibility-v1";
@@ -176,7 +168,7 @@ import {
   WORKSPACE_DIRECTORY_CAPABILITY,
   WORKSPACE_DIRECTORY_ROUTES,
 } from "@openbot/contracts/team-protocol/workspace-directory-v1";
-import { runTeamEffect } from "@openbot/team-client";
+import { createHttpTeamPeer, runTeamEffect } from "@openbot/team-client";
 import { bytesToBase64 } from "@openbot/team-client/base64";
 import { createRemoteBrowserView, type RemoteBrowserView } from "@openbot/team-client/browser-view";
 import { verifyEd25519Base64Url } from "@openbot/team-client/ed25519";
@@ -234,6 +226,7 @@ import { currentText } from "@openbot/ui/text";
 import { referenceFrom } from "@openbot/user-errors";
 import { Effect } from "effect";
 import type { ServerAdminPort } from "../servers/servers-port";
+import { decodeDirectMember, listDirectHosts } from "./web-direct-host";
 import {
   createWebHostConnections,
   type WebHostConnections,
@@ -368,10 +361,6 @@ export interface WebWorkspaceRuntime {
   compactChannelContext?: (channelId: string) => Promise<void>;
   /** The open waits of an agent, with `agent-waits-v1`. A host without it refuses before a request goes out. */
   listWaits?: (agentId: string) => Promise<AgentWaitsSnapshot>;
-  /** The pinned messages of all chats of an agent, with `message-pins-v1`. A host without it refuses before a request goes out. */
-  listPinnedMessages?: (agentId: string) => Promise<PinnedMessagesSnapshot>;
-  /** Pin or Unpin on one message, with `message-pins-v1`. Resolves with the new list of the chat. */
-  setMessagePinned?: (input: SetMessagePinnedInput) => Promise<PinnedMessagesSnapshot>;
   /** Cancel on one open wait of an agent, with `agent-waits-v1`. */
   cancelWait?: (agentId: string, waitId: string) => Promise<void>;
   /** Tells a hosted server that this tab has focus. Send it only to a host with `focus-use-v1`. */
@@ -523,11 +512,26 @@ export class WebHostConnectionError extends Error {
   }
 }
 
+const useDirect = import.meta.env.VITE_OPENBOT_DIRECT_HOST === "1";
+
 interface WebConnectionDependencies {
-  createPeer: typeof createRemoteTeamPeer;
+  createPeer: typeof createRemoteTeamPeer | typeof createHttpTeamPeer;
   acquireHostLock: typeof acquireWebHostLock;
   /** The channel between the tabs of the account. Without one, this tab keeps no status connections. */
   openHostChannel?: (accountId: string) => BroadcastChannel | null;
+}
+
+/**
+ * The host lock of the direct mode.
+ *
+ * The lock exists because the cloud account service gives one session per account, so two tabs
+ * would fight over it. The direct mode has no shared session: the bearer token lives in one tab
+ * and the Team API gives each tab a session of its own, so two tabs can hold the same host without
+ * conflict. The lock also needs a secure context, which a page served over plain HTTP does not
+ * have, so it would refuse the connection outright there.
+ */
+async function acquireDirectHostLock(): Promise<() => void> {
+  return () => undefined;
 }
 
 /** The fields of a move to another model at a usage limit. */
@@ -562,8 +566,8 @@ export function createWebWorkspaceRuntime(
   events: WebRuntimeEvents,
   accountFetch: typeof fetch,
   dependencies: WebConnectionDependencies = {
-    createPeer: createRemoteTeamPeer,
-    acquireHostLock: acquireWebHostLock,
+    createPeer: useDirect ? createHttpTeamPeer : createRemoteTeamPeer,
+    acquireHostLock: useDirect ? acquireDirectHostLock : acquireWebHostLock,
     openHostChannel: openWebHostChannel,
   },
 ): WebWorkspaceRuntime {
@@ -582,6 +586,16 @@ export function createWebWorkspaceRuntime(
   let sessionsEnded = false;
   const sessionActions = {
     getBootstrap: async (id: string, key: string, sessionId: string | null) => {
+      // The direct mode authenticates with a bearer session token, not with a WebRTC bootstrap
+      // ticket, so the account service is not in the path at all. The HTTP peer never asks for a
+      // ticket; this answer keeps a caller that does from reaching the account service.
+      if (useDirect) {
+        return {
+          sessionId: sessionId ?? "direct-session",
+          signalUrl: "",
+          ticket: "",
+        };
+      }
       try {
         return await runTeamEffect(directory.createBootstrap(id, key, sessionId));
       } catch (error) {
@@ -868,6 +882,13 @@ export function createWebWorkspaceRuntime(
     return runTeamEffect(readChatColors(teamApi).pipe(Effect.mapError((error) => error.cause)));
   }
   async function listMembers(): Promise<TeamMemberSummary[]> {
+    // The direct mode has no account service. The local Team API lists its own members, and it
+    // answers them in the shape the workspace reads.
+    if (useDirect) {
+      const value = await request("GET", TEAM_API_ROUTES.team.members);
+      if (!Array.isArray(value)) throw new Error(currentText().t("error.remote.invalidData"));
+      return value.map((entry) => decodeDirectMember(entry));
+    }
     // The account service has no chat colours. A failed read from the host gives the members without them.
     const [members, colors] = await Promise.all([
       runTeamEffect(directory.listMembers(requireHost().hostId)),
@@ -1327,7 +1348,12 @@ export function createWebWorkspaceRuntime(
       Effect.runPromise(respondToBrowserSecret(teamApi, input).pipe(Effect.mapError((error) => error.cause))),
     respondToTakeover: (input) =>
       Effect.runPromise(respondToBrowserTakeover(teamApi, input).pipe(Effect.mapError((error) => error.cause))),
-    listHosts: () => runTeamEffect(directory.listHosts()),
+    listHosts: async () => {
+      // The direct mode has no account service. The local Team API knows its own host, so the
+      // directory is that one host, read from the Team API itself.
+      if (useDirect) return listDirectHosts();
+      return runTeamEffect(directory.listHosts());
+    },
     leaveHost: (hostId, membershipId) => runTeamEffect(directory.leaveHost(hostId, membershipId)),
     async removeOwnedHost(hostId) {
       const response = await accountFetch(`/api/browser/v2/remote/hosts/${encodeURIComponent(hostId)}`, {
@@ -1447,23 +1473,6 @@ export function createWebWorkspaceRuntime(
       if (!capabilities.includes(AGENT_WAITS_CAPABILITY))
         throw new Error(currentText().t("error.team.agentWaitsUnsupported"));
       return decodeAgentWaitsResponse(await request("POST", AGENT_WAITS_ROUTES.list, { agentId }));
-    },
-    async listPinnedMessages(agentId) {
-      if (!capabilities.includes(MESSAGE_PINS_CAPABILITY))
-        throw new Error(currentText().t("error.team.messagePinsUnsupported"));
-      return decodeMessagePinsResponse(await request("POST", MESSAGE_PINS_ROUTES.list, { agentId }));
-    },
-    async setMessagePinned(input) {
-      if (!capabilities.includes(MESSAGE_PINS_CAPABILITY))
-        throw new Error(currentText().t("error.team.messagePinsUnsupported"));
-      return decodeMessagePinsResponse(
-        await request("POST", MESSAGE_PINS_ROUTES.set, {
-          agentId: input.agentId,
-          taskId: input.taskId ?? null,
-          messageId: input.messageId,
-          pinned: input.pinned,
-        }),
-      );
     },
     async cancelWait(agentId, waitId) {
       if (!capabilities.includes(AGENT_WAITS_CAPABILITY))
@@ -1684,12 +1693,9 @@ export function createWebWorkspaceRuntime(
       // The fast tiers and the picker listing are optional: when a route fails, the picker gets the
       // models with no Fast switch or listing.
       const [fast, listings] = await Promise.all([
-        // Only `agent-speed-v1` lists Ultrafast tiers and Claude models; an older host keeps `agent-fast-mode-v1`.
-        capabilities.includes(AGENT_SPEED_CAPABILITY)
-          ? request("POST", AGENT_SPEED_ROUTES.models, {}).then(decodeAgentFastModels, () => [])
-          : capabilities.includes(AGENT_FAST_MODE_CAPABILITY)
-            ? request("POST", AGENT_FAST_MODE_ROUTES.models, {}).then(decodeAgentFastModels, () => [])
-            : [],
+        capabilities.includes(AGENT_FAST_MODE_CAPABILITY)
+          ? request("POST", AGENT_FAST_MODE_ROUTES.models, {}).then(decodeAgentFastModels, () => [])
+          : [],
         capabilities.includes(MODEL_VISIBILITY_CAPABILITY)
           ? request("POST", MODEL_VISIBILITY_ROUTES.listing, {}).then(decodeAgentModelListings, () => [])
           : [],
