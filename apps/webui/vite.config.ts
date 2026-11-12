@@ -17,7 +17,6 @@ const rendererWebCssAlias = fileURLToPath(
 );
 
 const openpanelStub = fileURLToPath(new URL("./src/stubs/openpanel.ts", import.meta.url));
-const plushStub = fileURLToPath(new URL("./src/stubs/plush.tsx", import.meta.url));
 const mermaidStub = fileURLToPath(new URL("./src/stubs/mermaid.ts", import.meta.url));
 const i18nEnOnlyStub = fileURLToPath(new URL("./src/stubs/i18n-en-only.ts", import.meta.url));
 
@@ -97,7 +96,6 @@ export default defineConfig({
       "@openbot/renderer-web": rendererWebAlias,
       "@openbot/renderer-web-css": rendererWebCssAlias,
       "@openpanel/web": openpanelStub,
-      "@norbert_bodziony/bloub/plush": plushStub,
       mermaid: mermaidStub,
     },
   },
@@ -107,7 +105,7 @@ export default defineConfig({
   optimizeDeps: {
     // bloub finds its plush images with `new URL(..., import.meta.url)`. A pre-bundle moves the
     // code away from the images, so Vite serves the package as it is.
-    exclude: ["@norbert_bodziony/bloub"],
+    exclude: ["@norbert_bodziony/bloub", "@norbert_bodziony/bloub/plush"],
   },
   // Vite removes license comments by default. The home page beam's license requires its notice
   // in each copy, so the minifier moves `/*!` and `@license` comments to the end of each file.
