@@ -190,9 +190,15 @@ export const AVATAR_STYLES: readonly AvatarStyle[] = ["plush", "flat"];
 /** The seed segment of each style. Plush keeps the segment that faces had before styles existed. */
 const STYLE_SEED_SEGMENT: Readonly<Record<AvatarStyle, string>> = { plush: "face", flat: "flat" };
 
-export function avatarStyleForSeed(_seed: string): "flat" {
-  // Always use flat SVG avatars in web client to eliminate heavy WebP sprite frames and canvas animation overhead.
-  return "flat";
+const FLAT_SEED_PATTERN = /:flat:\d+$/;
+
+/**
+ * The style that a seed draws. Only `avatarSeedForFace` makes a flat seed, and only the seed is saved,
+ * so the style needs no new saved field. An app that does not know styles draws the same shape and eyes
+ * from a flat seed, as a plush.
+ */
+export function avatarStyleForSeed(seed: string): AvatarStyle {
+  return FLAT_SEED_PATTERN.test(seed) ? "flat" : "plush";
 }
 
 /** The seed of the agent's own face in a style: the agent ID for the plush, and the same face flat. */

@@ -317,7 +317,13 @@ function GeneratedAvatar(props: {
   };
   const plushMood = createMemo((): PlushMood => {
     if (cyclesFaces()) return { state: "idle", expression: reducedMotion() ? "attentif" : workingFace(), busy: true };
-    return activityMood() ?? PLUSH_MOODS[props.mood];
+    const mood = PLUSH_MOODS[props.mood];
+    const activity = activityMood();
+    if (!activity) return mood;
+    // The step lends the eyes, not the body. A state change makes the engine morph the whole
+    // plush, so a tool call that changed the state made the avatar jump. The state stays the one
+    // of the mood: `thinking` for a working agent, which pulses its three felt balls.
+    return { state: mood.state, expression: activity.expression, busy: true };
   });
   const profile = createMemo(() => bloubAvatarProfile(props.seed, props.hue, props.color));
   const restingExpression = () => props.expression ?? profile().expression;
