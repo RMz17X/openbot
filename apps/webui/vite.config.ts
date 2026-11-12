@@ -2,7 +2,6 @@ import { fileURLToPath } from "node:url";
 import solidPlugin from "@solidjs/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, type Plugin } from "vite";
-import { lazyLanguageCatalogs } from "../../packages/i18n/src/vite-plugin";
 
 /**
  * The web client component. The same mapping the account Worker uses, so both builds run the same
@@ -16,6 +15,29 @@ const rendererWebAlias = fileURLToPath(
 const rendererWebCssAlias = fileURLToPath(
   new URL("../../src/renderer/src/features/web-client/web-client.css", import.meta.url),
 );
+
+const openpanelStub = fileURLToPath(new URL("./src/stubs/openpanel.ts", import.meta.url));
+const plushStub = fileURLToPath(new URL("./src/stubs/plush.tsx", import.meta.url));
+const mermaidStub = fileURLToPath(new URL("./src/stubs/mermaid.ts", import.meta.url));
+const i18nEnOnlyStub = fileURLToPath(new URL("./src/stubs/i18n-en-only.ts", import.meta.url));
+
+function normalizePath(path: string): string {
+  return path.replaceAll("\\", "/");
+}
+
+function enOnlyLanguageCatalogs(): Plugin {
+  const i18nSource = normalizePath(fileURLToPath(new URL("../../packages/i18n/src/", import.meta.url)));
+  const eagerModules = new Set(["./app-catalogs", "./source-catalogs", "./format-catalogs", "./locale-loading"]);
+  return {
+    name: "openbot-en-only-language-catalogs",
+    enforce: "pre",
+    resolveId(source, importer) {
+      if (!importer || !eagerModules.has(source)) return null;
+      if (!normalizePath(importer).startsWith(i18nSource)) return null;
+      return i18nEnOnlyStub;
+    },
+  };
+}
 
 /**
  * The headers the account Worker sends with the web client page. A static bundle has no response
@@ -74,12 +96,18 @@ export default defineConfig({
     alias: {
       "@openbot/renderer-web": rendererWebAlias,
       "@openbot/renderer-web-css": rendererWebCssAlias,
+      "@openpanel/web": openpanelStub,
+      "@norbert_bodziony/bloub/plush": plushStub,
+      mermaid: mermaidStub,
     },
+  },
+  define: {
+    "import.meta.env.VITE_OPENBOT_DIRECT_HOST": JSON.stringify("1"),
   },
   optimizeDeps: {
     // bloub finds its plush images with `new URL(..., import.meta.url)`. A pre-bundle moves the
     // code away from the images, so Vite serves the package as it is.
-    exclude: ["@norbert_bodziony/bloub", "@norbert_bodziony/bloub/plush"],
+    exclude: ["@norbert_bodziony/bloub"],
   },
   // Vite removes license comments by default. The home page beam's license requires its notice
   // in each copy, so the minifier moves `/*!` and `@license` comments to the end of each file.
@@ -88,7 +116,7 @@ export default defineConfig({
     noElectronPreload(),
     solidPlugin({ performanceTracks: false }),
     tailwindcss({ optimize: false }),
-    lazyLanguageCatalogs(),
+    enOnlyLanguageCatalogs(),
     headersFile(),
   ],
   server: {
