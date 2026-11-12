@@ -605,42 +605,42 @@ export function WebApp(props: { createRuntime?: WebRuntimeFactory } = {}) {
                       variant={variant}
                       language={resolveLocale(languagePreference.language(), navigator.language)}
                       onChangeLanguage={() => setLanguageWheelOpen(true)}
-
-                    state={state.login}
-                    onRetry={checkSession}
-                    onRequestEmailCode={start}
-                    onVerifyEmailCode={verify}
-                    onOpenCompanySignIn={() =>
-                      state.login.status === "company_sign_in"
-                        ? openCompanySignIn(state.login.email)
-                        : Promise.resolve()
-                    }
-                    onReset={async () => {
-                      clearSession();
-                      setState((draft) => {
-                        draft.resendAt = 0;
-                      });
-                    }}
-                    consent={
-                      <Show when={!analyticsAgreed()}>
-                        <AnalyticsConsentRow
-                          class="web-consent-row"
-                          checked={analyticsChoice()}
-                          agents={consentAgents}
-                          onChange={(checked) => {
-                            analyticsTouched = true;
-                            setAnalyticsChoice(checked);
-                          }}
+                      state={state.login}
+                      onRetry={checkSession}
+                      onRequestEmailCode={start}
+                      onVerifyEmailCode={verify}
+                      onOpenCompanySignIn={() =>
+                        state.login.status === "company_sign_in"
+                          ? openCompanySignIn(state.login.email)
+                          : Promise.resolve()
+                      }
+                      onReset={async () => {
+                        clearSession();
+                        setState((draft) => {
+                          draft.resendAt = 0;
+                        });
+                      }}
+                      consent={
+                        <Show when={!analyticsAgreed()}>
+                          <AnalyticsConsentRow
+                            class="web-consent-row"
+                            checked={analyticsChoice()}
+                            agents={consentAgents}
+                            onChange={(checked) => {
+                              analyticsTouched = true;
+                              setAnalyticsChoice(checked);
+                            }}
+                          />
+                        </Show>
+                      }
+                      notice={
+                        <ConsentNotice
+                          onOpenTerms={() => window.open("/terms", "_blank", "noopener")}
+                          onOpenPrivacy={() => window.open("/privacy", "_blank", "noopener")}
                         />
-                      </Show>
-                    }
-                    notice={
-                      <ConsentNotice
-                        onOpenTerms={() => window.open("/terms", "_blank", "noopener")}
-                        onOpenPrivacy={() => window.open("/privacy", "_blank", "noopener")}
-                      />
-                    }
-                  />
+                      }
+                    />
+                  </Show>
                 </Show>
               }
             >
