@@ -72,3 +72,6 @@ keys
 
 # Persistent local development identity and migration recovery.
 .openbot/
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+/graft/

@@ -669,8 +669,34 @@ export function AgentThreadView(props: AgentThreadViewProps) {
     return branchDividerId() === messageId ? props.branchSource : undefined;
   }
   const failed = () => (props.task?.state === "idle" && props.task.outcome === "failed" ? props.task : undefined);
-  const running = () =>
+  const rawRunning = () =>
     props.task?.state === "running" && !props.approval && !props.waitsForAnswer ? props.task : undefined;
+  const [running, setRunning] = createSignal<AgentTask | undefined>(rawRunning());
+  let runningHoldTimer: ReturnType<typeof setTimeout> | undefined;
+  createEffect(rawRunning, (next) => {
+    if (runningHoldTimer !== undefined) {
+      clearTimeout(runningHoldTimer);
+      runningHoldTimer = undefined;
+    }
+    if (next) {
+      setRunning(next);
+      return;
+    }
+    if (!props.approval && !props.waitsForAnswer) {
+      runningHoldTimer = setTimeout(() => {
+        runningHoldTimer = undefined;
+        setRunning(undefined);
+      }, 500);
+      return;
+    }
+    setRunning(undefined);
+  });
+  onCleanup(() => {
+    if (runningHoldTimer !== undefined) {
+      clearTimeout(runningHoldTimer);
+      runningHoldTimer = undefined;
+    }
+  });
   const queued = () => (props.task && props.task.queuedMessages.length > 0 ? props.task : undefined);
   const hold = () => (props.task ? agentThreadHoldText(props.task, props.limit, t) : null);
   const editingQueued = () => Boolean(props.queue?.editingDeliveryId);
