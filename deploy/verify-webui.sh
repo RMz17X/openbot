@@ -41,6 +41,13 @@ TOKEN_CACHE="${OPENBOT_TOKEN_CACHE:-${HOME}/.cache/openbot/verify-webui.token}"
 # the bucket a browser uses.
 CONTAINER_ADDRESS=""
 
+# The client address the verification sign-in names in X-Real-IP. The Team API counts sign-in
+# attempts per client address and user name. A browser that signs in through the reverse proxy
+# is counted under its own address, so the verification sign-in needs an address of its own.
+# Otherwise the script and the browser share one budget, and five runs of the script lock the
+# browser out. The address comes from the documentation range 198.51.100.0/24 (TEST-NET-3).
+PROBE_CLIENT_ADDRESS="${OPENBOT_PROBE_CLIENT_ADDRESS:-198.51.100.10}"
+
 PASSED=0
 FAILED=0
 SESSION_TOKEN=""
@@ -167,12 +174,13 @@ if [ -z "${SESSION_TOKEN}" ]; then
     password=\$(cat '${PASSWORD_FILE_IN_CONTAINER}')
     body=\$(jq -n --arg u '${OWNER_USERNAME}' --arg p \"\$password\" '{username: \$u, password: \$p}')
     unset password
-    response=\$(curl -s -m 15 -w '\n%{http_code}' \
-      --interface '${CONTAINER_ADDRESS:-127.0.0.1}' \
-      -X POST 'http://127.0.0.1:${TEAM_API_PORT}/v1/auth/login' \
-      -H 'Content-Type: application/json' \
-      -H 'OpenBot-Protocol-Version: ${PROTOCOL_VERSION}' \
-      -H 'OpenBot-App-Version: ${APP_VERSION}' \
+    response=\$(curl -s -m 15 -w '\\n%{http_code}' \\
+      --interface '${CONTAINER_ADDRESS:-127.0.0.1}' \\
+      -X POST 'http://127.0.0.1:${TEAM_API_PORT}/v1/auth/login' \\
+      -H 'Content-Type: application/json' \\
+      -H 'OpenBot-Protocol-Version: ${PROTOCOL_VERSION}' \\
+      -H 'OpenBot-App-Version: ${APP_VERSION}' \\
+      -H 'X-Real-IP: ${PROBE_CLIENT_ADDRESS}' \\
       --data-binary \"\$body\")
     code=\$(printf '%s' \"\$response\" | tail -n 1)
     json=\$(printf '%s' \"\$response\" | head -n -1)
