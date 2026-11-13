@@ -52,8 +52,7 @@ export async function startWebUiServer(options: WebUiServerOptions): Promise<Web
     host: WEB_UI_HOST,
     onError: options.onError,
   });
-  const port = await gateway.start();
-  options.onError?.(`The web UI server listens on port ${port}.`, undefined);
+  await gateway.start();
   return gateway;
 }
 

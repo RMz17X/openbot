@@ -1,0 +1,34 @@
+[Unit]
+Description=OpenBot Agent Server Daemon
+After=network.target
+
+[Service]
+Type=simple
+User=openbot
+Group=openbot
+Environment="HOME=/home/openbot"
+Environment="USER=openbot"
+Environment="OPENBOT_SERVER=1"
+# The server mode needs a runtime directory of its own: the control socket of the server and the
+# sockets of the Computer Use driver live in it. Without it the daemon refuses to run in server
+# mode and falls back to the desktop, which loads a renderer nobody looks at.
+Environment="XDG_RUNTIME_DIR=/run/openbot"
+WorkingDirectory=/home/openbot
+
+# Fail-Fast Anti-Hang Memory Policy:
+# Avoid MemoryHigh CPU-throttling stall. Hard cap at 5500M so OOM kills and systemd auto-restarts cleanly.
+MemoryMax=5500M
+TasksMax=infinity
+LimitNOFILE=65536
+
+# The runtime directory belongs to the service and is removed with it.
+RuntimeDirectory=openbot
+RuntimeDirectoryMode=0700
+
+ExecStart=/usr/bin/dbus-run-session -- /home/openbot/start-openbot.sh
+
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
