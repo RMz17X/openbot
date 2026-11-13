@@ -129,6 +129,25 @@ The script reads the password from the container file at the moment of use. It n
 never writes it to a file on the host, and never passes it as a command line argument. It signs
 in exactly once and never retries, because a retry would spend a rate-limit attempt for nothing.
 
+### The session token is cached
+
+After a successful sign-in, the script writes the session token to:
+
+```
+~/.cache/openbot/verify-webui.token
+```
+
+mode `0600`. The next run reuses it and spends **no** sign-in attempt at all. Without the cache,
+running this script five times inside fifteen minutes would lock the local owner out of its own
+WebUI.
+
+The cache holds a session token, not the password. A token that no longer works is dropped and a
+fresh sign-in is made, so a stale cache heals itself. To force a fresh sign-in, delete the file:
+
+```bash
+rm ~/.cache/openbot/verify-webui.token
+```
+
 ## 4. Updating to a new official upstream release
 
 The fork lives at `/workspaces/openbot-fork`. `origin` is the official repository
@@ -237,6 +256,8 @@ Three things follow in practice:
 - Do not type the password wrong six times. Count.
 - `deploy/verify-webui.sh` sends its sign-in straight to the Team API with the container's own
   address as the source, so it has a bucket of its own and does not spend the browser's budget.
+- `deploy/verify-webui.sh` also caches its session token, so running it repeatedly costs no
+  sign-in attempts at all.
 - The upstream fix for this is tracked separately: the daemon should read the client address that
   the local proxy forwards, instead of the socket address.
 

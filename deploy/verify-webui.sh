@@ -7,10 +7,16 @@
 # line that another process could read.
 #
 # The Team API rate limit counts 5 sign-in attempts per 15 minutes per source address and user
-# name, and it lives in the daemon's memory, so a daemon restart clears it. Two things follow:
-# this script signs in exactly once and never retries the sign-in, and it sends the sign-in with
-# the container's own address as the source. A browser that is signed in at the same time comes
-# through nginx as 127.0.0.1 and would otherwise spend the budget this script needs.
+# name, and it lives in the daemon's memory, so a daemon restart clears it. Three things follow:
+#
+#   - This script signs in once and never retries the sign-in. A retry would spend an attempt for
+#     nothing.
+#   - The sign-in goes straight to the Team API with the container's own address as the source,
+#     so it has a rate-limit bucket of its own and does not spend the budget a signed-in browser
+#     is using.
+#   - The session token is cached on the host, so a second run reuses the token and spends no
+#     sign-in attempt at all. Without the cache, running this script five times inside fifteen
+#     minutes would lock the local owner out.
 set -uo pipefail
 
 CONTAINER="${OPENBOT_CONTAINER:-openbot-vm}"
@@ -23,6 +29,10 @@ PRESENCE_EMAIL="${OPENBOT_PRESENCE_EMAIL:-rickicode@gmail.com}"
 
 PASSWORD_FILE_IN_CONTAINER="/home/openbot/.config/OpenBot/webui-password"
 UPSTREAM_FILE_IN_CONTAINER="/etc/nginx/upstream-openbot-team-api.conf"
+
+# The cached session token. It is mode 0600 and holds a session token, not the password: the
+# token only works for the routes the script reads.
+TOKEN_CACHE="${OPENBOT_TOKEN_CACHE:-${HOME}/.cache/openbot/verify-webui.token}"
 
 # The address the container sends its own requests from. It keeps the verification sign-in out of
 # the bucket a browser uses.
@@ -124,53 +134,77 @@ fi
 
 section "4. the local owner signs in"
 
+# A cached token is tried first. It costs no sign-in attempt, so a repeat run of this script
+# cannot lock the local owner out. A token that no longer works is dropped and a fresh sign-in
+# is made.
+if [ -r "${TOKEN_CACHE}" ]; then
+  CACHED_TOKEN="$(tr -d '[:space:]' < "${TOKEN_CACHE}")"
+  CACHED_CODE="$(curl -s -m 10 -o /dev/null -w '%{http_code}' \
+    -H "Authorization: Bearer ${CACHED_TOKEN}" \
+    -H "OpenBot-Protocol-Version: ${PROTOCOL_VERSION}" -H "OpenBot-App-Version: ${APP_VERSION}" \
+    "${HOST_URL}/v1/me" || true)"
+  if [ "${CACHED_CODE}" = "200" ]; then
+    SESSION_TOKEN="${CACHED_TOKEN}"
+    pass "the local owner ${OWNER_USERNAME} is signed in with the cached session token"
+  else
+    rm -f "${TOKEN_CACHE}"
+    info "the cached session token no longer works; signing in again"
+  fi
+fi
+
 # The password is read inside the container and goes straight into the request body. It is never
 # printed, never stored in a file on the host, and never passed as a command line argument.
-LOGIN_RESULT="$(in_container "
-  set -uo pipefail
-  if [ ! -r '${PASSWORD_FILE_IN_CONTAINER}' ]; then
-    echo 'NO_PASSWORD_FILE'
-    exit 0
-  fi
-  password=\$(cat '${PASSWORD_FILE_IN_CONTAINER}')
-  body=\$(jq -n --arg u '${OWNER_USERNAME}' --arg p \"\$password\" '{username: \$u, password: \$p}')
-  unset password
-  response=\$(curl -s -m 15 -w '\n%{http_code}' \
-    --interface '${CONTAINER_ADDRESS:-127.0.0.1}' \
-    -X POST 'http://127.0.0.1:${TEAM_API_PORT}/v1/auth/login' \
-    -H 'Content-Type: application/json' \
-    -H 'OpenBot-Protocol-Version: ${PROTOCOL_VERSION}' \
-    -H 'OpenBot-App-Version: ${APP_VERSION}' \
-    --data-binary \"\$body\")
-  code=\$(printf '%s' \"\$response\" | tail -n 1)
-  json=\$(printf '%s' \"\$response\" | head -n -1)
-  token=\$(printf '%s' \"\$json\" | jq -r '.sessionToken // empty' 2>/dev/null || true)
-  if [ \"\$code\" = '200' ] && [ -n \"\$token\" ]; then
-    echo \"TOKEN:\$token\"
-  else
-    echo \"LOGIN_FAILED:\$code\"
-  fi
-")"
+if [ -z "${SESSION_TOKEN}" ]; then
+  LOGIN_RESULT="$(in_container "
+    set -uo pipefail
+    if [ ! -r '${PASSWORD_FILE_IN_CONTAINER}' ]; then
+      echo 'NO_PASSWORD_FILE'
+      exit 0
+    fi
+    password=\$(cat '${PASSWORD_FILE_IN_CONTAINER}')
+    body=\$(jq -n --arg u '${OWNER_USERNAME}' --arg p \"\$password\" '{username: \$u, password: \$p}')
+    unset password
+    response=\$(curl -s -m 15 -w '\n%{http_code}' \
+      --interface '${CONTAINER_ADDRESS:-127.0.0.1}' \
+      -X POST 'http://127.0.0.1:${TEAM_API_PORT}/v1/auth/login' \
+      -H 'Content-Type: application/json' \
+      -H 'OpenBot-Protocol-Version: ${PROTOCOL_VERSION}' \
+      -H 'OpenBot-App-Version: ${APP_VERSION}' \
+      --data-binary \"\$body\")
+    code=\$(printf '%s' \"\$response\" | tail -n 1)
+    json=\$(printf '%s' \"\$response\" | head -n -1)
+    token=\$(printf '%s' \"\$json\" | jq -r '.sessionToken // empty' 2>/dev/null || true)
+    if [ \"\$code\" = '200' ] && [ -n \"\$token\" ]; then
+      echo \"TOKEN:\$token\"
+    else
+      echo \"LOGIN_FAILED:\$code\"
+    fi
+  ")"
 
-case "${LOGIN_RESULT}" in
-  TOKEN:*)
-    SESSION_TOKEN="${LOGIN_RESULT#TOKEN:}"
-    pass "the local owner ${OWNER_USERNAME} signed in and got a session token"
-    ;;
-  NO_PASSWORD_FILE)
-    fail "the password file ${PASSWORD_FILE_IN_CONTAINER} is missing or unreadable in ${CONTAINER}"
-    ;;
-  LOGIN_FAILED:429)
-    fail "the sign-in was rate limited (429); the limit is 5 attempts per 15 minutes per address and it lives in the daemon's memory"
-    info "wait for the window, or restart openbot.service to clear the in-memory counter"
-    ;;
-  LOGIN_FAILED:*)
-    fail "the sign-in failed with HTTP ${LOGIN_RESULT#LOGIN_FAILED:}"
-    ;;
-  *)
-    fail "the sign-in check could not run"
-    ;;
-esac
+  case "${LOGIN_RESULT}" in
+    TOKEN:*)
+      SESSION_TOKEN="${LOGIN_RESULT#TOKEN:}"
+      pass "the local owner ${OWNER_USERNAME} signed in and got a session token"
+      # The token is cached so the next run spends no sign-in attempt. It is a session token,
+      # not the password, and it is written mode 0600.
+      mkdir -p "$(dirname "${TOKEN_CACHE}")" 2>/dev/null || true
+      ( umask 077 && printf '%s' "${SESSION_TOKEN}" > "${TOKEN_CACHE}" ) 2>/dev/null || true
+      ;;
+    NO_PASSWORD_FILE)
+      fail "the password file ${PASSWORD_FILE_IN_CONTAINER} is missing or unreadable in ${CONTAINER}"
+      ;;
+    LOGIN_FAILED:429)
+      fail "the sign-in was rate limited (429); the limit is 5 attempts per 15 minutes per address and it lives in the daemon's memory"
+      info "wait for the window, or restart openbot.service to clear the in-memory counter"
+      ;;
+    LOGIN_FAILED:*)
+      fail "the sign-in failed with HTTP ${LOGIN_RESULT#LOGIN_FAILED:}"
+      ;;
+    *)
+      fail "the sign-in check could not run"
+      ;;
+  esac
+fi
 
 # --- 5. the authenticated routes ----------------------------------------------------------------
 
