@@ -1,10 +1,16 @@
+export const STEALTH_CHROME_MAJOR = "133";
+export const STEALTH_CHROME_VERSION = "133.0.0.0";
+export const STEALTH_CHROME_FULL = "133.0.6943.98";
+
 /**
  * The browser keeps the installed Chromium major version and host platform. Chrome sends only the
- * major version in this string (`Chrome/156.0.0.0`); Electron sends the full version, which no
+ * major version in this string (`Chrome/133.0.0.0`); Electron sends the full version, which no
  * Chrome does, and some bot checks refuse it. The full version stays in `navigator.userAgentData`.
  */
 export function sessionBrowserUserAgent(userAgent: string): string {
-  const cleaned = userAgent.replace(/\s(?:Electron|OpenBot)\/[^\s]+/gu, "").replace(/(\sChrome\/\d+)\.[\d.]+/u, "$1.0.0.0");
+  const cleaned = userAgent
+    .replace(/\s(?:Electron|OpenBot)\/[^\s]+/gu, "")
+    .replace(/(\sChrome\/)\d+\.[\d.]+/u, `$1${STEALTH_CHROME_VERSION}`);
   return cleaned.replace(/\(([^)]+)\)/u, "(Windows NT 10.0; Win64; x64)");
 }
 
@@ -20,8 +26,7 @@ export function browserRequestUserAgent(url: string, userAgent: string, electron
   return cleanAgent.replace(/(Chrome\/[^\s]+)/u, `$1 Electron/${electronVersion}`);
 }
 
-const GREASE_CHARACTERS = [" ", "(", ":", "-", ".", "/", ")", ";", "=", "?", "_"] as const;
-const GREASE_VERSIONS = ["8", "99", "24"] as const;
+// GREASE constants removed for static stealth brand definition.
 
 /**
  * The brands of `navigator.userAgentData`, in Chromium's order: a GREASE brand and Chromium,
@@ -30,13 +35,14 @@ const GREASE_VERSIONS = ["8", "99", "24"] as const;
  * different brands than the page reads, even when a person solves the challenge.
  */
 function browserBrandHeader(chromeVersion: string, full: boolean): string {
-  const majorVersion = Number.parseInt(chromeVersion, 10);
-  const greaseVersion = GREASE_VERSIONS[majorVersion % GREASE_VERSIONS.length];
-  const grease = `"Not${GREASE_CHARACTERS[majorVersion % GREASE_CHARACTERS.length]}A${
-    GREASE_CHARACTERS[(majorVersion + 1) % GREASE_CHARACTERS.length]
-  }Brand";v="${full ? `${greaseVersion}.0.0.0` : greaseVersion}"`;
-  const chromium = `"Chromium";v="${full ? chromeVersion : majorVersion}"`;
-  return majorVersion % 2 === 0 ? `${grease}, ${chromium}` : `${chromium}, ${grease}`;
+  void chromeVersion;
+  const major = STEALTH_CHROME_MAJOR;
+  const version = full ? STEALTH_CHROME_FULL : major;
+  const greaseVersion = full ? "99.0.0.0" : "99";
+  const grease = `"Not(A:Brand";v="${greaseVersion}"`;
+  const googleChrome = `"Google Chrome";v="${version}"`;
+  const chromium = `"Chromium";v="${version}"`;
+  return `${grease}, ${googleChrome}, ${chromium}`;
 }
 
 /** Electron has native navigator.userAgentData, but does not send client-hint headers. */

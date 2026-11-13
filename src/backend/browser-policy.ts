@@ -82,8 +82,12 @@ function preferredBrowserLanguages(): string {
 }
 
 export function preferredBrowserLanguageCodes(): string {
-  const languages = app.getPreferredSystemLanguages();
-  return (languages.length > 0 ? languages : [app.getLocale()]).join(",");
+  const raw = app.getPreferredSystemLanguages();
+  const valid = (raw.length > 0 ? raw : [app.getLocale()])
+    .filter((code) => code && code.toLowerCase() !== "c" && code.toLowerCase() !== "posix" && code.length >= 2);
+  const result = valid.length > 0 ? valid : ["en-US", "en"];
+  if (!result.some((c) => c.startsWith("en"))) result.push("en");
+  return result.join(",");
 }
 
 function setRequestHeader(headers: Record<string, string>, name: string, value: string): void {

@@ -218,12 +218,21 @@ function matchChromePageValues(): void {
       connect() {},
       sendMessage() {},
       id: undefined,
-      OnInstalledReason: { CHROME_UPDATE: "chrome_update", INSTALL: "install", SHARED_MODULE_UPDATE: "shared_module_update", UPDATE: "update" },
+      OnInstalledReason: {
+        CHROME_UPDATE: "chrome_update",
+        INSTALL: "install",
+        SHARED_MODULE_UPDATE: "shared_module_update",
+        UPDATE: "update",
+      },
       OnRestartRequiredReason: { APP_UPDATE: "app_update", OS_UPDATE: "os_update", PERIODIC: "periodic" },
       PlatformArch: { ARM: "arm", ARM64: "arm64", MIPS: "mips", MIPS64: "mips64", X86_32: "x86-32", X86_64: "x86-64" },
       PlatformNaclArch: { ARM: "arm", MIPS: "mips", MIPS64: "mips64", X86_32: "x86-32", X86_64: "x86-64" },
       PlatformOs: { ANDROID: "android", CROS: "cros", LINUX: "linux", MAC: "mac", OPENBSD: "openbsd", WIN: "win" },
-      RequestUpdateCheckStatus: { NO_UPDATE: "no_update", THROTTLED: "throttled", UPDATE_AVAILABLE: "update_available" },
+      RequestUpdateCheckStatus: {
+        NO_UPDATE: "no_update",
+        THROTTLED: "throttled",
+        UPDATE_AVAILABLE: "update_available",
+      },
     };
     for (const name of ["getDetails", "getIsInstalled", "installState", "runningState"] as const) {
       natives.set(app[name], name);
@@ -296,10 +305,26 @@ function matchChromePageValues(): void {
         } catch {}
 
         try {
-          const rawUA = nav.userAgent || "";
-          const cleanUA = rawUA
+          const getLang = () => "en-US";
+          const getLangs = () => Object.freeze(["en-US", "en"]);
+          natives.set(getLang, "get language");
+          natives.set(getLangs, "get languages");
+          Object.defineProperty(navProto, "language", {
+            get: getLang,
+            enumerable: true,
+            configurable: true,
+          });
+          Object.defineProperty(navProto, "languages", {
+            get: getLangs,
+            enumerable: true,
+            configurable: true,
+          });
+        } catch {}
+
+        try {
+          const cleanUA = (nav.userAgent || "")
             .replace(/\s(?:Electron|OpenBot)\/[^\s]+/gu, "")
-            .replace(/(\sChrome\/\d+)\.[\d.]+/u, "$1.0.0.0")
+            .replace(/(\sChrome\/)\d+\.[\d.]+/u, "$1133.0.0.0")
             .replace(/\(([^)]+)\)/u, "(Windows NT 10.0; Win64; x64)");
           const getUA = () => cleanUA;
           natives.set(getUA, "get userAgent");
@@ -318,13 +343,11 @@ function matchChromePageValues(): void {
         } catch {}
 
         try {
-          const rawUA = nav.userAgent || "";
-          const match = /Chrome\/(\d+)/.exec(rawUA);
-          const major = match ? match[1] : "130";
+          const major = "133";
           const brands = [
-            { brand: "Chromium", version: major },
+            { brand: "Not(A:Brand", version: "99" },
             { brand: "Google Chrome", version: major },
-            { brand: "Not?A_Brand", version: "99" },
+            { brand: "Chromium", version: major },
           ];
           const highEntropyValues: Record<string, unknown> = {
             architecture: "x86",
@@ -332,9 +355,9 @@ function matchChromePageValues(): void {
             brands,
             formFactors: ["Desktop"],
             fullVersionList: [
-              { brand: "Chromium", version: `${major}.0.0.0` },
-              { brand: "Google Chrome", version: `${major}.0.0.0` },
-              { brand: "Not?A_Brand", version: "99.0.0.0" },
+              { brand: "Not(A:Brand", version: "99.0.0.0" },
+              { brand: "Google Chrome", version: "133.0.6943.98" },
+              { brand: "Chromium", version: "133.0.6943.98" },
             ],
             model: "",
             mobile: false,
@@ -381,7 +404,11 @@ function matchChromePageValues(): void {
             { name: "PDF Viewer", filename: "internal-pdf-viewer", description: "Portable Document Format" },
             { name: "Chrome PDF Viewer", filename: "internal-pdf-viewer", description: "Portable Document Format" },
             { name: "Chromium PDF Viewer", filename: "internal-pdf-viewer", description: "Portable Document Format" },
-            { name: "Microsoft Edge PDF Viewer", filename: "internal-pdf-viewer", description: "Portable Document Format" },
+            {
+              name: "Microsoft Edge PDF Viewer",
+              filename: "internal-pdf-viewer",
+              description: "Portable Document Format",
+            },
             { name: "WebKit built-in PDF", filename: "internal-pdf-viewer", description: "Portable Document Format" },
           ];
           const mimeData = [
@@ -472,10 +499,16 @@ function matchChromePageValues(): void {
             });
           };
 
-          if ("WebGLRenderingContext" in env && (env as { WebGLRenderingContext?: { prototype?: unknown } }).WebGLRenderingContext?.prototype) {
+          if (
+            "WebGLRenderingContext" in env &&
+            (env as { WebGLRenderingContext?: { prototype?: unknown } }).WebGLRenderingContext?.prototype
+          ) {
             patchWebGL((env as { WebGLRenderingContext: { prototype: unknown } }).WebGLRenderingContext.prototype);
           }
-          if ("WebGL2RenderingContext" in env && (env as { WebGL2RenderingContext?: { prototype?: unknown } }).WebGL2RenderingContext?.prototype) {
+          if (
+            "WebGL2RenderingContext" in env &&
+            (env as { WebGL2RenderingContext?: { prototype?: unknown } }).WebGL2RenderingContext?.prototype
+          ) {
             patchWebGL((env as { WebGL2RenderingContext: { prototype: unknown } }).WebGL2RenderingContext.prototype);
           }
         } catch {}
@@ -485,12 +518,21 @@ function matchChromePageValues(): void {
           const getMem = () => 8;
           natives.set(getConcurrency, "get hardwareConcurrency");
           natives.set(getMem, "get deviceMemory");
-          Object.defineProperty(navProto, "hardwareConcurrency", { get: getConcurrency, enumerable: true, configurable: true });
+          Object.defineProperty(navProto, "hardwareConcurrency", {
+            get: getConcurrency,
+            enumerable: true,
+            configurable: true,
+          });
           Object.defineProperty(navProto, "deviceMemory", { get: getMem, enumerable: true, configurable: true });
 
-          if ("screen" in env && env.screen) {
-            wrapGetter(env.screen as any, "colorDepth", () => 24);
-            wrapGetter(env.screen as any, "pixelDepth", () => 24);
+          const screenProto = (env as any).Screen?.prototype;
+          if (screenProto) {
+            wrapGetter(screenProto, "colorDepth", () => 24);
+            wrapGetter(screenProto, "pixelDepth", () => 24);
+            wrapGetter(screenProto, "width", () => 1920);
+            wrapGetter(screenProto, "height", () => 1080);
+            wrapGetter(screenProto, "availWidth", () => 1920);
+            wrapGetter(screenProto, "availHeight", () => 1040);
           }
         } catch {}
 
