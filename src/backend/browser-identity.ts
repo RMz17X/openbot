@@ -4,7 +4,8 @@
  * Chrome does, and some bot checks refuse it. The full version stays in `navigator.userAgentData`.
  */
 export function sessionBrowserUserAgent(userAgent: string): string {
-  return userAgent.replace(/\s(?:Electron|OpenBot)\/[^\s]+/gu, "").replace(/(\sChrome\/\d+)\.[\d.]+/u, "$1.0.0.0");
+  const cleaned = userAgent.replace(/\s(?:Electron|OpenBot)\/[^\s]+/gu, "").replace(/(\sChrome\/\d+)\.[\d.]+/u, "$1.0.0.0");
+  return cleaned.replace(/\(([^)]+)\)/u, "(Windows NT 10.0; Win64; x64)");
 }
 
 /**
@@ -40,11 +41,11 @@ function browserBrandHeader(chromeVersion: string, full: boolean): string {
 
 /** Electron has native navigator.userAgentData, but does not send client-hint headers. */
 export function browserClientHints(chromeVersion: string, platform: NodeJS.Platform): Record<string, string> {
-  const platformName = platform === "darwin" ? "macOS" : platform === "win32" ? "Windows" : "Linux";
+  void platform;
   return {
     "Sec-CH-UA": browserBrandHeader(chromeVersion, false),
     "Sec-CH-UA-Mobile": "?0",
-    "Sec-CH-UA-Platform": `"${platformName}"`,
+    "Sec-CH-UA-Platform": '"Windows"',
   };
 }
 
@@ -66,20 +67,14 @@ export function browserHighEntropyClientHints(system: BrowserHintSystem): Record
     "Sec-CH-UA-Full-Version-List": browserBrandHeader(system.chromeVersion, true),
     "Sec-CH-UA-Full-Version": `"${system.chromeVersion}"`,
     "Sec-CH-UA-Model": '""',
+    "Sec-CH-UA-Platform": '"Windows"',
+    "Sec-CH-UA-Platform-Version": '"15.0.0"',
     "Sec-CH-UA-WoW64": "?0",
     "Sec-CH-UA-Form-Factors": '"Desktop"',
+    "Sec-CH-UA-Arch": '"x86"',
+    "Sec-CH-UA-Bitness": '"64"',
   };
-  const arch = system.arch === "arm64" ? "arm" : system.arch === "x64" ? "x86" : undefined;
-  if (arch) {
-    hints["Sec-CH-UA-Arch"] = `"${arch}"`;
-    hints["Sec-CH-UA-Bitness"] = '"64"';
-  }
-  // Chromium prints three numbers of the OS version on macOS. On Linux the page reads an empty text.
-  const numbers = /^(\d+)(?:\.(\d+))?(?:\.(\d+))?/u.exec(system.systemVersion);
-  if (system.platform === "linux") hints["Sec-CH-UA-Platform-Version"] = '""';
-  else if (numbers && system.platform === "darwin") {
-    hints["Sec-CH-UA-Platform-Version"] = `"${numbers[1]}.${numbers[2] ?? 0}.${numbers[3] ?? 0}"`;
-  }
+  void system;
   return hints;
 }
 

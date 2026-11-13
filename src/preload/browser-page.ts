@@ -22,11 +22,11 @@ function matchChromePageValues(): void {
   // A masked `toString` called on an object with this key puts its map of replaced functions in
   // the object, so that the frames of one page share one map. A native `toString` throws instead.
   const nativesRequest = "matchChromePageValues:natives";
-  const onWindows = navigator.userAgent.includes("Windows");
-  const onMac = navigator.userAgent.includes("Macintosh");
+  const onWindows = true;
+  const onMac = false;
   // The window frame and toolbar of a Chrome window with no bookmarks bar.
-  const frameWidth = onWindows ? 16 : 0;
-  const toolbarHeight = onWindows ? 87 : 85;
+  const frameWidth = 16;
+  const toolbarHeight = 87;
 
   const isGlobal = (value: Window | null): value is Window & typeof globalThis => {
     try {
@@ -214,12 +214,25 @@ function matchChromePageValues(): void {
         return "cannot_run";
       },
     };
+    const runtime = {
+      connect() {},
+      sendMessage() {},
+      id: undefined,
+      OnInstalledReason: { CHROME_UPDATE: "chrome_update", INSTALL: "install", SHARED_MODULE_UPDATE: "shared_module_update", UPDATE: "update" },
+      OnRestartRequiredReason: { APP_UPDATE: "app_update", OS_UPDATE: "os_update", PERIODIC: "periodic" },
+      PlatformArch: { ARM: "arm", ARM64: "arm64", MIPS: "mips", MIPS64: "mips64", X86_32: "x86-32", X86_64: "x86-64" },
+      PlatformNaclArch: { ARM: "arm", MIPS: "mips", MIPS64: "mips64", X86_32: "x86-32", X86_64: "x86-64" },
+      PlatformOs: { ANDROID: "android", CROS: "cros", LINUX: "linux", MAC: "mac", OPENBSD: "openbsd", WIN: "win" },
+      RequestUpdateCheckStatus: { NO_UPDATE: "no_update", THROTTLED: "throttled", UPDATE_AVAILABLE: "update_available" },
+    };
     for (const name of ["getDetails", "getIsInstalled", "installState", "runningState"] as const) {
       natives.set(app[name], name);
     }
+    natives.set(runtime.connect, "connect");
+    natives.set(runtime.sendMessage, "sendMessage");
     natives.set(methods.loadTimes, "loadTimes");
     natives.set(methods.csi, "csi");
-    return { loadTimes: methods.loadTimes, csi: methods.csi, app };
+    return { loadTimes: methods.loadTimes, csi: methods.csi, app, runtime };
   };
 
   const install = (target: typeof globalThis): void => {
@@ -254,6 +267,273 @@ function matchChromePageValues(): void {
     if (chrome !== existing) {
       Object.defineProperty(target, "chrome", { value: chrome, writable: true, enumerable: true, configurable: true });
     }
+
+    const installStealth = (env: typeof globalThis): void => {
+      try {
+        const nav = env.navigator;
+        const navProto = env.Navigator?.prototype;
+        if (!nav || !navProto) return;
+
+        try {
+          const getWebdriver = () => false;
+          natives.set(getWebdriver, "get webdriver");
+          Object.defineProperty(navProto, "webdriver", {
+            get: getWebdriver,
+            set: undefined,
+            enumerable: true,
+            configurable: true,
+          });
+        } catch {}
+
+        try {
+          const getPlatform = () => "Win32";
+          natives.set(getPlatform, "get platform");
+          Object.defineProperty(navProto, "platform", {
+            get: getPlatform,
+            enumerable: true,
+            configurable: true,
+          });
+        } catch {}
+
+        try {
+          const rawUA = nav.userAgent || "";
+          const cleanUA = rawUA
+            .replace(/\s(?:Electron|OpenBot)\/[^\s]+/gu, "")
+            .replace(/(\sChrome\/\d+)\.[\d.]+/u, "$1.0.0.0")
+            .replace(/\(([^)]+)\)/u, "(Windows NT 10.0; Win64; x64)");
+          const getUA = () => cleanUA;
+          natives.set(getUA, "get userAgent");
+          Object.defineProperty(navProto, "userAgent", {
+            get: getUA,
+            enumerable: true,
+            configurable: true,
+          });
+          const getAppVersion = () => cleanUA.replace(/^Mozilla\//u, "");
+          natives.set(getAppVersion, "get appVersion");
+          Object.defineProperty(navProto, "appVersion", {
+            get: getAppVersion,
+            enumerable: true,
+            configurable: true,
+          });
+        } catch {}
+
+        try {
+          const rawUA = nav.userAgent || "";
+          const match = /Chrome\/(\d+)/.exec(rawUA);
+          const major = match ? match[1] : "130";
+          const brands = [
+            { brand: "Chromium", version: major },
+            { brand: "Google Chrome", version: major },
+            { brand: "Not?A_Brand", version: "99" },
+          ];
+          const highEntropyValues: Record<string, unknown> = {
+            architecture: "x86",
+            bitness: "64",
+            brands,
+            formFactors: ["Desktop"],
+            fullVersionList: [
+              { brand: "Chromium", version: `${major}.0.0.0` },
+              { brand: "Google Chrome", version: `${major}.0.0.0` },
+              { brand: "Not?A_Brand", version: "99.0.0.0" },
+            ],
+            model: "",
+            mobile: false,
+            platform: "Windows",
+            platformVersion: "15.0.0",
+            wow64: false,
+          };
+          const getHighEntropyValues = (hints: string[]) => {
+            const result: Record<string, unknown> = {
+              brands,
+              mobile: false,
+              platform: "Windows",
+            };
+            if (Array.isArray(hints)) {
+              for (const hint of hints) {
+                if (hint in highEntropyValues) {
+                  result[hint] = highEntropyValues[hint];
+                }
+              }
+            }
+            return env.Promise.resolve(result);
+          };
+          const toJSON = () => ({ brands, mobile: false, platform: "Windows" });
+          natives.set(getHighEntropyValues, "getHighEntropyValues");
+          natives.set(toJSON, "toJSON");
+          const uad = {
+            brands,
+            mobile: false,
+            platform: "Windows",
+            getHighEntropyValues,
+            toJSON,
+          };
+          const getUAD = () => uad;
+          natives.set(getUAD, "get userAgentData");
+          Object.defineProperty(navProto, "userAgentData", {
+            get: getUAD,
+            enumerable: true,
+            configurable: true,
+          });
+        } catch {}
+
+        try {
+          const pluginData = [
+            { name: "PDF Viewer", filename: "internal-pdf-viewer", description: "Portable Document Format" },
+            { name: "Chrome PDF Viewer", filename: "internal-pdf-viewer", description: "Portable Document Format" },
+            { name: "Chromium PDF Viewer", filename: "internal-pdf-viewer", description: "Portable Document Format" },
+            { name: "Microsoft Edge PDF Viewer", filename: "internal-pdf-viewer", description: "Portable Document Format" },
+            { name: "WebKit built-in PDF", filename: "internal-pdf-viewer", description: "Portable Document Format" },
+          ];
+          const mimeData = [
+            { type: "application/pdf", suffixes: "pdf", description: "Portable Document Format" },
+            { type: "text/pdf", suffixes: "pdf", description: "Portable Document Format" },
+          ];
+
+          const pProto = env.PluginArray ? env.PluginArray.prototype : Object.prototype;
+          const mProto = env.MimeTypeArray ? env.MimeTypeArray.prototype : Object.prototype;
+          const pluginsObj: Record<string | number, unknown> = Object.create(pProto);
+          const mimeTypesObj: Record<string | number, unknown> = Object.create(mProto);
+
+          pluginData.forEach((p, idx) => {
+            const plugin: Record<string, unknown> = env.Plugin ? Object.create(env.Plugin.prototype) : {};
+            Object.defineProperties(plugin, {
+              name: { value: p.name, enumerable: true },
+              filename: { value: p.filename, enumerable: true },
+              description: { value: p.description, enumerable: true },
+              length: { value: mimeData.length, enumerable: true },
+            });
+            pluginsObj[idx] = plugin;
+            pluginsObj[p.name] = plugin;
+          });
+          pluginsObj.length = pluginData.length;
+          const itemFn = (idx: number) => pluginsObj[idx] ?? null;
+          const namedItemFn = (name: string) => pluginsObj[name] ?? null;
+          const refreshFn = () => {};
+          natives.set(itemFn, "item");
+          natives.set(namedItemFn, "namedItem");
+          natives.set(refreshFn, "refresh");
+          pluginsObj.item = itemFn;
+          pluginsObj.namedItem = namedItemFn;
+          pluginsObj.refresh = refreshFn;
+
+          mimeData.forEach((m, idx) => {
+            const mime: Record<string, unknown> = env.MimeType ? Object.create(env.MimeType.prototype) : {};
+            Object.defineProperties(mime, {
+              type: { value: m.type, enumerable: true },
+              suffixes: { value: m.suffixes, enumerable: true },
+              description: { value: m.description, enumerable: true },
+              enabledPlugin: { value: pluginsObj[0], enumerable: true },
+            });
+            mimeTypesObj[idx] = mime;
+            mimeTypesObj[m.type] = mime;
+          });
+          mimeTypesObj.length = mimeData.length;
+          const mimeItemFn = (idx: number) => mimeTypesObj[idx] ?? null;
+          const mimeNamedItemFn = (name: string) => mimeTypesObj[name] ?? null;
+          natives.set(mimeItemFn, "item");
+          natives.set(mimeNamedItemFn, "namedItem");
+          mimeTypesObj.item = mimeItemFn;
+          mimeTypesObj.namedItem = mimeNamedItemFn;
+
+          const getPlugins = () => pluginsObj;
+          const getMimes = () => mimeTypesObj;
+          natives.set(getPlugins, "get plugins");
+          natives.set(getMimes, "get mimeTypes");
+          Object.defineProperty(navProto, "plugins", { get: getPlugins, enumerable: true, configurable: true });
+          Object.defineProperty(navProto, "mimeTypes", { get: getMimes, enumerable: true, configurable: true });
+        } catch {}
+
+        try {
+          const patchWebGL = (glProto: unknown): void => {
+            if (!glProto || typeof (glProto as { getParameter?: unknown }).getParameter !== "function") return;
+            const originalGetParam = (glProto as { getParameter: (...args: unknown[]) => unknown }).getParameter;
+            const getParameterProxy = new Proxy(originalGetParam, {
+              apply: (method, self: unknown, args: unknown[]) => {
+                const param = args[0];
+                if (param === 37445) return "Google Inc. (NVIDIA)";
+                if (param === 37446) return "ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Direct3D11 vs_5_0 ps_5_0, D3D11)";
+                if (param === 7936) return "WebKit";
+                if (param === 7937) return "WebKit WebGL";
+                if (param === 35724) return "WebGL GLSL ES 1.0 (OpenGL ES GLSL ES 1.0 Chromium)";
+                try {
+                  return method.apply(self, args);
+                } catch (error) {
+                  removeTrapFrame(error);
+                  throw error;
+                }
+              },
+            });
+            natives.set(getParameterProxy, "getParameter");
+            Object.defineProperty(glProto, "getParameter", {
+              value: getParameterProxy,
+              writable: true,
+              enumerable: false,
+              configurable: true,
+            });
+          };
+
+          if ("WebGLRenderingContext" in env && (env as { WebGLRenderingContext?: { prototype?: unknown } }).WebGLRenderingContext?.prototype) {
+            patchWebGL((env as { WebGLRenderingContext: { prototype: unknown } }).WebGLRenderingContext.prototype);
+          }
+          if ("WebGL2RenderingContext" in env && (env as { WebGL2RenderingContext?: { prototype?: unknown } }).WebGL2RenderingContext?.prototype) {
+            patchWebGL((env as { WebGL2RenderingContext: { prototype: unknown } }).WebGL2RenderingContext.prototype);
+          }
+        } catch {}
+
+        try {
+          const getConcurrency = () => 16;
+          const getMem = () => 8;
+          natives.set(getConcurrency, "get hardwareConcurrency");
+          natives.set(getMem, "get deviceMemory");
+          Object.defineProperty(navProto, "hardwareConcurrency", { get: getConcurrency, enumerable: true, configurable: true });
+          Object.defineProperty(navProto, "deviceMemory", { get: getMem, enumerable: true, configurable: true });
+
+          if ("screen" in env && env.screen) {
+            wrapGetter(env.screen as any, "colorDepth", () => 24);
+            wrapGetter(env.screen as any, "pixelDepth", () => 24);
+          }
+        } catch {}
+
+        try {
+          if ("Notification" in env) {
+            wrapGetter(env.Notification as any, "permission", () => "default");
+          }
+          if ("permissions" in nav && (nav as { permissions?: { query?: unknown } }).permissions) {
+            const permProto = Object.getPrototypeOf((nav as { permissions: object }).permissions);
+            if (permProto && typeof (permProto as { query?: unknown }).query === "function") {
+              const originalQuery = (permProto as { query: (...args: unknown[]) => unknown }).query;
+              const queryProxy = new Proxy(originalQuery, {
+                apply: (method, self: unknown, args: unknown[]) => {
+                  const name = (args[0] as { name?: string } | undefined)?.name;
+                  if (name === "notifications") {
+                    return env.Promise.resolve({
+                      name: "notifications",
+                      state: "prompt",
+                      onchange: null,
+                    });
+                  }
+                  try {
+                    return method.apply(self, args);
+                  } catch (error) {
+                    removeTrapFrame(error);
+                    throw error;
+                  }
+                },
+              });
+              natives.set(queryProxy, "query");
+              Object.defineProperty(permProto, "query", {
+                value: queryProxy,
+                writable: true,
+                enumerable: true,
+                configurable: true,
+              });
+            }
+          }
+        } catch {}
+      } catch {}
+    };
+
+    installStealth(target);
 
     const innerSize = (key: "innerWidth" | "innerHeight"): number => {
       try {
