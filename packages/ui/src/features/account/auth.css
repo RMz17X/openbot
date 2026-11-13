@@ -1647,3 +1647,16 @@ body,
   flex: 0 0 auto;
   stroke-width: var(--openbot-icon-stroke);
 }
+
+/* The public address of the WebUI, the way out of a page without a secure context. */
+.direct-login-public-link {
+  color: var(--openbot-text-primary);
+  font-size: var(--openbot-text-sm);
+  line-height: var(--openbot-leading-sm);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.direct-login-public-link:hover {
+  color: var(--openbot-text-secondary);
+}

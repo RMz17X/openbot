@@ -75,7 +75,15 @@ export const messages = defineMessages("webClient", {
   "webClient.error.attachmentLimit": "A message can have up to {limit} attachments.",
   "webClient.error.linkBlocked": "This link cannot be opened.",
   "webClient.error.fileTransfer": "File transfer failed.",
-  "webClient.error.noLocks": "This browser cannot protect the server connection. Use a current desktop browser.",
+  "webClient.error.noLocks":
+    "This page needs HTTPS. The Web Locks API does not exist on a plain HTTP page. Open the WebUI over https://openbot.jetstream.web.id/ instead.",
+  "webClient.error.insecureContext.title": "This page needs HTTPS",
+  "webClient.error.insecureContext.description":
+    "The WebUI protects its connection to the server with the Web Locks API, which a plain HTTP page does not have.",
+  "webClient.error.insecureContext.missingLocks":
+    "The Web Locks API is missing here, so the connection cannot start. Open the WebUI over HTTPS.",
+  "webClient.error.insecureContext.missingRandomUUID":
+    "crypto.randomUUID is missing here, so the requests cannot be named. Open the WebUI over HTTPS.",
   "webClient.error.otherTab": "This server is open in another tab. Close that connection before trying again.",
   "webClient.error.connectionClosed": "The browser connection is closed.",
   "webClient.error.hostChanged": "The selected server changed.",

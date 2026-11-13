@@ -75,7 +75,15 @@ export const messages = {
   "webClient.error.attachmentLimit": "메시지에는 첨부 파일을 최대 {limit}개까지 넣을 수 있어요.",
   "webClient.error.linkBlocked": "이 링크는 열 수 없어요.",
   "webClient.error.fileTransfer": "파일 전송에 실패했어요.",
-  "webClient.error.noLocks": "이 브라우저는 서버 연결을 보호할 수 없어요. 최신 데스크톱 브라우저를 사용해 주세요.",
+  "webClient.error.noLocks":
+    "이 페이지에는 HTTPS가 필요해요. 일반 HTTP 페이지에는 Web Locks API가 없어요. 대신 https://openbot.jetstream.web.id/ 로 WebUI를 열어 주세요.",
+  "webClient.error.insecureContext.title": "이 페이지에는 HTTPS가 필요해요",
+  "webClient.error.insecureContext.description":
+    "WebUI는 서버 연결을 Web Locks API로 보호하지만, 일반 HTTP 페이지에는 그 API가 없어요.",
+  "webClient.error.insecureContext.missingLocks":
+    "여기에는 Web Locks API가 없어서 연결을 시작할 수 없어요. HTTPS로 WebUI를 열어 주세요.",
+  "webClient.error.insecureContext.missingRandomUUID":
+    "여기에는 crypto.randomUUID가 없어서 요청에 이름을 붙일 수 없어요. HTTPS로 WebUI를 열어 주세요.",
   "webClient.error.otherTab": "이 서버가 다른 탭에서 열려 있어요. 해당 연결을 닫은 후 다시 시도해 주세요.",
   "webClient.error.connectionClosed": "브라우저 연결이 닫혔어요.",
   "webClient.error.hostChanged": "선택한 서버가 바뀌었어요.",

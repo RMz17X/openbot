@@ -73,7 +73,14 @@ export const messages = {
   "webClient.error.attachmentLimit": "一条消息最多可附带 {limit} 个附件。",
   "webClient.error.linkBlocked": "无法打开该链接。",
   "webClient.error.fileTransfer": "文件传输失败。",
-  "webClient.error.noLocks": "该浏览器无法保护服务器连接，请使用较新的桌面浏览器。",
+  "webClient.error.noLocks":
+    "此页面需要 HTTPS。普通的 HTTP 页面没有 Web Locks API。请改用 https://openbot.jetstream.web.id/ 打开 WebUI。",
+  "webClient.error.insecureContext.title": "此页面需要 HTTPS",
+  "webClient.error.insecureContext.description":
+    "WebUI 使用 Web Locks API 保护与服务器的连接，而普通的 HTTP 页面没有该 API。",
+  "webClient.error.insecureContext.missingLocks": "此处缺少 Web Locks API，因此连接无法建立。请通过 HTTPS 打开 WebUI。",
+  "webClient.error.insecureContext.missingRandomUUID":
+    "此处缺少 crypto.randomUUID，因此无法为请求命名。请通过 HTTPS 打开 WebUI。",
   "webClient.error.otherTab": "该服务器已在另一个标签页中打开，请先关闭那个连接再重试。",
   "webClient.error.connectionClosed": "浏览器连接已关闭。",
   "webClient.error.hostChanged": "所选服务器已更改。",

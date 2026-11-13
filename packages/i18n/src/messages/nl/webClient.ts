@@ -78,7 +78,14 @@ export const messages = {
   "webClient.error.linkBlocked": "Deze link kan niet worden geopend.",
   "webClient.error.fileTransfer": "Bestandsoverdracht mislukt.",
   "webClient.error.noLocks":
-    "Deze browser kan de serververbinding niet beschermen. Gebruik een actuele desktopbrowser.",
+    "Deze pagina heeft HTTPS nodig. De Web Locks API bestaat niet op een gewone HTTP-pagina. Open de WebUI in plaats daarvan via https://openbot.jetstream.web.id/.",
+  "webClient.error.insecureContext.title": "Deze pagina heeft HTTPS nodig",
+  "webClient.error.insecureContext.description":
+    "De WebUI beveiligt zijn verbinding met de server met de Web Locks API, die een gewone HTTP-pagina niet heeft.",
+  "webClient.error.insecureContext.missingLocks":
+    "De Web Locks API ontbreekt hier, dus de verbinding kan niet starten. Open de WebUI via HTTPS.",
+  "webClient.error.insecureContext.missingRandomUUID":
+    "crypto.randomUUID ontbreekt hier, dus de verzoeken kunnen geen naam krijgen. Open de WebUI via HTTPS.",
   "webClient.error.otherTab":
     "Deze server is geopend in een ander tabblad. Sluit die verbinding voordat je het opnieuw probeert.",
   "webClient.error.connectionClosed": "De browserverbinding is gesloten.",

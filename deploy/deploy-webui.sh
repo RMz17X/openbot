@@ -21,6 +21,9 @@ DIST_DIR="${WEBUI_DIR}/dist"
 
 CONTAINER="${OPENBOT_CONTAINER:-openbot-vm}"
 CONTAINER_WEBROOT="${OPENBOT_WEBROOT:-/var/www/openbot-webui}"
+# The daemon's own copy of the bundle. The daemon serves the web client itself from here, and
+# nginx proxies to the daemon, so this is the copy the browser is served.
+DAEMON_WEBROOT="${OPENBOT_DAEMON_WEBROOT:-/home/openbot/openbot-daemon/resources/webui}"
 HOST_URL="${OPENBOT_URL:-http://100.81.73.83:28420}"
 
 RESTART_DAEMON=0
@@ -97,10 +100,16 @@ done
 
 # The swap runs inside the container, so the old bundle and the new one are on the same filesystem
 # and the move is a rename rather than a copy.
-incus exec "${CONTAINER}" -- bash -s -- "${STAGE_DIR}" "${CONTAINER_WEBROOT}" <<'SWAP' || fail "the bundle swap in ${CONTAINER} failed"
+#
+# The bundle lands in two places. The daemon serves its own copy from
+# `resources/webui` (that is where `webUiRoot()` looks), and nginx proxies to the daemon, so
+# that copy is the one the browser gets. The static root `/var/www/openbot-webui` is kept in step
+# for the nginx configuration that serves the bundle itself.
+incus exec "${CONTAINER}" -- bash -s -- "${STAGE_DIR}" "${CONTAINER_WEBROOT}" "${DAEMON_WEBROOT}" <<'SWAP' || fail "the bundle swap in ${CONTAINER} failed"
 set -euo pipefail
 stage="$1"
 root="$2"
+daemon_root="$3"
 
 # The web root is a directory. A symlink into the shared workspace is replaced by a real
 # directory, so the push cannot write through it into the workspace.
@@ -121,6 +130,20 @@ mv "${stage}" "${root}"
 chmod 0755 "${root}"
 chmod -R a+rX "${root}"
 rm -rf "${previous}"
+
+# The daemon's own copy, which is the one the browser is served. The daemon reads the bundle
+# from disk on every request, so it does not have to be restarted for the new bundle to answer.
+if [ -n "${daemon_root}" ] && [ -d "$(dirname "${daemon_root}")" ]; then
+  daemon_previous="${daemon_root}.previous"
+  rm -rf "${daemon_previous}"
+  if [ -d "${daemon_root}" ]; then
+    mv "${daemon_root}" "${daemon_previous}"
+  fi
+  mkdir -p "$(dirname "${daemon_root}")"
+  cp -a "${root}" "${daemon_root}"
+  chmod -R a+rX "${daemon_root}"
+  rm -rf "${daemon_previous}"
+fi
 SWAP
 
 # --- nginx -----------------------------------------------------------------------------------

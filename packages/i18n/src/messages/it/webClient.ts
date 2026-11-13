@@ -77,7 +77,14 @@ export const messages = {
   "webClient.error.linkBlocked": "Impossibile aprire questo link.",
   "webClient.error.fileTransfer": "Trasferimento del file non riuscito.",
   "webClient.error.noLocks":
-    "Questo browser non può proteggere la connessione al server. Usa un browser desktop aggiornato.",
+    "Questa pagina richiede HTTPS. La Web Locks API non esiste in una normale pagina HTTP. Apri invece la WebUI tramite https://openbot.jetstream.web.id/.",
+  "webClient.error.insecureContext.title": "Questa pagina richiede HTTPS",
+  "webClient.error.insecureContext.description":
+    "La WebUI protegge la sua connessione al server con la Web Locks API, che una normale pagina HTTP non ha.",
+  "webClient.error.insecureContext.missingLocks":
+    "La Web Locks API manca qui, quindi la connessione non può avviarsi. Apri la WebUI via HTTPS.",
+  "webClient.error.insecureContext.missingRandomUUID":
+    "crypto.randomUUID manca qui, quindi le richieste non possono essere nominate. Apri la WebUI via HTTPS.",
   "webClient.error.otherTab":
     "Questo server è aperto in un'altra scheda. Chiudi quella connessione prima di riprovare.",
   "webClient.error.connectionClosed": "La connessione del browser è chiusa.",

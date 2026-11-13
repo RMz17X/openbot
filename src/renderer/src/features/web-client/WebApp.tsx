@@ -20,7 +20,6 @@ import { AccountLogin } from "@openbot/ui/features/account/AccountLogin";
 import { AppLoadingScreen } from "@openbot/ui/features/account/AppLoadingScreen";
 import { DirectLogin } from "@openbot/ui/features/account/DirectLogin";
 import { currentText } from "@openbot/ui/text";
-import { Dynamic } from "@solidjs/web";
 import { createEffect, createSignal, createStore, onSettled, Show } from "solid-js";
 import type { DesktopAnalyticsProperties } from "../../analytics";
 import {
@@ -41,12 +40,15 @@ import { WebLanguageStep } from "./WebLanguageStep";
 import type { WebWorkspace } from "./WebWorkspace";
 import { createWebAccountCalls } from "./web-account";
 import { deleteSavedAgentPictures } from "./web-agent-pictures";
+import { WebAppWorkspace } from "./web-app-workspace";
 import { createWebAppearancePreference } from "./web-appearance-preference";
 import { takeWebAppStart, WEB_APP_BILLING_PARAM, type WebAppStart } from "./web-billing";
 import type { WebRuntimeFactory } from "./web-client-context";
 import { DIRECT_HOST_USERNAME, readDirectSession, signInDirect, signOutDirect } from "./web-direct-session";
 import { takeHostingReturn } from "./web-hosted-servers";
+import { InsecureContextNoticeWhen } from "./web-insecure-context-notice";
 import { createWebLanguagePreference } from "./web-language-preference";
+import { missingSecureApi } from "./web-secure-context";
 
 // The site loads this before it mounts `WebApp` (`apps/auth-api/src/routes/app.lazy.tsx`).
 export { loadSavedLanguage } from "./web-language-preference";
@@ -581,103 +583,108 @@ export function WebApp(props: { createRuntime?: WebRuntimeFactory } = {}) {
       <NotificationObserver onShown={reportNotification}>
         <div class="web-app">
           <Toaster onToastShown={reportNotification} />
-          <Show when={state.loaded}>
-            <Show
-              keyed
-              when={state.account?.id}
-              fallback={
+          <Show
+            when={missingSecureApi()}
+            keyed
+            fallback={
+              <Show when={state.loaded}>
                 <Show
-                  when={!useDirect}
-                  fallback={<DirectLogin onLogin={directSignIn} initialUsername={DIRECT_HOST_USERNAME} />}
-                >
-                  <Show
-                    when={!languageWheelOpen()}
-                    fallback={
-                      <WebLanguageStep
-                        variant={variant}
-                        language={languagePreference.language()}
-                        onChangeLanguage={languagePreference.setLanguage}
-                        onDone={() => setLanguageWheelOpen(false)}
-                      />
-                    }
-                  >
-                    <AccountLogin
-                      variant={variant}
-                      language={resolveLocale(languagePreference.language(), navigator.language)}
-                      onChangeLanguage={() => setLanguageWheelOpen(true)}
-                      state={state.login}
-                      onRetry={checkSession}
-                      onRequestEmailCode={start}
-                      onVerifyEmailCode={verify}
-                      onOpenCompanySignIn={() =>
-                        state.login.status === "company_sign_in"
-                          ? openCompanySignIn(state.login.email)
-                          : Promise.resolve()
-                      }
-                      onReset={async () => {
-                        clearSession();
-                        setState((draft) => {
-                          draft.resendAt = 0;
-                        });
-                      }}
-                      consent={
-                        <Show when={!analyticsAgreed()}>
-                          <AnalyticsConsentRow
-                            class="web-consent-row"
-                            checked={analyticsChoice()}
-                            agents={consentAgents}
-                            onChange={(checked) => {
-                              analyticsTouched = true;
-                              setAnalyticsChoice(checked);
-                            }}
+                  keyed
+                  when={state.account?.id}
+                  fallback={
+                    <Show
+                      when={!useDirect}
+                      fallback={<DirectLogin onLogin={directSignIn} initialUsername={DIRECT_HOST_USERNAME} />}
+                    >
+                      <Show
+                        when={!languageWheelOpen()}
+                        fallback={
+                          <WebLanguageStep
+                            variant={variant}
+                            language={languagePreference.language()}
+                            onChangeLanguage={languagePreference.setLanguage}
+                            onDone={() => setLanguageWheelOpen(false)}
                           />
-                        </Show>
-                      }
-                      notice={
-                        <ConsentNotice
-                          onOpenTerms={() => window.open("/terms", "_blank", "noopener")}
-                          onOpenPrivacy={() => window.open("/privacy", "_blank", "noopener")}
+                        }
+                      >
+                        <AccountLogin
+                          variant={variant}
+                          language={resolveLocale(languagePreference.language(), navigator.language)}
+                          onChangeLanguage={() => setLanguageWheelOpen(true)}
+                          state={state.login}
+                          onRetry={checkSession}
+                          onRequestEmailCode={start}
+                          onVerifyEmailCode={verify}
+                          onOpenCompanySignIn={() =>
+                            state.login.status === "company_sign_in"
+                              ? openCompanySignIn(state.login.email)
+                              : Promise.resolve()
+                          }
+                          onReset={async () => {
+                            clearSession();
+                            setState((draft) => {
+                              draft.resendAt = 0;
+                            });
+                          }}
+                          consent={
+                            <Show when={!analyticsAgreed()}>
+                              <AnalyticsConsentRow
+                                class="web-consent-row"
+                                checked={analyticsChoice()}
+                                agents={consentAgents}
+                                onChange={(checked) => {
+                                  analyticsTouched = true;
+                                  setAnalyticsChoice(checked);
+                                }}
+                              />
+                            </Show>
+                          }
+                          notice={
+                            <ConsentNotice
+                              onOpenTerms={() => window.open("/terms", "_blank", "noopener")}
+                              onOpenPrivacy={() => window.open("/privacy", "_blank", "noopener")}
+                            />
+                          }
                         />
-                      }
+                      </Show>
+                    </Show>
+                  }
+                >
+                  {(accountId) => (
+                    <WebAppWorkspace
+                      accountId={accountId}
+                      account={state.account}
+                      workspace={workspace()}
+                      accountFetch={accountFetch}
+                      onSessionCheck={checkSession}
+                      accountSessionEnded={() => sessionEnded}
+                      onLogout={logout}
+                      createRuntime={props.createRuntime}
+                      agentTemplateId={agentTemplateId()}
+                      onAgentTemplateClose={() => setAgentTemplateId(null)}
+                      inviteUrl={inviteUrl()}
+                      onInviteClose={() => setInviteUrl(null)}
+                      pluginSlug={pluginSlug()}
+                      onPluginSlugConsumed={() => setPluginSlug(null)}
+                      marketplaceListing={marketplaceListing()}
+                      onMarketplaceListingConsumed={() => setMarketplaceListing(null)}
+                      start={startLink()}
+                      onStartConsumed={() => setStartLink(null)}
+                      billingReturn={billingReturn()}
+                      onBillingReturnConsumed={() => setBillingReturn(false)}
+                      hostingReturn={hostingReturn()}
+                      onHostingReturnConsumed={() => setHostingReturn(null)}
+                      language={languagePreference.language()}
+                      onChangeLanguage={languagePreference.setLanguage}
+                      appearance={appearancePreference.appearance()}
+                      onChangeAppearance={appearancePreference.setAppearance}
                     />
-                  </Show>
+                  )}
                 </Show>
-              }
-            >
-              {(accountId) => (
-                <Dynamic
-                  component={workspace()}
-                  accountId={accountId}
-                  accountEmail={state.account?.email ?? ""}
-                  accountName={state.account?.name ?? null}
-                  accountAvatarUrl={state.account?.avatarUrl ?? null}
-                  accountChatColor={state.account?.chatColor ?? null}
-                  accountFetch={accountFetch}
-                  onSessionCheck={checkSession}
-                  accountSessionEnded={() => sessionEnded}
-                  onLogout={logout}
-                  createRuntime={props.createRuntime}
-                  agentTemplateId={agentTemplateId()}
-                  onAgentTemplateClose={() => setAgentTemplateId(null)}
-                  inviteUrl={inviteUrl()}
-                  onInviteClose={() => setInviteUrl(null)}
-                  pluginSlug={pluginSlug()}
-                  onPluginSlugConsumed={() => setPluginSlug(null)}
-                  marketplaceListing={marketplaceListing()}
-                  onMarketplaceListingConsumed={() => setMarketplaceListing(null)}
-                  start={startLink()}
-                  onStartConsumed={() => setStartLink(null)}
-                  billingReturn={billingReturn()}
-                  onBillingReturnConsumed={() => setBillingReturn(false)}
-                  hostingReturn={hostingReturn()}
-                  onHostingReturnConsumed={() => setHostingReturn(null)}
-                  language={languagePreference.language()}
-                  onChangeLanguage={languagePreference.setLanguage}
-                  appearance={appearancePreference.appearance()}
-                  onChangeAppearance={appearancePreference.setAppearance}
-                />
-              )}
-            </Show>
+              </Show>
+            }
+          >
+            {(missing) => <InsecureContextNoticeWhen missing={missing} />}
           </Show>
           <Show when={loadingShown()}>
             <AppLoadingScreen

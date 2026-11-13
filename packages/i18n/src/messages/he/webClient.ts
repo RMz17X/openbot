@@ -73,7 +73,15 @@ export const messages = {
   "webClient.error.attachmentLimit": "הודעה יכולה לכלול עד {limit} קבצים מצורפים.",
   "webClient.error.linkBlocked": "לא ניתן לפתוח את הקישור הזה.",
   "webClient.error.fileTransfer": "העברת הקובץ נכשלה.",
-  "webClient.error.noLocks": "הדפדפן הזה לא יכול להגן על החיבור לשרת. יש להשתמש בדפדפן עדכני למחשב.",
+  "webClient.error.noLocks":
+    "הדף הזה זקוק ל-HTTPS. ממשק Web Locks אינו קיים בדף HTTP רגיל. יש לפתוח את ה-WebUI בכתובת https://openbot.jetstream.web.id/ במקום.",
+  "webClient.error.insecureContext.title": "הדף הזה זקוק ל-HTTPS",
+  "webClient.error.insecureContext.description":
+    "ה-WebUI מגנה על החיבור שלו לשרת באמצעות ממשק Web Locks, שאינו קיים בדף HTTP רגיל.",
+  "webClient.error.insecureContext.missingLocks":
+    "ממשק Web Locks חסר כאן, ולכן החיבור לא יכול להתחיל. יש לפתוח את ה-WebUI דרך HTTPS.",
+  "webClient.error.insecureContext.missingRandomUUID":
+    "crypto.randomUUID חסר כאן, ולכן לא ניתן לתת שמות לבקשות. יש לפתוח את ה-WebUI דרך HTTPS.",
   "webClient.error.otherTab": "השרת הזה פתוח בלשונית אחרת. יש לסגור את החיבור הזה לפני ניסיון נוסף.",
   "webClient.error.connectionClosed": "חיבור הדפדפן נסגר.",
   "webClient.error.hostChanged": "השרת שנבחר השתנה.",

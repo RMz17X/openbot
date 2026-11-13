@@ -75,7 +75,15 @@ export const messages = {
   "webClient.error.attachmentLimit": "Bir mesaj en fazla {limit} eke sahip olabilir.",
   "webClient.error.linkBlocked": "Bu bağlantı açılamaz.",
   "webClient.error.fileTransfer": "Dosya aktarımı başarısız oldu.",
-  "webClient.error.noLocks": "Bu tarayıcı sunucu bağlantısını koruyamaz. Güncel bir masaüstü tarayıcısı kullanın.",
+  "webClient.error.noLocks":
+    "Bu sayfanın HTTPS'e ihtiyacı var. Web Locks API, normal bir HTTP sayfasında bulunmaz. Bunun yerine WebUI'yi https://openbot.jetstream.web.id/ üzerinden açın.",
+  "webClient.error.insecureContext.title": "Bu sayfanın HTTPS'e ihtiyacı var",
+  "webClient.error.insecureContext.description":
+    "WebUI, sunucu bağlantısını Web Locks API ile korur; normal bir HTTP sayfasında bu API yoktur.",
+  "webClient.error.insecureContext.missingLocks":
+    "Burada Web Locks API yok, bu yüzden bağlantı başlayamaz. WebUI'yi HTTPS üzerinden açın.",
+  "webClient.error.insecureContext.missingRandomUUID":
+    "Burada crypto.randomUUID yok, bu yüzden istekler adlandırılamaz. WebUI'yi HTTPS üzerinden açın.",
   "webClient.error.otherTab": "Bu sunucu başka bir sekmede açık. Tekrar denemeden önce o bağlantıyı kapatın.",
   "webClient.error.connectionClosed": "Tarayıcı bağlantısı kapalı.",
   "webClient.error.hostChanged": "Seçilen sunucu değişti.",

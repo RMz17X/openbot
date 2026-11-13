@@ -540,11 +540,20 @@ interface WebConnectionDependencies {
  * The lock exists because the cloud account service gives one session per account, so two tabs
  * would fight over it. The direct mode has no shared session: the bearer token lives in one tab
  * and the Team API gives each tab a session of its own, so two tabs can hold the same host without
- * conflict. The lock also needs a secure context, which a page served over plain HTTP does not
- * have, so it would refuse the connection outright there.
+ * conflict.
+ *
+ * The lock still has a purpose in the direct mode: one tab speaks for a host, so the other tabs of
+ * the same browser learn its state instead of opening their own connection to it. The native lock
+ * gives that, and it needs a secure context, which a page served over plain HTTP does not have.
+ * The direct mode therefore uses the native lock as well, and a page without a secure context
+ * says so instead of stalling on "Connecting to ...".
  */
-async function acquireDirectHostLock(): Promise<() => void> {
-  return () => undefined;
+async function acquireDirectHostLock(
+  accountId: string,
+  hostId: string,
+  options: { wait?: AbortSignal } = {},
+): Promise<() => void> {
+  return acquireWebHostLock(accountId, hostId, options);
 }
 
 /** The fields of a move to another model at a usage limit. */

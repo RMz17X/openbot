@@ -9,16 +9,38 @@ stack is healthy, and how to pull in a new official upstream release.
 Open the WebUI in a browser:
 
 ```
+https://openbot.jetstream.web.id/
+```
+
+That is the public address. A Cloudflare Tunnel terminates the TLS and forwards to the Incus
+proxy `webui-proxy` on the host, which forwards to nginx inside `openbot-vm`. nginx reverse-proxies
+everything to the daemon, which serves the static bundle and the Team API on one port.
+
+**HTTPS is not a convenience here. The WebUI does not work over plain HTTP on any host that is
+not `localhost`.** The web client protects its connection to the server with the Web Locks API and
+names its requests with `crypto.randomUUID`, and a browser exposes both only in a secure context:
+on an HTTPS page, and on a trustworthy origin such as `localhost` or `127.0.0.1`. A plain HTTP
+page on any other host has neither.
+
+Over plain HTTP the page therefore says so, naming the address to open instead. It does not
+stall on "Connecting to ...". There is no polyfill: a polyfill would hide exactly the fact the
+operator has to know.
+
+### The LAN fallback
+
+```
 http://100.81.73.83:28420/
 ```
 
 That address is the Incus proxy `webui-proxy` on the host, which forwards to nginx inside
-`openbot-vm`. nginx serves the static bundle from `/var/www/openbot-webui` and reverse-proxies
-`/v1/` to the Team API.
+`openbot-vm`. nginx reverse-proxies `/v1/` to the Team API.
 
-The daemon also serves the web client itself, on the same port as the Team API. That is the
-path the desktop app and the Android app use, and it is why the Team API port can serve the
-bundle as well as the API. nginx in front of it is what the browser uses.
+It serves the page and the sign-in form, and the sign-in works. What it cannot do is open the
+workspace, because the connection needs the Web Locks API. Use it to reach the host when the
+public address is not available, and use the public address for the workspace.
+
+`localhost` and `127.0.0.1` are secure contexts even over plain HTTP, so a browser on the host
+itself is in the normal case.
 
 ### Signing in
 
@@ -233,7 +255,7 @@ has to re-apply. As of this writing it touches:
 
 ## 5. Known limits
 
-### The sign-in rate limit is global behind the reverse proxy
+### The sign-in rate limit is 5 attempts per 15 minutes, per address and user name
 
 The Team API counts sign-in attempts per source address plus user name. The constants are in
 `src/main/team-api-server.ts`:
@@ -243,23 +265,31 @@ RATE_LIMIT_WINDOW_MS = 15 * 60 * 1_000
 RATE_LIMIT_ATTEMPTS   = 5
 ```
 
-The daemon listens on a loopback port only, so every request reaches it through the nginx
-reverse proxy in the container. nginx forwards to the proxy from `127.0.0.1`, and the daemon
-sees `request.socket.remoteAddress` as `127.0.0.1` for every caller. **All sign-ins share one
-bucket per user name.**
+Five wrong sign-ins from one address lock that address out for 15 minutes. The counters live in
+an in-memory `Map`, so **a daemon restart is the only thing that clears them**.
 
-Six wrong sign-ins from one place lock out every other place for 15 minutes. The counters live
-in an in-memory `Map`, so the only way to clear them is a daemon restart.
+The address the daemon counts is the one the reverse proxy names in `X-Real-IP`. Three hops sit
+in front of the daemon and each of them loses the address on its own:
+
+1. The Cloudflare Tunnel terminates the TLS and connects to the local port.
+2. The Incus proxy device forwards the port into the container. It is a TCP proxy, so the source
+   address of the connection is the loopback address of the container.
+3. nginx is the last hop before the daemon.
+
+`deploy/openbot.conf` maps `CF-Connecting-IP` (the address the tunnel saw) and `X-Real-IP` (a
+direct LAN caller) onto the header the daemon reads, so the budget stays per caller. Without
+that map every caller through the tunnel shares one budget, and five runs of the verification
+script would lock the browser out.
 
 Three things follow in practice:
 
 - Do not type the password wrong six times. Count.
-- `deploy/verify-webui.sh` sends its sign-in straight to the Team API with the container's own
-  address as the source, so it has a bucket of its own and does not spend the browser's budget.
+- `deploy/verify-webui.sh` signs in with the container's own address as the source, so it has a
+  bucket of its own and does not spend the browser's budget.
 - `deploy/verify-webui.sh` also caches its session token, so running it repeatedly costs no
   sign-in attempts at all.
-- The upstream fix for this is tracked separately: the daemon should read the client address that
-  the local proxy forwards, instead of the socket address.
+- A wrong password through the **public** address and a wrong password through the **LAN**
+  address count separately, because the tunnel address and the LAN address differ.
 
 ### The Team API port is random
 
@@ -273,6 +303,17 @@ daemon start. nginx cannot be configured with a fixed port, so:
 
 Between a daemon start and the next probe run there is a window where nginx still points at the
 old port and `/v1/` answers `502`. The probe clears it within two minutes.
+
+### The event socket needs the upgrade headers under `/v1/`
+
+The live updates of the workspace arrive on a WebSocket at `/v1/events`. A WebSocket needs the
+`Upgrade` and `Connection` headers on its request, and nginx only passes them where the
+configuration says so. The `location /v1/` and `location /v2/` blocks carry them; without them
+the daemon answers `426 Upgrade Required` and the browser never receives a live event.
+
+The symptom is a workspace that shows the agent list but never updates: the unread count in the
+sidebar does not move and no message arrives without a reload. `deploy/verify-webui.sh` asks the
+socket for an upgrade and requires `101`, so it catches this.
 
 ### The Android app needs the daemon's cloud connection
 

@@ -77,7 +77,14 @@ export const messages = {
   "webClient.error.linkBlocked": "Nie można otworzyć tego linku.",
   "webClient.error.fileTransfer": "Przesyłanie pliku nie powiodło się.",
   "webClient.error.noLocks":
-    "Ta przeglądarka nie może chronić połączenia z serwerem. Użyj aktualnej przeglądarki na komputerze.",
+    "Ta strona wymaga HTTPS. Interfejs Web Locks nie istnieje na zwykłej stronie HTTP. Otwórz WebUI przez https://openbot.jetstream.web.id/.",
+  "webClient.error.insecureContext.title": "Ta strona wymaga HTTPS",
+  "webClient.error.insecureContext.description":
+    "WebUI chroni połączenie z serwerem przez interfejs Web Locks, którego zwykła strona HTTP nie ma.",
+  "webClient.error.insecureContext.missingLocks":
+    "Interfejs Web Locks tu nie istnieje, więc połączenie nie może się rozpocząć. Otwórz WebUI przez HTTPS.",
+  "webClient.error.insecureContext.missingRandomUUID":
+    "crypto.randomUUID tu nie istnieje, więc żądań nie można nazwać. Otwórz WebUI przez HTTPS.",
   "webClient.error.otherTab":
     "Ten serwer jest otwarty w innej karcie. Zamknij tamto połączenie, zanim spróbujesz ponownie.",
   "webClient.error.connectionClosed": "Połączenie przeglądarki jest zamknięte.",

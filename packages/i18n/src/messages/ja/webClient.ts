@@ -77,7 +77,14 @@ export const messages = {
   "webClient.error.linkBlocked": "このリンクは開けません。",
   "webClient.error.fileTransfer": "ファイルの転送に失敗しました。",
   "webClient.error.noLocks":
-    "このブラウザーはサーバーへの接続を保護できません。最新のデスクトップブラウザーを使ってください。",
+    "このページには HTTPS が必要です。Web Locks API は通常の HTTP ページには存在しません。代わりに https://openbot.jetstream.web.id/ から WebUI を開いてください。",
+  "webClient.error.insecureContext.title": "このページには HTTPS が必要です",
+  "webClient.error.insecureContext.description":
+    "WebUI はサーバーへの接続を Web Locks API で保護しますが、通常の HTTP ページにはその API がありません。",
+  "webClient.error.insecureContext.missingLocks":
+    "ここでは Web Locks API がないため、接続を開始できません。HTTPS で WebUI を開いてください。",
+  "webClient.error.insecureContext.missingRandomUUID":
+    "ここでは crypto.randomUUID がないため、リクエストに名前を付けられません。HTTPS で WebUI を開いてください。",
   "webClient.error.otherTab": "このサーバーは別のタブで開かれています。再試行する前に、その接続を閉じてください。",
   "webClient.error.connectionClosed": "ブラウザーの接続は閉じられています。",
   "webClient.error.hostChanged": "選択したサーバーが変わりました。",

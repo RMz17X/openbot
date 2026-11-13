@@ -10,7 +10,15 @@ import type { ChannelNotificationContent } from "@openbot/team-client/channel-no
 const PERMISSION_ASKED_KEY = "openbot.web.notification-permission-asked";
 /** The tab of this browser that has focus. The tab that speaks for a host is often in the background. */
 const FOCUSED_TAB_KEY = "openbot.web.focused-tab";
-const TAB_ID = crypto.randomUUID();
+/**
+ * The id of this tab.
+ *
+ * `crypto.randomUUID` needs a secure context, and this module is imported at load time, so the
+ * call cannot be guarded by a check that happens later. A page without a secure context has no
+ * Web Locks API either, so it never reaches the notification code; the fallback keeps the module
+ * loadable there, and it only names a tab that no other tab can already hold.
+ */
+const TAB_ID = typeof crypto.randomUUID === "function" ? crypto.randomUUID() : `tab-${Math.random()}`;
 
 /**
  * Asks the browser for notification permission. The browser shows its prompt only from a user action.

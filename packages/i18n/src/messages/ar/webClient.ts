@@ -73,7 +73,15 @@ export const messages = {
   "webClient.error.attachmentLimit": "يمكن أن تحتوي الرسالة على {limit} مرفقات كحد أقصى.",
   "webClient.error.linkBlocked": "لا يمكن فتح هذا الرابط.",
   "webClient.error.fileTransfer": "فشل نقل الملف.",
-  "webClient.error.noLocks": "لا يمكن لهذا المتصفح حماية الاتصال بالخادم. استخدم متصفح سطح مكتب حديثًا.",
+  "webClient.error.noLocks":
+    "هذه الصفحة تحتاج HTTPS. واجهة Web Locks غير موجودة على صفحة HTTP عادية. افتح WebUI عبر https://openbot.jetstream.web.id/ بدلاً من ذلك.",
+  "webClient.error.insecureContext.title": "هذه الصفحة تحتاج HTTPS",
+  "webClient.error.insecureContext.description":
+    "يحمي WebUI اتصاله بالخادم بواجهة Web Locks، التي لا تملكها صفحة HTTP عادية.",
+  "webClient.error.insecureContext.missingLocks":
+    "واجهة Web Locks غير موجودة هنا، لذلك لا يمكن بدء الاتصال. افتح WebUI عبر HTTPS.",
+  "webClient.error.insecureContext.missingRandomUUID":
+    "crypto.randomUUID غير موجود هنا، لذلك لا يمكن تسمية الطلبات. افتح WebUI عبر HTTPS.",
   "webClient.error.otherTab": "هذا الخادم مفتوح في علامة تبويب أخرى. أغلق ذلك الاتصال قبل المحاولة مرة أخرى.",
   "webClient.error.connectionClosed": "اتصال المتصفح مغلق.",
   "webClient.error.hostChanged": "تغيّر الخادم المحدد.",
