@@ -16,7 +16,7 @@ import { decodeTeamProtocolSupportV9 } from "@openbot/contracts/team-protocol/v9
 import { runTeamEffect } from "@openbot/team-client";
 import { agentEventCanNotify } from "@openbot/team-client/agent-notifications";
 import type { RemoteTeamHost } from "@openbot/team-client/remote-directory";
-import type { createRemoteTeamPeer, RemoteTeamPeerActions } from "@openbot/team-client/remote-peer";
+import type { RemoteTeamPeerActions } from "@openbot/team-client/remote-peer";
 import { createRemoteConnectionRecovery } from "@openbot/team-client/remote-recovery";
 import {
   listAgentNotificationLevels,
@@ -24,6 +24,12 @@ import {
   setOwnServerNotificationLevel,
 } from "@openbot/team-client/team-admin-requests";
 import type { TeamApiRequest } from "@openbot/team-client/team-api-requests";
+import type {
+  CreateWebTeamPeer,
+  WebTeamPeer,
+  WebTeamPeerActionsRef,
+  WebTeamPeerOptions,
+} from "@openbot/team-client/web-peer-contract";
 import { currentText } from "@openbot/ui/text";
 import { referenceFrom } from "@openbot/user-errors";
 import { Effect } from "effect";
@@ -37,8 +43,8 @@ import {
 /** After another tab asks for a host, this tab does not ask for its lock again for this long. */
 const RELEASED_HOST_REST_MS = 30_000;
 
-type Peer = ReturnType<typeof createRemoteTeamPeer>;
-type PeerActions = Parameters<typeof createRemoteTeamPeer>[0];
+type Peer = WebTeamPeer;
+type PeerActions = WebTeamPeerActionsRef;
 
 /** A live status connection that the opened host takes over, with the host's tab lock. */
 interface WebHostHandover {
@@ -153,9 +159,9 @@ export function createWebHostConnections(options: {
   accountId: string;
   channel: BroadcastChannel;
   actions: Pick<RemoteTeamPeerActions, "getBootstrap" | "endSession">;
-  createPeer: typeof createRemoteTeamPeer;
+  createPeer: CreateWebTeamPeer;
   /** The opened host's peer options apart from `waitForHost`, so a status connection can become it. */
-  peerOptions?: Pick<NonNullable<Parameters<typeof createRemoteTeamPeer>[1]>, "hostProtocols">;
+  peerOptions?: Pick<WebTeamPeerOptions, "hostProtocols">;
   acquireHostLock: typeof acquireWebHostLock;
   /** Throws when the host identity differs from the pinned one. */
   pinHostKey(host: RemoteTeamHost): void;

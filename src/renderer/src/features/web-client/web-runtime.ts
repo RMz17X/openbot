@@ -221,6 +221,7 @@ import {
   updateQueuedMessage,
   uploadAttachmentDraft,
 } from "@openbot/team-client/team-api-requests";
+import type { CreateWebTeamPeer } from "@openbot/team-client/web-peer-contract";
 import type { BrowserViewRuntime } from "@openbot/ui/features/browser/BrowserLiveView";
 import { currentText } from "@openbot/ui/text";
 import { referenceFrom } from "@openbot/user-errors";
@@ -515,7 +516,7 @@ export class WebHostConnectionError extends Error {
 const useDirect = import.meta.env.VITE_OPENBOT_DIRECT_HOST === "1";
 
 interface WebConnectionDependencies {
-  createPeer: typeof createRemoteTeamPeer | typeof createHttpTeamPeer;
+  createPeer: CreateWebTeamPeer;
   acquireHostLock: typeof acquireWebHostLock;
   /** The channel between the tabs of the account. Without one, this tab keeps no status connections. */
   openHostChannel?: (accountId: string) => BroadcastChannel | null;

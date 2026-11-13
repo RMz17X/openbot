@@ -21,6 +21,7 @@
     "./agent-notifications": "./src/agent-notifications.ts",
     "./channel-notifications": "./src/channel-notifications.ts",
     "./webrtc-framing": "./src/webrtc-framing.ts",
+    "./web-peer-contract": "./src/web-peer-contract.ts",
     "./workspace-preferences": "./src/workspace-preferences.ts",
     "./browser-view": "./src/browser-view.ts",
     "./team-api-requests": "./src/team-api-requests.ts",

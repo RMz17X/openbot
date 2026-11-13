@@ -26,5 +26,6 @@ export * from "./remote-directory";
 export * from "./remote-recovery";
 export * from "./request-id";
 export * from "./runtime-attention";
+export * from "./web-peer-contract";
 export * from "./webrtc-framing";
 export * from "./workspace-preferences";
