@@ -366,6 +366,37 @@ else
   fi
 fi
 
+# --- 9. the event socket ----------------------------------------------------------------------
+
+section "9. the event socket answers an upgrade"
+
+# The event socket of the Team API lives under /v1/. The proxy must pass the upgrade headers on
+# that path, or the daemon answers 426 Upgrade Required and the browser never gets a live event.
+# A sign-in is not retried here: the socket reuses the session token that the earlier check
+# already obtained, so no attempt of the sign-in budget is spent.
+WS_CODE="$(curl -s -m 15 --http1.1 -o /dev/null -w '%{http_code}' \
+  -H 'Connection: Upgrade' \
+  -H 'Upgrade: websocket' \
+  -H 'Sec-WebSocket-Version: 13' \
+  -H 'Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==' \
+  -H "Sec-WebSocket-Protocol: openbot-team-v1, openbot-token.${SESSION_TOKEN}" \
+  "${HOST_URL}/v1/events" || true)"
+case "${WS_CODE}" in
+  101)
+    pass "the event socket at ${HOST_URL}/v1/events answers 101 Switching Protocols"
+    ;;
+  426)
+    fail "the event socket answered 426 Upgrade Required, so the proxy drops the upgrade headers"
+    info "the location for /v1/ needs proxy_set_header Upgrade and Connection"
+    ;;
+  401)
+    fail "the event socket answered 401, so the session token did not reach the daemon"
+    ;;
+  *)
+    fail "the event socket answered ${WS_CODE:-no response}"
+    ;;
+esac
+
 # --- Result ------------------------------------------------------------------------------------
 
 printf '\n'

@@ -10,12 +10,11 @@
 # The password is read inside the container at the moment of use. It is never printed and never
 # passed on a command line.
 #
-# What this script does not cover: the address the public tunnel and the LAN address share. The
-# Incus proxy device that publishes the container connects from inside the container, so nginx
-# sees 127.0.0.1 as the client for every caller. X-Real-IP and the last entry of X-Forwarded-For
-# are therefore 127.0.0.1 on every path, and those two paths share one bucket. Separating them
-# needs the proxy chain to name the real client, which is a change to the proxy, not to the
-# daemon. See the comment in src/main/team-api/request-helpers.ts.
+# Check 6 goes through the reverse proxy, because the proxy is where the address of the caller
+# is decided. The Incus proxy device that publishes the container connects from inside the
+# container, so nginx used to see 127.0.0.1 as the client for every caller and every caller
+# shared one budget. The proxy now names the real caller: the tunnel address arrives in
+# CF-Connecting-IP and a LAN caller names itself in X-Real-IP. See deploy/openbot.conf.
 set -uo pipefail
 
 CONTAINER="${OPENBOT_CONTAINER:-openbot-vm}"
@@ -180,6 +179,36 @@ if [ "${BLOCKED_CODE}" = "429" ]; then
   pass "the address that spent the budget is still blocked"
 else
   fail "the address that spent the budget answered ${BLOCKED_CODE}, not 429"
+fi
+
+printf '\n== 6. two client addresses through the reverse proxy\n'
+# The checks above go straight to the Team API, so they never touch the proxy. The proxy is
+# where the address of the caller is decided, and a proxy that names its own address puts every
+# caller into one bucket. Two sign-ins with two different client addresses must both answer 200
+# when they go through the proxy.
+PROXY_URL="${OPENBOT_PROXY_URL:-http://127.0.0.1:80}"
+PROXY_CODES=""
+for address in 198.51.100.31 198.51.100.32; do
+  code="$(in_container "
+    set -uo pipefail
+    password=\$(cat '${PASSWORD_FILE_IN_CONTAINER}' 2>/dev/null || echo '')
+    body=\$(jq -n --arg u '${OWNER_USERNAME}' --arg p \"\$password\" '{username: \$u, password: \$p}')
+    unset password
+    curl -s -m 15 -o /dev/null -w '%{http_code}' \
+      -X POST '${PROXY_URL}/v1/auth/login' \
+      -H 'Content-Type: application/json' \
+      -H 'OpenBot-Protocol-Version: ${PROTOCOL_VERSION}' \
+      -H 'OpenBot-App-Version: ${APP_VERSION}' \
+      -H 'X-Real-IP: ${address}' \
+      --data-binary \"\$body\"
+  ")"
+  PROXY_CODES="${PROXY_CODES}${code} "
+done
+info "sign-ins through the proxy with two addresses: ${PROXY_CODES}"
+if [ "$(printf '%s' "${PROXY_CODES}" | tr ' ' '\n' | grep -c '^200$')" = "2" ]; then
+  pass "two client addresses through the proxy both answer 200, so the budget is per caller"
+else
+  fail "two client addresses through the proxy did not both answer 200, so the budget is shared"
 fi
 
 printf '\nRESULT: %s (%d passed, %d failed)\n' \
