@@ -17,6 +17,9 @@
 #   - The session token is cached on the host, so a second run reuses the token and spends no
 #     sign-in attempt at all. Without the cache, running this script five times inside fifteen
 #     minutes would lock the local owner out.
+#
+# `set -e` is deliberately not used here. The point of this script is to report every broken check
+# in one run, and `set -e` would abort on the first failure instead of naming the rest.
 set -uo pipefail
 
 CONTAINER="${OPENBOT_CONTAINER:-openbot-vm}"
