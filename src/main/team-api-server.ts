@@ -276,6 +276,7 @@ import {
   bearerToken,
   conversationSnapshotForCapabilities,
   firstHeaderValue,
+  forwardedClientAddress,
   JSON_LIMIT,
   pathIdentifier,
   readJson,
@@ -1471,9 +1472,13 @@ export class TeamApiServer {
    * peers from this computer, so the address is the same for each peer, and one peer could use
    * all the attempts for a user name. A forwarded request has the session token of its peer and
    * the session ID in a header; both must agree, so a header alone does not select a new count.
+   *
+   * The daemon listens on a loopback port, so every request comes through the local reverse
+   * proxy and the socket address is the proxy, not the caller. The address of the caller is the
+   * one the proxy names, so the count is per caller and not one bucket for everybody.
    */
   #rateLimitSource(request: IncomingMessage): string {
-    const address = request.socket.remoteAddress ?? "local";
+    const address = forwardedClientAddress(request) ?? request.socket.remoteAddress ?? "local";
     const webRtcSession = request.headers["x-openbot-webrtc-session"];
     const token = bearerToken(request.headers.authorization);
     if (!isString(webRtcSession) || !token) return address;

@@ -8,6 +8,7 @@
 // property of the reader, not something ~50 routes each have to remember.
 
 import type { IncomingMessage } from "node:http";
+import { isIP } from "node:net";
 import { INPUT_LIMITS } from "@openbot/contracts/input-limits";
 import {
   AGENT_WELCOME_ITEM_TYPE,
@@ -239,6 +240,41 @@ export function publicHttpBaseUrl(request: IncomingMessage): string {
 export function firstHeaderValue(value: string | string[] | undefined): string | undefined {
   const first = Array.isArray(value) ? value[0] : value?.split(",", 1)[0];
   return first?.trim();
+}
+
+/**
+ * The address of the client that sent the request, as the reverse proxy names it.
+ *
+ * The daemon listens on a loopback port only, so every request comes through the local reverse
+ * proxy, and the proxy sets `X-Real-IP` to the address it saw. `X-Forwarded-For` is the second
+ * name for the same client: its last entry is the address the proxy saw, and the entries before
+ * it are the ones the client claimed. The socket address is the fallback for a request that
+ * reaches the daemon without the proxy, such as a local check.
+ *
+ * A value that is not an IP address is ignored. The header is read for the address of the client,
+ * never for a value that a caller can set to name itself: a caller that reaches the daemon
+ * directly could put any address in these headers. The daemon binds a loopback port, so only the
+ * local proxy can reach it, and the proxy replaces both headers with the address it saw.
+ */
+export function forwardedClientAddress(request: IncomingMessage): string | null {
+  const realIp = firstHeaderValue(request.headers["x-real-ip"]);
+  if (realIp && isIpAddress(realIp)) return realIp;
+  const forwardedFor = request.headers["x-forwarded-for"];
+  const chain = (Array.isArray(forwardedFor) ? forwardedFor.join(",") : (forwardedFor ?? "")).split(",");
+  // The last entry is the address the proxy saw. The entries before it are what the client
+  // claimed, so they name no client that the proxy can vouch for.
+  for (let index = chain.length - 1; index >= 0; index -= 1) {
+    const entry = chain[index]?.trim();
+    if (entry && isIpAddress(entry)) return entry;
+  }
+  return null;
+}
+
+/** True for an IPv4 or IPv6 address, with or without the brackets of a host and port pair. */
+function isIpAddress(value: string): boolean {
+  const bare = value.startsWith("[") && value.endsWith("]") ? value.slice(1, -1) : value;
+  if (bare.includes("%")) return false;
+  return isIP(bare) !== 0;
 }
 
 /** The member who made this request, as the sender the host stamps on the message they write. */

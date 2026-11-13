@@ -2820,6 +2820,44 @@ try {
       otherUser.status === 200 && typeof field(otherUser.body, "sessionToken") === "string",
       { status: otherUser.status },
     );
+
+    // Behind a reverse proxy, the client address comes from X-Real-IP or X-Forwarded-For.
+    // While the owner is blocked on the socket address, a different client address must still be able to sign in.
+    const realIpUser = await call("POST", TEAM_API_ROUTES.auth.login, {
+      headers: { "x-real-ip": "198.51.100.2" },
+      json: { username: "owner", password: OWNER_PASSWORD },
+    });
+    check(
+      "a different client IP via X-Real-IP is not blocked by the socket rate limit",
+      realIpUser.status === 200 && typeof field(realIpUser.body, "sessionToken") === "string",
+      { status: realIpUser.status },
+    );
+    // Five wrong attempts from a forwarded address blocks only that address.
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      await call("POST", TEAM_API_ROUTES.auth.login, {
+        headers: { "x-forwarded-for": "203.0.113.195, 198.51.100.3" },
+        json: { username: "owner", password: "wrong-password" },
+      });
+    }
+    const forwardedBlocked = await call("POST", TEAM_API_ROUTES.auth.login, {
+      headers: { "x-forwarded-for": "203.0.113.195, 198.51.100.3" },
+      json: { username: "owner", password: OWNER_PASSWORD },
+    });
+    check(
+      "five wrong passwords via X-Forwarded-For get 429 for that client IP",
+      errorIs(forwardedBlocked, 429, sourceText("error.team.tooManySignInAttempts")),
+      summary(forwardedBlocked),
+    );
+    const forwardedOther = await call("POST", TEAM_API_ROUTES.auth.login, {
+      headers: { "x-forwarded-for": "203.0.113.195, 198.51.100.4" },
+      json: { username: "owner", password: OWNER_PASSWORD },
+    });
+    check(
+      "a different client IP on X-Forwarded-For is not blocked",
+      forwardedOther.status === 200 && typeof field(forwardedOther.body, "sessionToken") === "string",
+      { status: forwardedOther.status },
+    );
+
     clock += 15 * 60 * 1_000 + 1;
     const afterWindow = await call("POST", TEAM_API_ROUTES.auth.login, {
       json: { username: "owner", password: OWNER_PASSWORD },
