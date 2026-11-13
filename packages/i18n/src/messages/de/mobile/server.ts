@@ -262,6 +262,7 @@ export const messages = {
     "Der Server stoppt und startet wieder. Das dauert etwa eine Minute. Laufende Agentendurchläufe stoppen, und Mitglieder verlieren die Verbindung, bis der Server zurück ist. Dateien und Chats bleiben erhalten.",
   "mobile.server.settings.restartConfirm": "Neu starten",
   "mobile.server.settings.restarted": "{name} startet neu",
+  "mobile.server.settings.restartUnsupported": "Aktualisiere OpenBot auf diesem Server, um ihn hier neu zu starten.",
   "mobile.server.settings.leaveTitle": "{name} verlassen?",
   "mobile.server.settings.leaveBody": "Du brauchst eine neue Einladung, um erneut beizutreten.",
   "mobile.server.settings.leave": "Server verlassen",
@@ -331,6 +332,8 @@ export const messages = {
   "mobile.server.route.invite": "Personen einladen",
   "mobile.server.route.member": "Mitglied",
   "mobile.server.route.timezone": "Zeitzone",
+  "mobile.server.route.personality": "Agent-Persönlichkeit",
+  "mobile.server.route.agents": "Agenten",
   "mobile.server.settings.storage": "Speicher",
   "mobile.server.route.storage": "Speicher",
   "mobile.server.route.storageFiles": "Alle Dateien",
@@ -459,6 +462,38 @@ export const messages = {
     "Das Erinnerungslimit konnte nicht gespeichert werden. Versuche es erneut.",
   "mobile.server.settings.memoryLimitUnsupported":
     "Aktualisiere OpenBot auf diesem Server, um sein Erinnerungslimit hier zu ändern.",
+  "mobile.server.settings.memoryReview": "Erinnerungsprüfung",
+  "mobile.server.settings.memoryReviewDescription":
+    "Wie oft Agenten auf diesem Server im Hintergrund dauerhafte Fakten aus ihren Chats speichern.",
+  "mobile.server.settings.memoryReviewOff": "Aus",
+  "mobile.server.settings.memoryReviewTurns": { one: "Alle {count} Runde", other: "Alle {count} Runden" },
+  "mobile.server.settings.memoryReviewLoadFailed":
+    "Die Einstellung für die Erinnerungsprüfung konnte nicht geladen werden.",
+  "mobile.server.settings.skillLearning": "Fähigkeiten lernen",
+  "mobile.server.settings.skillLearningDescription":
+    "Ob Agenten auf diesem Server das Gelernte als Fähigkeiten speichern.",
+  "mobile.server.settings.skillLearningAutomatic": "Automatisch",
+  "mobile.server.settings.skillLearningAsk": "Zuerst fragen",
+  "mobile.server.settings.skillLearningOff": "Aus",
+  "mobile.server.settings.skillLearningLoadFailed": "Die Einstellung „Fähigkeiten lernen“ konnte nicht geladen werden.",
+  "mobile.server.settings.browsingMemory": "Aus meinem Browsen lernen",
+  "mobile.server.settings.browsingMemoryDescription":
+    "Wenn du den Browser eines Agenten steuerst, lernt der Agent aus den Seiten und Schaltflächen, die du nutzt, wie Websites funktionieren. Eingegebener Text wird nicht gespeichert.",
+  "mobile.server.settings.browsingMemoryLoadFailed": "Die Browsing-Einstellung konnte nicht geladen werden.",
+  "mobile.server.settings.learningSaveFailed": "Die Einstellung konnte nicht gespeichert werden. Versuche es erneut.",
+  "mobile.server.settings.learningUnsupported":
+    "Aktualisiere OpenBot auf diesem Server, um diese Einstellung hier zu ändern.",
+  "mobile.server.settings.responseStyleDescription":
+    "Natürlich: Agenten senden während der Arbeit kurze Updates, und der Chat zeigt sie. Klassisch: Agenten antworten einmal, wenn sie fertig sind.",
+  "mobile.server.settings.responseStyleNatural": "Natürlich",
+  "mobile.server.settings.responseStyleClassic": "Klassisch",
+  "mobile.server.settings.personalityLoadFailed": "Die Persönlichkeit des Servers konnte nicht geladen werden.",
+  "mobile.server.settings.personalitySaveFailed":
+    "Der Antwortstil konnte nicht gespeichert werden. Versuche es erneut.",
+  "mobile.server.settings.personalityUnsupported":
+    "Aktualisiere OpenBot auf diesem Server, um seinen Antwortstil hier zu ändern.",
+  "mobile.server.settings.agentsUnavailable":
+    "Verbinde dich als Eigentümer oder Admin mit diesem Server, um seine Agent-Einstellungen zu ändern.",
   "mobile.server.route.browserProfiles": "Browser-Profile",
   "mobile.server.browserProfiles.unavailable":
     "Nur Besitzer oder Admins eines Online-Servers können seine Browser-Profile verwalten.",
@@ -856,6 +891,9 @@ export const messages = {
   "mobile.server.connectors.whatsapp.ownNumber": "Private Nummer",
   "mobile.server.connectors.whatsapp.ownNumberDescription":
     "Nur dein Chat „Nachricht an dich selbst“ und die Personen, die du zulässt, können schreiben. Schalte das für eine Nummer nur für OpenBot aus.",
+  "mobile.server.connectors.whatsapp.workingMessage": "Nachricht „Wird bearbeitet…“",
+  "mobile.server.connectors.whatsapp.workingMessageDescription":
+    "OpenBot sendet sie, während der Agent arbeitet, und ersetzt sie dann durch die Antwort. Schalte sie aus, um nur die Antwort zu senden.",
   "mobile.server.connectors.whatsapp.orchestratorTitle": "WhatsApp-Orchestrator",
   "mobile.server.connectors.whatsapp.orchestratorDescription":
     "Dieser Agent empfängt die Nachrichten für OpenBot von all deinen verknüpften Nummern. Kurze beantwortet er selbst, andere Aufgaben gibt er an den passenden Agenten weiter und antwortet in WhatsApp.",
@@ -1041,6 +1079,17 @@ export const messages = {
   "mobile.server.providers.status.ready": "Installiert",
   "mobile.server.providers.status.notInstalled": "Nicht installiert",
   "mobile.server.providers.status.checking": "Wird geprüft",
+  "mobile.server.providers.pool": "Konten bündeln",
+  "mobile.server.providers.poolHint":
+    "Agenten nutzen ein Konto, bis es fast ein Nutzungslimit erreicht, dann das Konto, dessen Limit zuerst zurückgesetzt wird.",
+  "mobile.server.providers.accountsPooledHint":
+    "Agenten teilen sich diese Konten. Ein neues Konto meldet sich auf seiner Seite auf diesem Telefon an.",
+  "mobile.server.providers.accountsPooledOnComputer":
+    "Agenten teilen sich diese Konten. Füge ein Konto in OpenBot auf einem Computer hinzu.",
+  "mobile.server.providers.inUse": "Aktiv",
+  "mobile.server.providers.notInPool": "Nicht im Pool",
+  "mobile.server.providers.leaveOutOfPool": "Aus Pool nehmen",
+  "mobile.server.providers.putBackInPool": "Zurück in Pool",
   "mobile.server.providers.models": "Modelle",
   "mobile.server.providers.modelsCount": "{shown} von {total}",
   "mobile.server.providers.modelsTitle": "Modelle von {name}",
@@ -1116,6 +1165,8 @@ export const messages = {
   "mobile.server.mcp.unsupported": "Aktualisiere OpenBot auf diesem Server, um seine MCP-Server hier zu verwalten.",
   "mobile.server.mcp.unavailable":
     "Verbinde dich als Inhaber oder Admin mit diesem Server, um seine MCP-Server zu verwalten.",
+  "mobile.server.mcp.accessUnsupported":
+    "Aktualisiere OpenBot auf diesem Server, um festzulegen, wer seine MCP-Server erhält.",
   "mobile.server.mcp.description":
     "MCP-Server geben den Agenten dieses Servers mehr Werkzeuge. Claude- und Codex-Agenten erhalten nur die Server in dieser Liste.",
   "mobile.server.mcp.loading": "MCP-Server werden geladen…",
@@ -1188,6 +1239,21 @@ export const messages = {
   "mobile.server.mcp.removeBody":
     "Die Agenten dieses Servers erhalten seine Werkzeuge nicht mehr. Die Einstellungen werden nicht behalten.",
   "mobile.server.mcp.remove": "MCP-Server entfernen",
+  "mobile.server.mcp.access.title": "Zugriff",
+  "mobile.server.mcp.access.agents": "Agenten",
+  "mobile.server.mcp.access.agentsOf": "Agenten, die {name} nutzen können",
+  "mobile.server.mcp.access.allAgents": "Alle Agenten",
+  "mobile.server.mcp.access.allAgentsHint": "Alle Agenten umfasst auch jeden später hinzugefügten Agenten.",
+  "mobile.server.mcp.access.noAgents": "Keine Agenten",
+  "mobile.server.mcp.access.someAgents": "{count} von {total}",
+  "mobile.server.mcp.access.use": "Nutzen",
+  "mobile.server.mcp.access.fromEveryone": "Wie Alle",
+  "mobile.server.mcp.access.level": "Zugriff von {role} auf {name}",
+  "mobile.server.mcp.access.hint":
+    "Ein Mitglied erhält die höchste Stufe von Alle und seinen Rollen. Inhaber, Admins und die Person, die den Server hinzugefügt hat, können ihn immer verwalten.",
+  "mobile.server.mcp.access.loadFailed": "Zugriff auf diesen MCP-Server konnte nicht geladen werden.",
+  "mobile.server.mcp.access.unavailable":
+    "Nur ein Inhaber oder Admin eines Online-Servers kann festlegen, wer diesen MCP-Server erhält.",
   "mobile.server.usage.agents": "Agenten",
   "mobile.server.usage.agentLine": "{tokens} Token · {cost} · {percent}",
   "mobile.server.usage.noAgents": "In diesem Zeitraum wurde keine Agentennutzung erfasst.",
@@ -1350,6 +1416,10 @@ export const messages = {
   "mobile.server.roles.agentCount": { one: "{count} Agent", other: "{count} Agenten" },
   "mobile.server.roles.memberCount": { one: "{count} Mitglied", other: "{count} Mitglieder" },
   "mobile.server.roles.agentLevel": "Zugriff von {role} auf {agent}",
+  "mobile.server.roles.changeInEveryone": "In Alle ändern",
+  "mobile.server.roles.setAll": "Alle setzen",
+  "mobile.server.roles.setAllLabel": "Alle setzen: Zugriff von {role} auf alle Agenten",
+  "mobile.server.roles.mixed": "Gemischt",
   "mobile.server.roles.delete": "Rolle löschen",
   "mobile.server.roles.deleteTitle": "{name} löschen?",
   "mobile.server.roles.deleteBody": "Mitglieder mit dieser Rolle verlieren die Agenten, die sie ihnen gibt.",

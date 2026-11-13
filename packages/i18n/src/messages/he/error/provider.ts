@@ -169,6 +169,8 @@ export const messages = {
   "error.provider.cliBusyUpdate": "ה-CLI של {provider} עובד על פעולה. יש להמתין לסיומה ואז לעדכן.",
   "error.provider.cliSelectFailed": "OpenBot לא הצליח לבחור את ה-CLI המנוהל שהותקן.",
   "error.provider.noAuthenticatedAccount": "{provider} לא החזיר חשבון מאומת.",
+  "error.provider.codexModelProvider":
+    "Codex במחשב הזה משתמש בספק מודלים אחר, והספק הזה לא משתמש בהתחברות ל-ChatGPT או במפתח API של OpenAI. סוכני ChatGPT יכולים להשתמש בספק הזה כבר עכשיו. כדי להשתמש בחשבון ChatGPT שלך, יש להחזיר את ספק המודלים של Codex ל-OpenAI.",
   "error.provider.signInExpired": "ההתחברות שלך אל {provider} פגה. יש להתחבר שוב כדי להמשיך.",
   "error.provider.cliActivateFailed": "OpenBot לא הצליח להפעיל את ה-CLI המנוהל.",
   "error.provider.noMainlandChinaSignIn": "ל-{provider} אין התחברות עבור סין היבשתית.",
@@ -213,6 +215,7 @@ export const messages = {
     "אפליקציית Codex אחרת פתחה את הצ'אט הזה, למשל אפליקציית Codex למחשב, Codex CLI או תוסף IDE. רק אפליקציה אחת בכל פעם יכולה לכתוב לצ'אט של Codex. יש לסגור את הצ'אט באותה אפליקציה ואז לשלוח את ההודעה שוב.",
   "error.provider.realtimeLimitZero":
     "Linux עצר את הספק כי ל-OpenBot יש מגבלת מעבד בזמן אמת של 0. המגבלה מגיעה מהמערכת שלך. יש להתקין ולהפעיל את rtkit (`rtkit-daemon`), להריץ `systemctl --user restart xdg-desktop-portal`, ואז להפעיל מחדש את OpenBot. הפעלה מחדש של xdg-desktop-portal בלבד לא תעזור כל עוד rtkit חסר.",
+  "error.provider.cpuUnsupported": "המעבד של המחשב הזה לא יכול להריץ את הספק הזה. השתמש בספק אחר.",
   "error.provider.opencodeDatabaseNewer":
     "OpenCode לא הצליח לפתוח את מסד הנתונים שלו כי גרסה חדשה יותר של OpenCode שינתה אותו. יש לעדכן את OpenCode לגרסה 2 ומעלה ואז לנסות שוב.",
   "error.provider.opencodeNoAnswer": "מודל OpenCode סיים את הפעולה בלי תשובה. יש לנסות שוב, או לבחור מודל אחר.",
@@ -242,6 +245,8 @@ export const messages = {
     "Gemini לא יכול להשתמש במודל הזה כרגע. יש לבחור מודל אחר ואז לנסות שוב.\n{detail}",
   "error.provider.antigravityServiceFailure":
     "השירות Gemini של Google לא השלים את הבקשה. יש לנסות שוב בעוד כמה דקות.\n{detail}",
+  "error.provider.antigravityRequestRejected":
+    "Gemini דחה את הבקשה הזו. יש לבחור מודל אחר ולשלוח את ההודעה שוב. אם זה נכשל שוב, יש להתחיל צ'אט חדש.\n{detail}",
   "error.provider.antigravityConnectionLost": "Gemini איבד את החיבור לסוכן שלו ונעצר. יש לשלוח הודעה כדי להמשיך.",
   "error.provider.antigravityRemoteWindowsSignIn":
     "במארח Windows, ‏Gemini פותח את דף Google במארח עצמו. יש לחבר את Gemini במחשב המארח.",
@@ -276,6 +281,8 @@ export const messages = {
   "error.provider.hermesNotStarted": "Hermes Agent לא הצליח לפעול. יש להריץ `hermes --version` בטרמינל.",
   "error.provider.hermesVersionUnreadable": "לא ניתן לקרוא את הגרסה של Hermes Agent.",
   "error.provider.hermesSignIn": "יש להתחבר עם Nous Portal, או להריץ `hermes setup` בטרמינל, כדי להשתמש ב-Hermes.",
+  "error.provider.hermesTurnFailed":
+    "Hermes לא הצליח לסיים את התור הזה. אם התשובה שלו מציינת סיבה, פעל לפיה. אם לא, ייתכן ששרת MCP של הסוכן הזה אינו זמין: בדוק אותו בהגדרות השרת › MCP, ואז שלח את ההודעה שוב.",
   "error.provider.usageLimitReached": "החשבון הגיע למגבלת השימוש שלו.",
   "error.provider.claudeContextFull":
     "הצ'אט הזה נעשה ארוך מדי עבור Claude. OpenBot התחיל סשן חדש של Claude Code עם היסטוריית הצ'אט. יש לנסות שוב.",

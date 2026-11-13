@@ -183,6 +183,8 @@ export const messages = {
   "provider.geminiKey.title": "Klucz API Gemini",
   "provider.geminiKey.description":
     "Zapisz klucz API Gemini na tym komputerze. Zapisany klucz jest używany zamiast konta Google. Aby zalogować się przez Google, usuń klucz i wybierz „Połącz” w wierszu Gemini.",
+  "provider.geminiKey.descriptionHost":
+    "Zapisz klucz API Gemini na hoście. Zapisany klucz jest używany zamiast konta Google. Aby zalogować się przez Google, usuń klucz i wybierz „Połącz” w wierszu Gemini.",
   "provider.geminiKey.label": "Klucz API Gemini",
   "provider.claudeKey.title": "Klucz API Anthropic",
   "provider.claudeKey.description":
@@ -191,14 +193,20 @@ export const messages = {
   "provider.inceptionKey.title": "Klucz API Inception",
   "provider.inceptionKey.description":
     "Zapisz klucz API Inception na tym komputerze, aby używać modeli Mercury. OpenBot uruchamia je w pobranym Pi CLI.",
+  "provider.inceptionKey.descriptionHost":
+    "Zapisz klucz API Inception na hoście, aby używać modeli Mercury. OpenBot uruchamia je w pobranym Pi CLI.",
   "provider.inceptionKey.label": "Klucz API Inception",
   "provider.deepseekKey.title": "Klucz API DeepSeek",
   "provider.deepseekKey.description":
     "Zapisz klucz API DeepSeek na tym komputerze, aby używać modeli DeepSeek. OpenBot uruchamia je w pobranym Pi CLI.",
+  "provider.deepseekKey.descriptionHost":
+    "Zapisz klucz API DeepSeek na hoście, aby używać modeli DeepSeek. OpenBot uruchamia je w pobranym Pi CLI.",
   "provider.deepseekKey.label": "Klucz API DeepSeek",
   "provider.openrouterKey.title": "Klucz API OpenRouter",
   "provider.openrouterKey.description":
     "Zapisz klucz API OpenRouter na tym komputerze, aby używać modeli z OpenRouter. OpenBot uruchamia je w pobranym Pi CLI.",
+  "provider.openrouterKey.descriptionHost":
+    "Zapisz klucz API OpenRouter na hoście, aby używać modeli z OpenRouter. OpenBot uruchamia je w pobranym Pi CLI.",
   "provider.openrouterKey.label": "Klucz API OpenRouter",
 
   "provider.openCodeKey.title": "Zaloguj się do OpenCode Go",
@@ -249,13 +257,30 @@ export const messages = {
   "provider.account.resetUsageNoCredit": "Konto {name} nie ma już kredytów resetu użycia.",
   "provider.account.resetUsageAlreadyRedeemed": "Ten kredyt resetu konta {name} został już użyty.",
   "provider.account.resetUsageFailed": "Nie udało się zresetować użycia konta {name}.",
+  "provider.account.pool": "Łącz konta w pulę",
+  "provider.account.poolDescription":
+    "Agenci używają jednego konta, aż zbliży się do limitu użycia, a potem konta, którego limit odnowi się najwcześniej.",
+  "provider.account.inUse": "W użyciu",
+  "provider.account.notInPool": "Poza pulą",
+  "provider.account.leaveOutOfPool": "Wyłącz z puli",
+  "provider.account.putBackInPool": "Przywróć do puli",
+  "provider.account.poolChip": "Pula",
+  "provider.account.poolCount": "Pula: {accounts}",
+  "provider.account.poolInUse": "{pool} · w użyciu {name}",
+  "provider.settings.accountsPooledDescription": "{count} z {max}. Agenci dzielą te konta.",
   "provider.settings.disconnectTitle": "Odłączyć {name}?",
   "provider.settings.disconnectOthers": "Pozostałe konta {provider} czekają, aż ponownie połączysz {provider}.",
   "provider.settings.disconnectLocal":
     "OpenBot wyloguje {provider} na tym komputerze. CLI {provider} w terminalu również zostanie wylogowane.",
   "provider.settings.disconnectHost": "OpenBot wyloguje {provider} na serwerze.",
+  "provider.settings.geminiKeyReplacesAccount":
+    "Zapisany klucz API Gemini jest używany zamiast logowania przez Google. Aby używać planu Google i jego modeli, usuń klucz.",
   "provider.settings.versionInstalledByUser": "{version} · zainstalowana przez Ciebie",
   "provider.settings.versionDownloaded": "{version} · pobrana przez OpenBot",
+  "provider.settings.otherVersionInstalledByUser": "Nieużywana: {version} · zainstalowana przez Ciebie",
+  "provider.settings.otherVersionDownloaded": "Nieużywana: {version} · pobrana przez OpenBot",
+  "provider.settings.useInstalledVersion": "Użyj zainstalowanej",
+  "provider.settings.useDownloadedVersion": "Użyj wersji OpenBot",
   "provider.settings.cache": "Pamięć podręczna",
   "provider.settings.promptCache": "Pamięć podręczna promptów",
   "provider.settings.promptCacheDescription":
@@ -296,4 +321,6 @@ export const messages = {
   "provider.settings.deleteOff":
     "Usuwa CLI pobrane przez OpenBot dla {name} ({size}). Konta, logowania i agenci zostają.",
   "provider.settings.removeDownloadFailed": "Nie udało się usunąć pobranych plików.",
+  "provider.settings.disconnectLocalOnly":
+    "OpenBot wylogowuje {provider} na tym komputerze. CLI {provider} w terminalu pozostaje zalogowane.",
 } as const satisfies PartialTranslation<typeof source>;

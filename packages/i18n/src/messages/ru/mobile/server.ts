@@ -299,6 +299,7 @@ export const messages = {
     "Сервер остановится и запустится снова. Это займёт около минуты. Текущие ходы агентов остановятся, а участники потеряют соединение, пока сервер не вернётся. Файлы и чаты сохранятся.",
   "mobile.server.settings.restartConfirm": "Перезапустить",
   "mobile.server.settings.restarted": "{name} перезапускается",
+  "mobile.server.settings.restartUnsupported": "Обновите OpenBot на этом сервере, чтобы перезапускать его отсюда.",
   "mobile.server.settings.leaveTitle": "Покинуть «{name}»?",
   "mobile.server.settings.leaveBody": "Чтобы присоединиться снова, понадобится новое приглашение.",
   "mobile.server.settings.leave": "Покинуть сервер",
@@ -370,6 +371,8 @@ export const messages = {
   "mobile.server.route.invite": "Пригласить людей",
   "mobile.server.route.member": "Участник",
   "mobile.server.route.timezone": "Часовой пояс",
+  "mobile.server.route.personality": "Личность агента",
+  "mobile.server.route.agents": "Агенты",
   "mobile.server.settings.storage": "Хранилище",
   "mobile.server.route.storage": "Хранилище",
   "mobile.server.route.storageFiles": "Все файлы",
@@ -501,6 +504,40 @@ export const messages = {
   "mobile.server.settings.memoryLimitSaveFailed": "Не удалось сохранить лимит воспоминаний. Повторите попытку.",
   "mobile.server.settings.memoryLimitUnsupported":
     "Обновите OpenBot на этом сервере, чтобы изменить здесь его лимит воспоминаний.",
+  "mobile.server.settings.memoryReview": "Проверка памяти",
+  "mobile.server.settings.memoryReviewDescription":
+    "Как часто агенты на этом сервере сохраняют в фоне устойчивые факты из своих чатов.",
+  "mobile.server.settings.memoryReviewOff": "Выкл.",
+  "mobile.server.settings.memoryReviewTurns": {
+    one: "Каждый {count} ход",
+    few: "Каждые {count} хода",
+    many: "Каждые {count} ходов",
+    other: "Каждые {count} хода",
+  },
+  "mobile.server.settings.memoryReviewLoadFailed": "Не удалось загрузить настройку проверки памяти.",
+  "mobile.server.settings.skillLearning": "Обучение навыкам",
+  "mobile.server.settings.skillLearningDescription":
+    "Сохраняют ли агенты на этом сервере то, чему научились, как навыки.",
+  "mobile.server.settings.skillLearningAutomatic": "Автоматически",
+  "mobile.server.settings.skillLearningAsk": "Сначала спросить",
+  "mobile.server.settings.skillLearningOff": "Выкл.",
+  "mobile.server.settings.skillLearningLoadFailed": "Не удалось загрузить настройку обучения навыкам.",
+  "mobile.server.settings.browsingMemory": "Учиться на моём браузинге",
+  "mobile.server.settings.browsingMemoryDescription":
+    "Когда вы управляете браузером агента, агент узнаёт, как работают сайты, по страницам и кнопкам, которые вы используете. Введённый текст не сохраняется.",
+  "mobile.server.settings.browsingMemoryLoadFailed": "Не удалось загрузить настройку браузинга.",
+  "mobile.server.settings.learningSaveFailed": "Не удалось сохранить этот параметр. Повторите попытку.",
+  "mobile.server.settings.learningUnsupported": "Обновите OpenBot на этом сервере, чтобы изменить здесь этот параметр.",
+  "mobile.server.settings.responseStyleDescription":
+    "Естественный: агенты присылают короткие обновления во время работы, и чат их показывает. Классический: агенты отвечают один раз, когда закончат.",
+  "mobile.server.settings.responseStyleNatural": "Естественный",
+  "mobile.server.settings.responseStyleClassic": "Классический",
+  "mobile.server.settings.personalityLoadFailed": "Не удалось загрузить характер сервера.",
+  "mobile.server.settings.personalitySaveFailed": "Не удалось сохранить стиль ответов. Повторите попытку.",
+  "mobile.server.settings.personalityUnsupported":
+    "Обновите OpenBot на этом сервере, чтобы изменить здесь его стиль ответов.",
+  "mobile.server.settings.agentsUnavailable":
+    "Подключитесь к этому серверу как владелец или администратор, чтобы изменить настройки агентов.",
   "mobile.server.route.browserProfiles": "Профили браузера",
   "mobile.server.browserProfiles.unavailable":
     "Управлять профилями браузера сервера в сети может только владелец или администратор.",
@@ -929,6 +966,9 @@ export const messages = {
   "mobile.server.connectors.whatsapp.ownNumber": "Личный номер",
   "mobile.server.connectors.whatsapp.ownNumberDescription":
     "Писать могут только вы в чате «Сообщение себе» и люди, которым вы разрешили. Выключите, если номер только для OpenBot.",
+  "mobile.server.connectors.whatsapp.workingMessage": "Сообщение «Уже работаю…»",
+  "mobile.server.connectors.whatsapp.workingMessageDescription":
+    "OpenBot отправляет его, пока агент работает, а затем заменяет ответом. Выключите, чтобы отправлять только ответ.",
   "mobile.server.connectors.whatsapp.orchestratorTitle": "Оркестратор WhatsApp",
   "mobile.server.connectors.whatsapp.orchestratorDescription":
     "Этот агент получает сообщения для OpenBot со всех ваших привязанных номеров. Короткие он обрабатывает сам, остальную работу передаёт нужному агенту и отвечает в WhatsApp.",
@@ -1114,6 +1154,17 @@ export const messages = {
   "mobile.server.providers.status.ready": "Установлено",
   "mobile.server.providers.status.notInstalled": "Не установлено",
   "mobile.server.providers.status.checking": "Проверка",
+  "mobile.server.providers.pool": "Объединить аккаунты",
+  "mobile.server.providers.poolHint":
+    "Агенты используют один аккаунт, пока он не приблизится к лимиту, а затем аккаунт, чей лимит сбросится раньше всех.",
+  "mobile.server.providers.accountsPooledHint":
+    "Агенты используют эти аккаунты вместе. Новый аккаунт входит на своей странице на этом телефоне.",
+  "mobile.server.providers.accountsPooledOnComputer":
+    "Агенты используют эти аккаунты вместе. Добавьте аккаунт в OpenBot на компьютере.",
+  "mobile.server.providers.inUse": "Используется",
+  "mobile.server.providers.notInPool": "Вне пула",
+  "mobile.server.providers.leaveOutOfPool": "Исключить из пула",
+  "mobile.server.providers.putBackInPool": "Вернуть в пул",
   "mobile.server.providers.models": "Модели",
   "mobile.server.providers.modelsCount": "{shown} из {total}",
   "mobile.server.providers.modelsTitle": "Модели {name}",
@@ -1197,6 +1248,8 @@ export const messages = {
   "mobile.server.mcp.unsupported": "Обновите OpenBot на этом сервере, чтобы управлять его серверами MCP здесь.",
   "mobile.server.mcp.unavailable":
     "Подключитесь к этому серверу как владелец или администратор, чтобы управлять его серверами MCP.",
+  "mobile.server.mcp.accessUnsupported":
+    "Обновите OpenBot на этом сервере, чтобы выбирать, кто получает его серверы MCP.",
   "mobile.server.mcp.description":
     "Серверы MCP дают агентам этого сервера больше инструментов. Агенты Claude и Codex получают только серверы из этого списка.",
   "mobile.server.mcp.loading": "Загрузка серверов MCP…",
@@ -1273,6 +1326,21 @@ export const messages = {
   "mobile.server.mcp.removeTitle": "Удалить {name}?",
   "mobile.server.mcp.removeBody": "Агенты этого сервера перестают получать его инструменты. Настройки не сохраняются.",
   "mobile.server.mcp.remove": "Удалить сервер MCP",
+  "mobile.server.mcp.access.title": "Доступ",
+  "mobile.server.mcp.access.agents": "Агенты",
+  "mobile.server.mcp.access.agentsOf": "Агенты, которые могут использовать «{name}»",
+  "mobile.server.mcp.access.allAgents": "Все агенты",
+  "mobile.server.mcp.access.allAgentsHint": "«Все агенты» также включает каждого агента, добавленного позже.",
+  "mobile.server.mcp.access.noAgents": "Нет агентов",
+  "mobile.server.mcp.access.someAgents": "{count} из {total}",
+  "mobile.server.mcp.access.use": "Использование",
+  "mobile.server.mcp.access.fromEveryone": "Как у «Все»",
+  "mobile.server.mcp.access.level": "Доступ роли «{role}» к «{name}»",
+  "mobile.server.mcp.access.hint":
+    "Участник получает самый высокий уровень из «Все» и своих ролей. Владельцы, администраторы и тот, кто добавил сервер, всегда могут им управлять.",
+  "mobile.server.mcp.access.loadFailed": "Не удалось загрузить, кто получает этот сервер MCP.",
+  "mobile.server.mcp.access.unavailable":
+    "Выбрать, кто получает этот сервер MCP, может только владелец или администратор сервера в сети.",
   "mobile.server.usage.agents": "Агенты",
   "mobile.server.usage.agentLine": "{tokens} токенов · {cost} · {percent}",
   "mobile.server.usage.noAgents": "За этот период использования агентами нет.",
@@ -1461,6 +1529,10 @@ export const messages = {
     other: "{count} участника",
   },
   "mobile.server.roles.agentLevel": "Доступ роли {role} к агенту {agent}",
+  "mobile.server.roles.changeInEveryone": "Изменить в «Все»",
+  "mobile.server.roles.setAll": "Задать всем",
+  "mobile.server.roles.setAllLabel": "Задать всем: доступ {role} ко всем агентам",
+  "mobile.server.roles.mixed": "Разный",
   "mobile.server.roles.delete": "Удалить роль",
   "mobile.server.roles.deleteTitle": "Удалить {name}?",
   "mobile.server.roles.deleteBody": "Участники с этой ролью потеряют агентов, которых она им даёт.",

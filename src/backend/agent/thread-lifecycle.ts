@@ -43,6 +43,7 @@ import {
   type McpToolRuntimes,
   mcpFingerprintValues,
   NO_MCP_TOOL_RUNTIMES,
+  openCodeMcpServers,
   toMcpShapeFailed,
   usableMcpServers,
 } from "../mcp-provider-shapes";
@@ -201,7 +202,8 @@ export interface ThreadLifecycleOptions {
   /** Whether a password vault is connected, read at each start and resume of a session. */
   passwordVaultConnected?: () => boolean;
   /** What the Vault holds, read at each start and resume of a session. */
-  vaultItems?: () => VaultContents;
+  /** What the Vault holds for the agent with this id. */
+  vaultItems?: (agentId: string) => VaultContents;
   /** OpenBot runs on a server. The prompt then names the sign-in on the user's computer. */
   serverHost?: boolean;
   /** The plan storage in GB of a hosted server, read at each start and resume of a session. */
@@ -252,7 +254,7 @@ export class ThreadLifecycle {
   ) => Effect.Effect<string | null, McpOperationError>;
   readonly #agentEnvironment: () => Readonly<Record<string, string>>;
   readonly #passwordVaultConnected: () => boolean;
-  readonly #vaultItems: () => VaultContents;
+  readonly #vaultItems: (agentId: string) => VaultContents;
   readonly #serverHost: boolean;
   readonly #hostedStorageGb: () => number | null;
   readonly #agentCursorDrawn: boolean;
@@ -785,6 +787,9 @@ export class ThreadLifecycle {
       cwd: agent.workspacePath,
       runtimeWorkspaceRoots: workspaceWritableRoots(agent, this.#store.sharedRoot),
       approvalPolicy: "on-request",
+      // A Codex `approvals_reviewer` in the user's config would send approvals to its own reviewer, which
+      // ignores OpenBot cards. A resumed thread keeps its last reviewer, so each request names the user.
+      approvalsReviewer: "user",
       sandbox: codexSandboxMode(agent),
       ...this.#workspaceOnlyParam(agent, client),
       ...this.#computerUseParam(agent, client),
@@ -1141,6 +1146,10 @@ export class ThreadLifecycle {
   ): string {
     const folders = existingAgentFolders(agent);
     const excluded = workspaceExcludedFolders(agent);
+    const catalogCommands = configs.flatMap((config) => {
+      const command = toolRuntimes.catalogCommand?.(config) ?? null;
+      return command === null ? [] : [[config.name, command]];
+    });
     return createHash("sha256")
       .update(
         JSON.stringify([
@@ -1172,6 +1181,9 @@ export class ThreadLifecycle {
           // to the file adds a new value. Only another file name, or a file with text, adds a value.
           ...(instructionsFile.fileName === "AGENTS.md" ? [] : [["instructions-file", instructionsFile.fileName]]),
           ...(instructionsFile.found?.text ? [["instructions", instructionsFile.found.text]] : []),
+          // A Marketplace app that starts on the managed Bun: a session from before that start has the
+          // `npx` command, and Codex keeps it on resume. Only an agent with such an app adds a value.
+          ...(catalogCommands.length > 0 ? [["catalog-commands", ...catalogCommands]] : []),
         ]),
       )
       .digest("hex");
@@ -1268,7 +1280,7 @@ export class ThreadLifecycle {
 
   /** The enabled servers this agent is given. Without Computer Use the fingerprint changes, so Codex replaces the session. */
   #agentMcpServers(agent: AgentSummary): readonly McpServerConfig[] {
-    return agentMcpServers(this.#mcpServers(), agentComputerUseEnabled(agent));
+    return agentMcpServers(this.#mcpServers(agent.id), agentComputerUseEnabled(agent));
   }
 
   /**
@@ -1397,7 +1409,7 @@ export class ThreadLifecycle {
         agentComputerUseEnabled(agent) && !mcpServers.some((config) => config.id === COMPUTER_USE_MCP_SERVER_ID),
       sideThread,
       passwordVault: this.#passwordVaultConnected(),
-      vaultItems: this.#vaultItems(),
+      vaultItems: this.#vaultItems(agent.id),
       serverHost: this.#serverHost,
       hostedStorageGb: this.#hostedStorageGb(),
       agentCursorDrawn: this.#agentCursorDrawn,
@@ -1415,7 +1427,11 @@ export class ThreadLifecycle {
       workspaceSkills,
       httpMcpServers: mcpServers.some((config) => config.transport === "http"),
       deferredMcpServers:
-        client.provider === "codex" ? codexDeferredMcpServers(mcpServers).map((config) => config.name) : [],
+        client.provider === "codex"
+          ? codexDeferredMcpServers(mcpServers).map((config) => config.name)
+          : client.provider === "opencode"
+            ? openCodeMcpServers(mcpServers).map((config) => config.name)
+            : [],
       instructionsFileName: instructionsFile.fileName,
       instructionsFile: instructionsFile.file,
     };
@@ -1510,6 +1526,7 @@ export class ThreadLifecycle {
       cwd: agent.workspacePath,
       runtimeWorkspaceRoots: workspaceWritableRoots(agent, this.#store.sharedRoot),
       approvalPolicy: "on-request",
+      approvalsReviewer: "user",
       sandbox: codexSandboxMode(agent),
       ...this.#workspaceOnlyParam(agent, client),
       ...this.#computerUseParam(agent, client),

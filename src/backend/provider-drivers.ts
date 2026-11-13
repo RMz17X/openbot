@@ -1,5 +1,5 @@
 import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
-import { homedir, tmpdir } from "node:os";
+import { tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { type ClientSideConnection, type InitializeResponse, RequestError } from "@agentclientprotocol/sdk";
 import {
@@ -16,15 +16,15 @@ import { Effect } from "effect";
 import { AcpAgentClient, type AcpHistoryPersistence } from "./acp-client";
 import {
   CLINE_ACP_FLAVOR,
+  COPILOT_ACP_FLAVOR,
   CURSOR_ACP_FLAVOR,
   customAgentFlavor,
-  DEFAULT_ACP_FLAVOR,
   DEVIN_ACP_FLAVOR,
   HERMES_ACP_FLAVOR,
   KIMI_ACP_FLAVOR,
   MISTRAL_ACP_FLAVOR,
 } from "./acp-flavor";
-import { ANTIGRAVITY_ACP_FLAVOR } from "./acp-flavor-antigravity";
+import { ANTIGRAVITY_ACP_FLAVOR, antigravityGeminiHome, GEMINI_DIR_FLAG } from "./acp-flavor-antigravity";
 import { OPENCODE_ACP_FLAVOR } from "./acp-flavor-opencode";
 import type { AcpArgv, AcpExtensionMethod } from "./acp-sign-in";
 import { readMuseAccount } from "./agent/muse-login";
@@ -37,7 +37,7 @@ import {
 import type { TurnContext } from "./agent/turn-context";
 import type { AgentClient } from "./agent-client";
 import { ANTIGRAVITY_TOKEN_FILE, importAntigravityToken } from "./antigravity-token-import";
-import { readAntigravityQuota } from "./antigravity-usage";
+import { readAntigravityEmail, readAntigravityQuota } from "./antigravity-usage";
 import { CodexAppServerClient } from "./app-server-client";
 import { ClaudeAgentClient } from "./claude-client";
 import {
@@ -172,17 +172,15 @@ const CLAUDE_COMMAND_ENV = (cli: AgentCliInfo): Record<string, string> =>
 /**
  * The environment one OpenCode process gets, read at spawn time.
  *
- * `OPENCODE_API_KEY` is the whole of the optional account: with it the CLI lists the paid Go
- * catalog, without it the free one. `OPENCODE_DISABLE_AUTOUPDATE` is not optional on a managed
- * install -- a CLI that updates itself past the pin fails the exact-version compare in
- * `verifyInstalledRuntime`, and OpenBot would then keep re-downloading a runtime it already has.
+ * The stored key goes only to the `opencode-go` provider, in `openCodeConfigEnv`. OpenCode reads
+ * `OPENCODE_API_KEY` for its free tier too, and a key there replaced the free tier's own key: a
+ * refused key then failed each free model with "provider authentication required" (#7550).
+ * `OPENCODE_DISABLE_AUTOUPDATE` is not optional on a managed install -- a CLI that updates itself
+ * past the pin fails the exact-version compare in `verifyInstalledRuntime`, and OpenBot would then
+ * keep re-downloading a runtime it already has.
  */
-function opencodeEnv(cli: AgentCliInfo, credentials: ProviderClientContext): Record<string, string> {
-  const key = credentials.apiKey("opencode");
-  return {
-    ...(key ? { OPENCODE_API_KEY: key } : {}),
-    ...(cli.source === "managed" ? { OPENCODE_DISABLE_AUTOUPDATE: "1" } : {}),
-  };
+function opencodeEnv(cli: AgentCliInfo): Record<string, string> {
+  return cli.source === "managed" ? { OPENCODE_DISABLE_AUTOUPDATE: "1" } : {};
 }
 
 /**
@@ -275,11 +273,6 @@ function antigravityKeyOptions(context: ProviderClientContext, agentEnvironment:
  */
 const ANTIGRAVITY_ENV = { WSL_DISTRO_NAME: "OpenBot" };
 
-/** The Gemini home of an Antigravity process: the account's `GEMINI_HOME`, else `~/.gemini`. */
-function antigravityGeminiHome(env: Readonly<Record<string, string | undefined>>): string {
-  return env.GEMINI_HOME?.trim() || join(homedir(), ".gemini");
-}
-
 /** The CLI's app data folder, which holds the sign-in and the sessions. 1.4 kept them there too. */
 const ANTIGRAVITY_APP_DATA = "antigravity-acp";
 
@@ -295,7 +288,7 @@ function antigravityAppDataDir(env: Readonly<Record<string, string | undefined>>
  */
 const antigravityArgv = (env: Readonly<Record<string, string | undefined>>): readonly string[] => [
   "acp",
-  `--gemini-dir=${antigravityGeminiHome(env)}`,
+  `${GEMINI_DIR_FLAG}${antigravityGeminiHome(env)}`,
   `--app-data-dir=${ANTIGRAVITY_APP_DATA}`,
 ];
 
@@ -682,7 +675,7 @@ export interface BuiltInProviderDriver {
   id: AgentProviderId;
   signIn: ProviderSignIn;
   /**
-   * The files the provider's CLI writes when the user signs in with it. The host checks the account
+   * The files that give the provider's CLI its sign-in or its keys. The host checks the account
    * again when one of them changes, so a sign-in done outside OpenBot, such as over SSH, needs no
    * restart. Absent for a provider that OpenBot always signs in itself.
    */
@@ -715,6 +708,11 @@ export interface BuiltInProviderDriver {
    * started without tools starts that way here. Without this hook the normal client is used.
    */
   createProfileClient?(cli: AgentCliInfo, requestTimeoutMs: number, context: ProviderClientContext): AgentClient;
+  /**
+   * The client that makes one image or video for a workflow, when the provider needs a different one:
+   * it may run only the provider's media tools. Without this hook the profile client is used.
+   */
+  createMediaClient?(cli: AgentCliInfo, requestTimeoutMs: number, context: ProviderClientContext): AgentClient;
   authState(account: AccountReadResult["account"]): AgentAuthState;
   validateAccount(account: NonNullable<AccountReadResult["account"]>): void;
 }
@@ -786,7 +784,9 @@ export const BUILT_IN_PROVIDER_DRIVERS: readonly BuiltInProviderDriver[] = [
   {
     id: "pi",
     signIn: { kind: "terminal", timeoutMs: CLI_LOGIN_TIMEOUT_MS },
-    signInFiles: () => [join(piAgentDirectory(), "auth.json")],
+    // `/login` writes `auth.json`. A key in `models.json` also gives Pi models, and a tool such as a
+    // local gateway writes only that file (#7758).
+    signInFiles: () => ["auth.json", "models.json"].map((name) => join(piAgentDirectory(), name)),
     resolveCli: resolvePiCli,
     createClient: (cli, timeout, context, confinement) => piClient("pi", cli, timeout, context, confinement),
     createProfileClient: (cli, timeout, context) => piProfileClient("pi", cli, timeout, context),
@@ -995,6 +995,18 @@ export const BUILT_IN_PROVIDER_DRIVERS: readonly BuiltInProviderDriver[] = [
         undefined,
         accountEnvironment && (() => accountEnvironment),
       ),
+    createMediaClient: (cli, requestTimeoutMs, { accountEnvironment }) =>
+      new GrokAgentClient(
+        cli,
+        requestTimeoutMs,
+        "media",
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        accountEnvironment && (() => accountEnvironment),
+      ),
     authState: (account) => ({ kind: "grok", email: account?.email ?? null }),
     validateAccount: () => undefined,
     // Grok 1.0.70 starts on its two built-in models when its sign-in has expired, renews the sign-in,
@@ -1030,7 +1042,7 @@ export const BUILT_IN_PROVIDER_DRIVERS: readonly BuiltInProviderDriver[] = [
           const agentEnvironment = context.agentEnvironment?.();
           return {
             ...agentEnvironment,
-            ...opencodeEnv(cli, context),
+            ...opencodeEnv(cli),
             // A file below the user's project config. `OPENCODE_AGENT_CONFIG` is above all of it.
             ...openCodeAgentDefaultsEnv(context.providerStateDirectory, { ...process.env, ...agentEnvironment }),
             ...openCodeConfigEnv(OPENCODE_AGENT_CONFIG, openCodeEndpoints(context), context.apiKey("opencode")),
@@ -1069,7 +1081,7 @@ export const BUILT_IN_PROVIDER_DRIVERS: readonly BuiltInProviderDriver[] = [
         profileGeneration: true,
         env: {},
         extraEnv: () => ({
-          ...opencodeEnv(cli, context),
+          ...opencodeEnv(cli),
           ...openCodeConfigEnv(OPENCODE_PROFILE_CONFIG, openCodeEndpoints(context), context.apiKey("opencode")),
         }),
         signInMessage: openCodeSignInMessage(openCodeEndpoints(context)().length),
@@ -1090,6 +1102,14 @@ export const BUILT_IN_PROVIDER_DRIVERS: readonly BuiltInProviderDriver[] = [
       // The usage read needs an access token that has not expired, and only a running CLI refreshes it.
       // A process started only to read usage would give no reading, so an idle account shows its last one.
       usageLeavesSession: true,
+    },
+    // The CLI has no `logout` command; its ACP server has a `logout` method, which deletes the token
+    // file in the default Gemini home. An account after the first goes with its folder.
+    signOut: {
+      argv: antigravityArgv(process.env),
+      env: () => ({ ...ANTIGRAVITY_ENV }),
+      timeoutMs: 30_000,
+      acpLogout: true,
     },
     // `model/list` opens a probe session and then probes the efforts of each model. On a busy
     // computer the two together pass 5 s, and the picker then had no Gemini models (#3546).
@@ -1117,6 +1137,13 @@ export const BUILT_IN_PROVIDER_DRIVERS: readonly BuiltInProviderDriver[] = [
         mcpToolRuntimes: context.mcpToolRuntimes,
         mcpEndpoint: context.mcpEndpoint,
         history: context.history?.("antigravity"),
+        // A saved key signs in no Google account, so the row names none.
+        readAccount: () =>
+          context.apiKey("antigravity") && !context.accountEnvironment
+            ? Effect.succeed({ email: null })
+            : readAntigravityEmail(
+                join(antigravityAppDataDir({ ...process.env, ...context.accountEnvironment }), ANTIGRAVITY_TOKEN_FILE),
+              ).pipe(Effect.map((email) => ({ email }))),
         // A saved key has no plan quota.
         readRateLimits: (_connection, model) =>
           context.apiKey("antigravity") && !context.accountEnvironment
@@ -1126,7 +1153,6 @@ export const BUILT_IN_PROVIDER_DRIVERS: readonly BuiltInProviderDriver[] = [
                   antigravityAppDataDir({ ...process.env, ...context.accountEnvironment }),
                   ANTIGRAVITY_TOKEN_FILE,
                 ),
-                version: cli.version,
                 model,
               }),
       }),
@@ -1377,7 +1403,7 @@ export const BUILT_IN_PROVIDER_DRIVERS: readonly BuiltInProviderDriver[] = [
     createClient: (cli, timeout, context, confinement) =>
       new AcpAgentClient(cli, timeout, {
         provider: "copilot",
-        flavor: DEFAULT_ACP_FLAVOR,
+        flavor: COPILOT_ACP_FLAVOR,
         argv: COPILOT_ARGV,
         env: { ...COPILOT_ENV },
         ...(confinement
@@ -1401,7 +1427,7 @@ export const BUILT_IN_PROVIDER_DRIVERS: readonly BuiltInProviderDriver[] = [
     createProfileClient: (cli, timeout, context) =>
       new AcpAgentClient(cli, timeout, {
         provider: "copilot",
-        flavor: DEFAULT_ACP_FLAVOR,
+        flavor: COPILOT_ACP_FLAVOR,
         argv: COPILOT_ARGV,
         profileGeneration: true,
         env: { ...COPILOT_ENV },

@@ -66,6 +66,8 @@ export const messages = {
     "圧縮してもこのチャットは小さくなりません。2回圧縮しても、モデルのコンテキストウィンドウの{percent}%を使っているため、OpenBotは自動圧縮を止めます。ウィンドウの大部分はツールと指示が使っています。このエージェントに不要なMCPサーバーやコンピューター操作をオフにするか、より大きなウィンドウのモデルを選んでください。その後、新しいチャットを開始してください。",
   "error.backend.contextCompactionStopped":
     "このチャットの圧縮が2回続けて失敗したため、OpenBot は自動圧縮を停止します。試行のたびにチャット全体がモデルに送信され、プランの上限を消費します。もう一度試すには「今すぐ圧縮」を選択するか、新しいチャットを開始してください。",
+  "error.backend.providerModelAtCapacity":
+    "モデルが混雑しています。プロバイダーは数分後に再試行します。今すぐ続けるには、ターンを停止して別のモデルを選んでください。",
   "error.backend.providerRetrying":
     "プロバイダーでこのリクエストが{attempts}回失敗し、再試行しています。エージェントが続かない場合は、ターンを停止してください。",
   "error.backend.providerRetryingLargeContext":
@@ -171,6 +173,10 @@ export const messages = {
   "error.backend.attachBetween": "1 〜 {limit} 個のファイルを添付してください。",
   "error.backend.attachmentNotFile": "添付ファイルがファイルではありません: {path}",
   "error.backend.generatedImageTooLarge": "生成された画像が 100 MB の上限を超えています。",
+  "error.backend.generatedVideoTooLarge": "生成された動画が 100 MB の上限を超えています。",
+  "error.backend.videoGenerationFailed": "動画の生成に失敗しました。",
+  "error.backend.videoGenerationNoVideo": "動画の生成で動画が返されませんでした。",
+  "error.backend.videoGenerationInterrupted": "動画の生成が中断されました。",
   "error.backend.attachmentNotRegularFile": "添付できるのは通常のファイルだけです: {name}",
   "error.backend.attachmentCopyFailed": "OpenBot は {name} をコピーできませんでした。",
   "error.backend.routineNameRequired": "ルーティン名が必要です。",
@@ -232,6 +238,9 @@ export const messages = {
   "error.backend.messageDeleteNotFound": "このメッセージはチャットにありません。",
   "error.backend.messageDeleteBusy": "このメッセージは実行中のターンの一部です。ターンが終わってから削除してください。",
   "error.backend.messageDeleteForbidden": "削除できるのは自分が送信したメッセージだけです。",
+  "error.backend.messagePinNotFound": "このメッセージはチャットにありません。",
+  "error.backend.messagePinLimit":
+    "このチャットにはピン留めしたメッセージが50件あります。別のメッセージをピン留めする前に、1件解除してください。",
   "error.backend.routineFlowHandoffFailed": "ルーティンはこのエージェントに作業を渡せませんでした。",
   "error.backend.mcpServerLimit": "OpenBot に保存できる MCP サーバーは {limit} 個までです。",
   "error.backend.mcpServerNameTaken": "{name} という名前の MCP サーバーはすでに存在します。",
@@ -264,6 +273,8 @@ export const messages = {
   "error.backend.mcpServerExited":
     "サーバーは応答する前に停止しました。ターミナルでコマンドを実行してエラーを確認してください。",
   "error.backend.mcpServerFailedToStart": "サーバーが起動しませんでした: {reason}",
+  "error.backend.mcpToolSchemaRefused":
+    "このサーバーのツール {tool} の入力形式を、このプロバイダーは読み取れません。ほかのプロバイダーのエージェントは引き続きこのサーバーを使えます。",
   "error.backend.mcpServerSignInForProvider":
     "{provider} は MCP サーバー {name} を使用できませんでした。サーバーがサインインを求めています。MCP 設定を開いて「サインイン」を選択してください。",
   "error.backend.mcpServerFailedForProvider":
@@ -296,6 +307,13 @@ export const messages = {
   "error.backend.sectionNameTooLong": "セクション名が長すぎます。",
   "error.backend.sidebarFolderTooDeep": "フォルダーは3階層までです。",
   "error.backend.sidebarFolderMoveInvalid": "このフォルダーはそこへ移動できません。",
+  "error.backend.libraryFolderName": "フォルダー名は 1〜{limit} 文字にしてください。",
+  "error.backend.libraryFolderLimit": "1 つのサーバーに置けるライブラリのフォルダーは {limit} 個までです。",
+  "error.backend.libraryFolderFileLimit": "ライブラリのフォルダーにあるファイルが多すぎます。",
+  "error.backend.libraryFolderTooDeep": "ライブラリのフォルダーは {limit} 階層までです。",
+  "error.backend.libraryFolderGone": "フォルダーが存在しないか、すでに削除されています。",
+  "error.backend.libraryFolderOtherAgent": "ファイルは、そのエージェントのフォルダーにのみ入れられます。",
+  "error.backend.libraryFolderMoveInvalid": "このフォルダーはそこへ移動できません。",
   "error.backend.sectionNameDuplicate": "セクション名は重複しないようにしてください。",
   "error.backend.directMessageRequired": "先にメッセージを入力してください。",
   "error.backend.directMessageTooLong": "ダイレクトメッセージは {limit} 文字までです。",

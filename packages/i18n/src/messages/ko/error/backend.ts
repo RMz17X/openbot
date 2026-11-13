@@ -65,6 +65,8 @@ export const messages = {
     "압축해도 이 채팅이 작아지지 않아요. 두 번 압축한 뒤에도 모델 컨텍스트 창의 {percent}%를 사용해서 OpenBot이 압축을 멈춰요. 창의 대부분은 도구와 지침이 사용해요. 이 에이전트에 필요 없는 MCP 서버나 컴퓨터 사용을 끄거나, 창이 더 큰 모델을 선택하세요. 그런 다음 새 채팅을 시작하세요.",
   "error.backend.contextCompactionStopped":
     '이 채팅의 압축이 두 번 연속 실패하여 OpenBot이 자동 압축을 중지합니다. 시도할 때마다 채팅 전체가 모델로 전송되어 요금제 한도를 사용합니다. 다시 시도하려면 "지금 압축"을 선택하거나 새 채팅을 시작하세요.',
+  "error.backend.providerModelAtCapacity":
+    "모델 용량이 가득 찼습니다. 제공업체가 몇 분 후에 다시 시도합니다. 지금 계속하려면 턴을 중지하고 다른 모델을 선택하세요.",
   "error.backend.providerRetrying":
     "제공자가 이 요청에 {attempts}번 실패해서 다시 시도하고 있어요. 에이전트가 계속하지 않으면 턴을 중지하세요.",
   "error.backend.providerRetryingLargeContext":
@@ -158,6 +160,10 @@ export const messages = {
   "error.backend.attachBetween": "파일을 1개에서 {limit}개 사이로 첨부하세요.",
   "error.backend.attachmentNotFile": "첨부 파일이 파일이 아니에요: {path}",
   "error.backend.generatedImageTooLarge": "생성된 이미지가 100MB 한도를 넘었어요.",
+  "error.backend.generatedVideoTooLarge": "생성된 동영상이 100MB 한도를 넘었어요.",
+  "error.backend.videoGenerationFailed": "동영상을 생성하지 못했어요.",
+  "error.backend.videoGenerationNoVideo": "동영상 생성 결과로 동영상이 오지 않았어요.",
+  "error.backend.videoGenerationInterrupted": "동영상 생성이 중단됐어요.",
   "error.backend.attachmentNotRegularFile": "일반 파일만 첨부할 수 있어요: {name}",
   "error.backend.attachmentCopyFailed": "OpenBot이 {name}을(를) 복사할 수 없었어요.",
   "error.backend.routineNameRequired": "루틴 이름이 필요해요.",
@@ -214,6 +220,9 @@ export const messages = {
   "error.backend.messageDeleteNotFound": "이 메시지는 채팅에 없어요.",
   "error.backend.messageDeleteBusy": "이 메시지는 실행 중인 턴의 일부예요. 턴이 끝나면 삭제하세요.",
   "error.backend.messageDeleteForbidden": "내가 보낸 메시지만 삭제할 수 있어요.",
+  "error.backend.messagePinNotFound": "이 메시지는 채팅에 없습니다.",
+  "error.backend.messagePinLimit":
+    "이 채팅에는 고정된 메시지가 50개 있습니다. 다른 메시지를 고정하려면 먼저 하나를 해제하세요.",
   "error.backend.routineFlowHandoffFailed": "루틴이 이 에이전트에게 작업을 넘기지 못했어요.",
   "error.backend.mcpServerLimit": "OpenBot은 MCP 서버를 최대 {limit}개까지 유지해요.",
   "error.backend.mcpServerNameTaken": "{name}(이)라는 MCP 서버가 이미 있어요.",
@@ -243,6 +252,8 @@ export const messages = {
     "로그인 서버가 OpenBot이 읽을 수 없는 응답을 보냈어요. 서비스에서 API 키나 토큰을 제공한다면 이 서버의 설정에 추가한 후 다시 연결을 테스트해 주세요.",
   "error.backend.mcpServerExited": "서버가 응답하기 전에 중지되었어요. 터미널에서 명령을 실행해 오류를 확인하세요.",
   "error.backend.mcpServerFailedToStart": "서버가 시작되지 않았어요: {reason}",
+  "error.backend.mcpToolSchemaRefused":
+    "이 서버의 도구 {tool}의 입력 형식을 이 제공자가 읽을 수 없어요. 다른 제공자의 에이전트는 계속 이 서버를 받아요.",
   "error.backend.mcpServerSignInForProvider":
     "{provider}이(가) MCP 서버 {name}을(를) 사용할 수 없었어요. 서버가 로그인을 요청해요. MCP 설정을 열고 로그인을 선택해 주세요.",
   "error.backend.mcpServerFailedForProvider":
@@ -273,6 +284,13 @@ export const messages = {
   "error.backend.sectionNameTooLong": "섹션 이름이 너무 길어요.",
   "error.backend.sidebarFolderTooDeep": "폴더는 3단계까지만 만들 수 있습니다.",
   "error.backend.sidebarFolderMoveInvalid": "이 폴더는 그곳으로 옮길 수 없습니다.",
+  "error.backend.libraryFolderName": "폴더 이름은 1~{limit}자여야 해요.",
+  "error.backend.libraryFolderLimit": "서버 하나에는 라이브러리 폴더를 최대 {limit}개까지 둘 수 있어요.",
+  "error.backend.libraryFolderFileLimit": "라이브러리 폴더에 파일이 너무 많아요.",
+  "error.backend.libraryFolderTooDeep": "라이브러리 폴더는 {limit}단계까지만 만들 수 있어요.",
+  "error.backend.libraryFolderGone": "폴더가 없거나 이미 삭제되었어요.",
+  "error.backend.libraryFolderOtherAgent": "파일은 해당 에이전트의 폴더에만 넣을 수 있어요.",
+  "error.backend.libraryFolderMoveInvalid": "이 폴더는 그곳으로 옮길 수 없어요.",
   "error.backend.sectionNameDuplicate": "섹션 이름은 고유해야 해요.",
   "error.backend.directMessageRequired": "먼저 메시지를 작성하세요.",
   "error.backend.directMessageTooLong": "다이렉트 메시지는 최대 {limit}자까지 쓸 수 있어요.",

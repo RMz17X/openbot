@@ -169,6 +169,8 @@ export const messages = {
   "error.provider.cliBusyUpdate": "تعمل واجهة {provider} CLI على دور. انتظر حتى ينتهي، ثم حدّث.",
   "error.provider.cliSelectFailed": "تعذّر على OpenBot اختيار واجهة CLI المُدارة المثبتة.",
   "error.provider.noAuthenticatedAccount": "لم يُرجع {provider} حسابًا مصادقًا عليه.",
+  "error.provider.codexModelProvider":
+    "يستخدم Codex على هذا الكمبيوتر مزوّد نماذج آخر، وهذا المزوّد لا يستخدم تسجيل الدخول إلى ChatGPT أو مفتاح OpenAI API. يمكن لوكلاء ChatGPT استخدام هذا المزوّد الآن. لاستخدام حساب ChatGPT، أعد مزوّد النماذج في Codex إلى OpenAI.",
   "error.provider.signInExpired": "انتهت صلاحية تسجيل دخولك إلى {provider}. سجّل الدخول مرة أخرى للمتابعة.",
   "error.provider.cliActivateFailed": "تعذّر على OpenBot تفعيل واجهة CLI المُدارة.",
   "error.provider.noMainlandChinaSignIn": "لا يوفر {provider} تسجيل دخول للصين القارية.",
@@ -212,6 +214,7 @@ export const messages = {
     "تطبيق Codex آخر يفتح هذه الدردشة، مثل تطبيق Codex لسطح المكتب أو Codex CLI أو إضافة IDE. يمكن لتطبيق واحد فقط في كل مرة أن يكتب في دردشة Codex. أغلق الدردشة في ذلك التطبيق، ثم أرسل رسالتك مرة أخرى.",
   "error.provider.realtimeLimitZero":
     "أوقف Linux المزوّد لأن حد وقت المعالج في الوقت الحقيقي لدى OpenBot هو 0. يأتي هذا الحد من نظامك. ثبّت rtkit وشغّله (`rtkit-daemon`)، ثم نفّذ `systemctl --user restart xdg-desktop-portal`، ثم أعد تشغيل OpenBot. إعادة تشغيل xdg-desktop-portal وحدها لا تكفي ما دام rtkit غير مثبّت.",
+  "error.provider.cpuUnsupported": "لا يمكن لمعالج هذا الكمبيوتر تشغيل هذا المزوّد. استخدم مزوّدًا آخر.",
   "error.provider.opencodeDatabaseNewer":
     "تعذّر على OpenCode فتح قاعدة بياناته لأن إصدارًا أحدث من OpenCode غيّرها. حدّث OpenCode إلى الإصدار 2 أو أحدث، ثم أعد المحاولة.",
   "error.provider.opencodeNoAnswer": "أنهى نموذج OpenCode الدور بدون إجابة. أعد المحاولة، أو اختر نموذجًا آخر.",
@@ -241,6 +244,8 @@ export const messages = {
     "لا يستطيع Gemini استخدام هذا النموذج الآن. اختر نموذجًا آخر، ثم أعد المحاولة.\n{detail}",
   "error.provider.antigravityServiceFailure":
     "لم تُكمل خدمة Gemini من Google الطلب. أعد المحاولة بعد بضع دقائق.\n{detail}",
+  "error.provider.antigravityRequestRejected":
+    "رفض Gemini هذا الطلب. اختر نموذجًا آخر، ثم أرسل رسالتك مرة أخرى. إذا فشل مرة أخرى، فابدأ دردشة جديدة.\n{detail}",
   "error.provider.antigravityConnectionLost": "فقد Gemini الاتصال بوكيله وتوقف. أرسل رسالة للمتابعة.",
   "error.provider.antigravityRemoteWindowsSignIn":
     "على مضيف Windows، يفتح Gemini صفحة Google على المضيف نفسه. اربط Gemini على الكمبيوتر المضيف.",
@@ -276,6 +281,8 @@ export const messages = {
   "error.provider.hermesVersionUnreadable": "تتعذّر قراءة إصدار Hermes Agent.",
   "error.provider.hermesSignIn":
     "سجّل الدخول باستخدام Nous Portal، أو شغّل `hermes setup` في نافذة طرفية، لاستخدام Hermes.",
+  "error.provider.hermesTurnFailed":
+    "لم يتمكن Hermes من إنهاء هذا الدور. إذا ذكر ردّه سببًا، فاتبع ما يقوله. وإلا فقد يكون أحد خوادم MCP لهذا الوكيل غير متاح: تحقق منه في إعدادات الخادم › MCP، ثم أرسل رسالتك مرة أخرى.",
   "error.provider.usageLimitReached": "بلغ الحساب حد الاستخدام.",
   "error.provider.claudeContextFull":
     "أصبحت هذه الدردشة طويلة جدًا على Claude. بدأ OpenBot جلسة Claude Code جديدة بسجل الدردشة. أعد المحاولة.",

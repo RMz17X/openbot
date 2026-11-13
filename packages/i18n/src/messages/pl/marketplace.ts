@@ -136,6 +136,11 @@ export const messages = {
   "marketplace.app.remove.confirmTitle": "Usunąć: {name}?",
   "marketplace.app.remove.keep": "Zachowaj",
   "marketplace.app.connection": "Połączenie",
+  "marketplace.app.access.use": "Może używać",
+  "marketplace.app.access.noAgents": "Brak agentów",
+  "marketplace.app.access.agentsOf": "Agenci, którzy mogą używać {name}",
+  "marketplace.app.access.chooseAgents": "{name}: {summary}. Wybierz agentów",
+  "marketplace.app.access.level": "Dostęp roli {role} do {name}",
   "marketplace.app.setup.account": "Zaloguj się w przeglądarce na konto {name}.",
   "marketplace.app.setup.key": "Wymaga klucza API z konta {name}.",
   "marketplace.app.setup.keySaved": "{field} – zapisano na: {host}.",
@@ -261,6 +266,15 @@ export const messages = {
   "marketplace.plugin.higgsfield.prompt.productShot":
     "Zrób w Higgsfield zdjęcie produktowe ceramicznego kubka na drewnianym stole.",
   "marketplace.plugin.higgsfield.prompt.clip": "Zrób w Higgsfield 5-sekundowe wideo fal o zachodzie słońca.",
+  "marketplace.plugin.sunra.tagline": "Obrazy, wideo, audio i 3D z AI",
+  "marketplace.plugin.sunra.description":
+    "Sunra pozwala agentom tworzyć obrazy, wideo, audio i modele 3D modelami takimi jak GPT Image, Nano Banana, Seedream, FLUX, Seedance, Kling i Veo, sprawdzać saldo kredytów i pobierać wyniki. Wyniki trafiają do projektu na koncie Sunra użytkownika. Każdy użytkownik loguje się do własnego konta Sunra w przeglądarce. Sunra najpierw podaje koszt każdego generowania, a kredyty tego konta zużywa dopiero po potwierdzeniu.",
+  "marketplace.plugin.sunra.app":
+    "Generowanie obrazów, wideo, audio i 3D, kredyty i wyniki przez serwer MCP Sunra z logowaniem w przeglądarce.",
+  "marketplace.plugin.sunra.prompt.balance": "Ile mam kredytów w Sunra?",
+  "marketplace.plugin.sunra.prompt.poster": "Zrób w Sunra plakat nocnego targu w deszczu, w formacie pionowym.",
+  "marketplace.plugin.sunra.prompt.clip":
+    "Zrób w Sunra 5-sekundowe wideo papierowej łódki na rzece. Najpierw podaj mi koszt.",
   "marketplace.plugin.elevenlabs.tagline": "Mowa, głosy i agenci głosowi",
   "marketplace.plugin.elevenlabs.description":
     "ElevenLabs pozwala agentom zamieniać tekst na mowę, pracować z głosami oraz tworzyć, testować i przeglądać agentów głosowych ElevenLabs i ich rozmowy. Wygenerowane audio wraca jako krótko ważny link do pobrania. Każdy użytkownik loguje się do własnego konta ElevenLabs w przeglądarce, a każde generowanie zużywa kredyty tego konta.",
@@ -581,6 +595,14 @@ export const messages = {
   "marketplace.skills.origin.local": "Utworzona na tym komputerze",
   "marketplace.skills.origin.workspace": "W folderze tego agenta",
   "marketplace.skills.origin.marketplace": "Z Marketplace · wersja {version}",
+  "marketplace.skills.origin.github": "Z GitHub · {repository}",
+  "marketplace.skills.github.search": "Szukaj lub wklej link do GitHub",
+  "marketplace.skills.github.reading": "Szukanie umiejętności w repozytorium",
+  "marketplace.skills.github.trust":
+    "OpenBot nie sprawdził umiejętności z GitHub. Przeczytaj umiejętność, zanim ją dodasz.",
+  "marketplace.skills.github.source": "GitHub · {repository}, commit {commit}",
+  "marketplace.skills.github.open": "GitHub",
+  "marketplace.skills.github.openName": "Otwórz {repository} w GitHub",
   "marketplace.skills.status.notAdded": "Niedodana",
   "marketplace.skills.status.on": "Włączona: {agents}",
   "marketplace.skills.agentCount": {

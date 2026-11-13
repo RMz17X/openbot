@@ -183,6 +183,8 @@ export const messages = {
   "provider.geminiKey.title": "مفتاح Gemini API",
   "provider.geminiKey.description":
     "احفظ مفتاح Gemini API على هذا الحاسوب. يُستخدم المفتاح المحفوظ بدلًا من حسابك في Google. لتسجيل الدخول باستخدام Google، أزل المفتاح واختر «اتصال» في صف Gemini.",
+  "provider.geminiKey.descriptionHost":
+    "احفظ مفتاح Gemini API على المضيف. يُستخدم المفتاح المحفوظ بدلًا من حسابك في Google. لتسجيل الدخول باستخدام Google، أزل المفتاح واختر «اتصال» في صف Gemini.",
   "provider.geminiKey.label": "مفتاح Gemini API",
   "provider.claudeKey.title": "مفتاح Anthropic API",
   "provider.claudeKey.description":
@@ -197,14 +199,20 @@ export const messages = {
   "provider.inceptionKey.title": "مفتاح Inception API",
   "provider.inceptionKey.description":
     "احفظ مفتاح Inception API على هذا الحاسوب لاستخدام نماذج Mercury. يشغّلها OpenBot في Pi CLI الذي ينزّله.",
+  "provider.inceptionKey.descriptionHost":
+    "احفظ مفتاح Inception API على المضيف لاستخدام نماذج Mercury. يشغّلها OpenBot في Pi CLI الذي ينزّله.",
   "provider.inceptionKey.label": "مفتاح Inception API",
   "provider.deepseekKey.title": "مفتاح DeepSeek API",
   "provider.deepseekKey.description":
     "احفظ مفتاح DeepSeek API على هذا الحاسوب لاستخدام نماذج DeepSeek. يشغّلها OpenBot في Pi CLI الذي ينزّله.",
+  "provider.deepseekKey.descriptionHost":
+    "احفظ مفتاح DeepSeek API على المضيف لاستخدام نماذج DeepSeek. يشغّلها OpenBot في Pi CLI الذي ينزّله.",
   "provider.deepseekKey.label": "مفتاح DeepSeek API",
   "provider.openrouterKey.title": "مفتاح OpenRouter API",
   "provider.openrouterKey.description":
     "احفظ مفتاح OpenRouter API على هذا الحاسوب لاستخدام النماذج التي يقدمها OpenRouter. يشغّلها OpenBot في Pi CLI الذي ينزّله.",
+  "provider.openrouterKey.descriptionHost":
+    "احفظ مفتاح OpenRouter API على المضيف لاستخدام النماذج التي يقدمها OpenRouter. يشغّلها OpenBot في Pi CLI الذي ينزّله.",
   "provider.openrouterKey.label": "مفتاح OpenRouter API",
   "provider.openCodeKey.title": "تسجيل الدخول إلى OpenCode Go",
   "provider.openCodeKey.description": "لا تحتاج النماذج المجانية إلى حساب. يفتح المفتاح نماذج Go المدفوعة.",
@@ -258,6 +266,16 @@ export const messages = {
   "provider.account.resetUsageNoCredit": "لم يتبقَّ لدى {name} أي رصيد لإعادة تعيين الاستخدام.",
   "provider.account.resetUsageAlreadyRedeemed": "رصيد إعادة التعيين هذا لـ {name} مستخدم بالفعل.",
   "provider.account.resetUsageFailed": "تعذّرت إعادة تعيين استخدام {name}.",
+  "provider.account.pool": "تجميع الحسابات",
+  "provider.account.poolDescription":
+    "يستخدم الوكلاء حسابًا واحدًا حتى يقترب من حد الاستخدام، ثم الحساب الذي يُعاد تعيين حده أولًا.",
+  "provider.account.inUse": "قيد الاستخدام",
+  "provider.account.notInPool": "خارج المجموعة",
+  "provider.account.leaveOutOfPool": "استبعاد من المجموعة",
+  "provider.account.putBackInPool": "إعادة إلى المجموعة",
+  "provider.account.poolChip": "مجموعة",
+  "provider.account.poolCount": "مجموعة من {accounts}",
+  "provider.account.poolInUse": "{pool} · {name} قيد الاستخدام",
   "provider.settings.connected": "متصل",
   "provider.settings.other": "مزوّدون آخرون",
   "provider.settings.search": "البحث في المزوّدين",
@@ -290,6 +308,7 @@ export const messages = {
   "provider.settings.defaultSubtitle": "الافتراضي للوكلاء الجدد · {use}",
   "provider.settings.accounts": "الحسابات",
   "provider.settings.accountsDescription": "{count} من {max}. يستخدم كل وكيل حسابًا واحدًا.",
+  "provider.settings.accountsPooledDescription": "{count} من {max}. يتشارك الوكلاء هذه الحسابات.",
   "provider.settings.accountBlocked": "لا يمكن تشغيل {agents} حتى تسجّل الدخول مرة أخرى.",
   "provider.settings.removeTitle": "إزالة {name}؟",
   "provider.settings.removeMoves": "سيستخدم {agents} الحساب {name}.",
@@ -309,6 +328,8 @@ export const messages = {
   "provider.settings.keyOptional": "اختياري. يضيف المفتاح نماذج مدفوعة.",
   "provider.settings.keyAlternative": "أو الصق مفتاح {name} API.",
   "provider.settings.geminiKeyInUse": "يستخدم Gemini هذا المفتاح، لا خطة Google AI. لا يُعرض استخدام الخطة.",
+  "provider.settings.geminiKeyReplacesAccount":
+    "يُستخدم مفتاح Gemini API المحفوظ بدلًا من تسجيل الدخول بحساب Google. لاستخدام خطة Google ونماذجها، أزِل المفتاح.",
   "provider.settings.claudeKeyInUse":
     "تحتسب Anthropic رصيد API للمفتاح، وليس خطة Claude. اختر حساب مفتاح API في قائمة نموذج الوكيل. عندما لا يكون Claude مسجّل الدخول، يستخدم كل الوكلاء المفتاح.",
   "provider.settings.codexKeyInUse":
@@ -321,6 +342,10 @@ export const messages = {
   "provider.settings.versionAvailable": "{installed} · يتوفر {available}",
   "provider.settings.versionInstalledByUser": "{version} · ثبّته أنت",
   "provider.settings.versionDownloaded": "{version} · نزّله OpenBot",
+  "provider.settings.otherVersionInstalledByUser": "غير مستخدم: {version} · ثبّته أنت",
+  "provider.settings.otherVersionDownloaded": "غير مستخدم: {version} · نزّله OpenBot",
+  "provider.settings.useInstalledVersion": "استخدم الإصدار المثبّت",
+  "provider.settings.useDownloadedVersion": "استخدم إصدار OpenBot",
   "provider.settings.update": "تحديث",
   "provider.settings.downloadLabel": "تنزيل {name}",
   "provider.settings.diagnostics": "التشخيص",
@@ -384,4 +409,6 @@ export const messages = {
     many: "{url} · {count} نموذجًا",
     other: "{url} · {count} نموذج",
   },
+  "provider.settings.disconnectLocalOnly":
+    "يسجّل OpenBot خروج {provider} على هذا الكمبيوتر. تحتفظ واجهة {provider} CLI في الطرفية بتسجيل دخولها.",
 } as const satisfies PartialTranslation<typeof source>;

@@ -55,7 +55,7 @@ import type { DeltaBuffer } from "./delta-buffer";
 import type { FailureContext, FailureSignal } from "./failure-signal";
 import { readCapturedSteps } from "./handoff-tool-steps";
 import type { ImageGenRuntime } from "./image-gen-runtime";
-import { markIncompleteImageGeneration } from "./image-generation";
+import { markIncompleteMediaGeneration } from "./image-generation";
 import { type InstructionsChanges, instructionsChangeMessage } from "./instructions-changes";
 import type { MailboxSync } from "./mailbox-sync";
 import { memoryChangesMessage } from "./memory-changes-message";
@@ -68,7 +68,12 @@ import {
   providerResetDelayMs,
 } from "./provider-diagnostics";
 import type { ProviderRuntime } from "./provider-runtime";
-import { isNoUpdateAnswer, quietTeammateDelivery, settleQuietRoutineTurn } from "./routine-quiet-runs";
+import {
+  isNoUpdateAnswer,
+  quietTeammateDelivery,
+  settleQuietChannelTurn,
+  settleQuietRoutineTurn,
+} from "./routine-quiet-runs";
 import { type SkillLoad, skillLoads, skillLoadTokens } from "./skill-loads";
 import {
   foldCodexChildItem,
@@ -98,6 +103,17 @@ import { USAGE_LIMIT_METHOD, type UsageLimitGate } from "./usage-limit-gate";
 const logger = createOpenBotLogger("turn-lifecycle");
 /** The retry of one turn after which the user gets a notice. A single retry is a normal network error. */
 const RETRY_NOTICE_ATTEMPTS = 3;
+const CAPACITY_CAUSE: CauseCode = "provider_unavailable";
+/**
+ * Codex's text for a model at capacity (`ServerOverloaded`). A retry notice of Codex carries
+ * `responseStreamDisconnected` as its info and keeps this text only in `additionalDetails`.
+ */
+const MODEL_AT_CAPACITY = /\bmodel is at capacity\b/iu;
+
+/** Whether a provider retries because its model is at capacity. */
+function modelAtCapacity(error: DynamicRecord | null, details: string | null): boolean {
+  return error?.codexErrorInfo === "serverOverloaded" || (details !== null && MODEL_AT_CAPACITY.test(details));
+}
 const ENDED_TURN_LIMIT = 256;
 /** How long before a turn's start its usage records can be, as in host analytics. */
 const TURN_USAGE_MARGIN_MS = 60 * 60 * 1_000;
@@ -341,6 +357,8 @@ export class TurnLifecycle {
   readonly #turnErrors = new Map<string, string>();
   /** How many times the provider retried a request of each running turn. */
   readonly #turnRetries = new Map<string, number>();
+  /** The running turns that showed the model-at-capacity notice. A turn shows it one time. */
+  readonly #capacityNotices = new Set<string>();
   /**
    * The client, provider thread and start time of each running turn, from its `turn/started`.
    * `produced` is set by the first item or delta: a refused turn is run again only without one.
@@ -394,6 +412,12 @@ export class TurnLifecycle {
   readonly #refusedRetries = new Set<string>();
   /** Running turns whose agent called the no-update tool. The completion of the turn takes the entry. */
   readonly #noUpdateTurns = new Set<string>();
+  /**
+   * Running turns whose agent owns a main task of a channel routine's request and called the no-update
+   * tool. The channel shows their answers as steps. The entry stays until the completion has marked
+   * them as quiet answers, so no capture in between posts them.
+   */
+  readonly #quietChannelTurns = new Set<string>();
   /** Quiet routine turns whose provider failed with no answer after the no-update call. The completion takes the entry. */
   readonly #quietEmptyAnswers = new Set<string>();
   /** Running turns whose agent reported that its routine run failed, with the reason. The completion takes it. */
@@ -524,11 +548,13 @@ export class TurnLifecycle {
     this.#turnAssociations.clear();
     this.#turnErrors.clear();
     this.#turnRetries.clear();
+    this.#capacityNotices.clear();
     this.#limitedTurns.clear();
     this.#failoverTurns.clear();
     this.#failoverRetries.clear();
     this.#runningTurns.clear();
     this.#noUpdateTurns.clear();
+    this.#quietChannelTurns.clear();
     this.#quietEmptyAnswers.clear();
     this.#reportedFailures.clear();
     this.#endedTurns.clear();
@@ -562,6 +588,8 @@ export class TurnLifecycle {
     for (const [turnId, turn] of this.#runningTurns) {
       if (turn.client !== client) continue;
       this.#runningTurns.delete(turnId);
+      this.#turnRetries.delete(turnId);
+      this.#capacityNotices.delete(turnId);
       const compactionFailure = this.#compactionFailures.get(turnId);
       this.#compactionFailures.delete(turnId);
       // A routine run's own session saves no history, so its turn ends now and closes the session.
@@ -1161,14 +1189,20 @@ export class TurnLifecycle {
         }
         // Codex retries on its own and reports the final failure again without `willRetry`.
         if (isRecord(params) && params.willRetry === true) {
-          this.#providerRetried(agentId, threadId, getString(params, "turnId"), source.provider);
+          this.#providerRetried(
+            agentId,
+            threadId,
+            getString(params, "turnId"),
+            source.provider,
+            modelAtCapacity(error, getString(error, "additionalDetails")),
+          );
           return;
         }
         // A usage limit shows no banner, but the failed delivery still keeps it as the reason.
         const errorTurnId = getString(params, "turnId");
         // The no-update tool tells the model to end its turn, and a model that then sends only its
         // reasoning makes Grok fail the prompt with no answer. The run had nothing to report, so it
-        // ends quiet and shows no error (#6247).
+        // ends quiet and shows no error (#6247). A quiet channel routine turn too (#7166).
         if (
           notification.method === "error" &&
           causeCode === "empty_answer" &&
@@ -1176,9 +1210,10 @@ export class TurnLifecycle {
           threadId &&
           errorTurnId &&
           this.#runningTurns.has(errorTurnId) &&
-          this.#noUpdateTurns.has(errorTurnId) &&
           !this.#reportedFailures.has(errorTurnId) &&
-          this.#quietRoutineTurn(agentId, threadId, this.#mailbox.findDeliveriesByTurn(agentId, errorTurnId))
+          (this.#quietChannelTurns.has(errorTurnId) ||
+            (this.#noUpdateTurns.has(errorTurnId) &&
+              this.#quietRoutineTurn(agentId, threadId, this.#mailbox.findDeliveriesByTurn(agentId, errorTurnId))))
         ) {
           this.#quietEmptyAnswers.add(errorTurnId);
           logger.info("A quiet turn ended with no answer after its no-update call.", {
@@ -1321,13 +1356,19 @@ export class TurnLifecycle {
   /**
    * Codex sent a request of a running turn again. A turn that retries again and again looked like
    * work: Codex sent the same large request for 11 minutes, and the agent showed as working (#4374).
-   * The user gets one notice per turn. A large session also compacts before its next turn.
+   * The user gets a notice at the third retry. A large session also compacts before its next turn.
+   *
+   * A model at capacity gets its own notice, one time per turn, at the first capacity retry that
+   * OpenBot sees. Codex then waits about 5 minutes between tries and hides its first retry, so the
+   * agent showed as working with no output for more than 15 minutes before the general notice. A
+   * capacity retry does not count toward a compaction: the request size is not its cause.
    */
   #providerRetried(
     agentId: string | null | undefined,
     threadId: string | null | undefined,
     turnId: string | null,
     provider: AgentClient["provider"],
+    atCapacity: boolean,
   ): void {
     if (!agentId || !threadId || !turnId || !this.#runningTurns.has(turnId)) return;
     const attempts = (this.#turnRetries.get(turnId) ?? 0) + 1;
@@ -1335,25 +1376,33 @@ export class TurnLifecycle {
     logger.info("A provider retries a request.", {
       provider,
       attempts,
+      atCapacity,
       usedPercent: this.#compaction.usedPercent(threadId),
     });
-    if (attempts !== RETRY_NOTICE_ATTEMPTS) return;
-    const compacts = this.#compaction.retrying(threadId);
+    if (atCapacity) {
+      if (this.#capacityNotices.has(turnId)) return;
+      this.#capacityNotices.add(turnId);
+    } else if (attempts !== RETRY_NOTICE_ATTEMPTS) return;
+    // Only a retry for another cause can come from a large request, so only it can start a compaction.
+    const compacts = !atCapacity && this.#compaction.retrying(threadId);
     const percent = this.#compaction.usedPercent(threadId);
     this.#hooks.emitError(
       "agent_warning",
-      compacts && percent !== null
-        ? sourceText("error.backend.providerRetryingLargeContext", {
-            attempts: String(attempts),
-            percent: String(percent),
-          })
-        : sourceText("error.backend.providerRetrying", { attempts: String(attempts) }),
+      atCapacity
+        ? sourceText("error.backend.providerModelAtCapacity")
+        : compacts && percent !== null
+          ? sourceText("error.backend.providerRetryingLargeContext", {
+              attempts: String(attempts),
+              percent: String(percent),
+            })
+          : sourceText("error.backend.providerRetrying", { attempts: String(attempts) }),
       agentId,
       {
         provider,
         model: this.#hooks.turnModel(agentId, turnId),
         turnId,
         severity: "warning",
+        ...(atCapacity ? { causeCode: CAPACITY_CAUSE } : {}),
       },
     );
   }
@@ -1363,9 +1412,14 @@ export class TurnLifecycle {
    * teammate updates, so its completion keeps the text answers as quiet answers; `shown` when a
    * person waits for the answer, as in a Test run; null when neither a routine run nor a teammate
    * update started the turn. The completion decides again, because a message can join the turn after
-   * the call.
+   * the call. `channelRun` is a turn that owns a main task of a channel routine's request: the channel
+   * then posts no message for the turn (#7166).
    */
-  requestNoUpdate(agentId: string, threadId: string, turnId: string): "quiet" | "shown" | null {
+  requestNoUpdate(agentId: string, threadId: string, turnId: string, channelRun = false): "quiet" | "shown" | null {
+    if (channelRun) {
+      this.#quietChannelTurns.add(turnId);
+      return this.#reportedFailures.has(turnId) ? "shown" : "quiet";
+    }
     const deliveries = this.#mailbox.findDeliveriesByTurn(agentId, turnId);
     if (!deliveries.some(({ delivery }) => delivery.sender.kind === "routine" || quietTeammateDelivery(delivery)))
       return null;
@@ -1373,6 +1427,16 @@ export class TurnLifecycle {
     // A failed run is never quiet, so its answer must still be written.
     if (this.#reportedFailures.has(turnId)) return "shown";
     return this.#quietRoutineTurn(agentId, threadId, deliveries) ? "quiet" : "shown";
+  }
+
+  /** Whether the channel shows the answers of this running channel routine turn as steps (#7166). */
+  quietChannelTurn(turnId: string): boolean {
+    return this.#quietChannelTurns.has(turnId) && !this.#reportedFailures.has(turnId);
+  }
+
+  /** A person's message joined this channel turn, so its answers show in the channel again. */
+  keepChannelTurnAnswers(turnId: string): void {
+    this.#quietChannelTurns.delete(turnId);
   }
 
   /**
@@ -1415,6 +1479,7 @@ export class TurnLifecycle {
       // A turn that runs again below starts a new trace, so each path takes this one.
       const trace = this.#traces.take(turnId, new Date().toISOString());
       const noUpdateCalled = this.#noUpdateTurns.delete(turnId);
+      const quietChannelRun = this.#quietChannelTurns.has(turnId);
       this.#quietEmptyAnswers.delete(turnId);
       const reportedFailure = this.#reportedFailures.get(turnId);
       this.#reportedFailures.delete(turnId);
@@ -1435,6 +1500,7 @@ export class TurnLifecycle {
       const reportedError = this.#turnErrors.get(turnId);
       this.#turnErrors.delete(turnId);
       this.#turnRetries.delete(turnId);
+      this.#capacityNotices.delete(turnId);
       // The error is kept only while the turn runs, so a refused turn always has its entry.
       const refusedFailure =
         running !== undefined && status === "failed" && reportedError !== undefined
@@ -1618,7 +1684,7 @@ export class TurnLifecycle {
         message.status = normalizeCompletionStatus(
           repeatable || failedOver || runsAgainHere || compactionContinuation ? "interrupted" : status,
         );
-        markIncompleteImageGeneration(message, message.status);
+        markIncompleteMediaGeneration(message, message.status);
       }
       // Only this loop reads the map, so the finished turn's items go, or it holds every item ever seen.
       for (const [itemId, itemTurnId] of this.#itemTurns) if (itemTurnId === turnId) this.#itemTurns.delete(itemId);
@@ -1694,13 +1760,17 @@ export class TurnLifecycle {
         dropPlaceholderAnswers(snapshot, turnId);
       }
       // Only a turn that ran nothing but scheduled, script or webhook runs and teammate updates: a
-      // person who wrote in the same turn, or who started a Test run, waits for the answer. A failed
-      // run is never quiet.
+      // person who wrote in the same turn, or who started a Test run, waits for the answer. The owner
+      // of a channel routine's request that called the no-update tool is quiet too. A failed run is
+      // never quiet.
       const quiet =
         outcome === "completed" &&
         reportedFailure === undefined &&
-        this.#quietRoutineTurn(agentId, snapshot.threadId, deliveries) &&
-        settleQuietRoutineTurn(snapshot, turnId, noUpdateCalled);
+        (this.#quietRoutineTurn(agentId, snapshot.threadId, deliveries)
+          ? settleQuietRoutineTurn(snapshot, turnId, noUpdateCalled)
+          : quietChannelRun && settleQuietChannelTurn(snapshot, turnId));
+      // A turn that is not quiet after all, such as one with a file, shows its answers in the channel.
+      if (!quiet) this.#quietChannelTurns.delete(turnId);
       const latestAssistant = latestTurnAnswer(snapshot.messages, turnId);
       // A routine run that answered only the no-update marker, also a Test run that shows it in the
       // chat, does not put the marker in the preview.
@@ -1859,7 +1929,10 @@ export class TurnLifecycle {
         ),
         Effect.ensuring(
           Effect.andThen(
-            Effect.sync(() => this.#completingTurns.delete(turnId)),
+            Effect.sync(() => {
+              this.#completingTurns.delete(turnId);
+              this.#quietChannelTurns.delete(turnId);
+            }),
             this.#hooks.closeRoutineSession(threadId),
           ),
         ),
@@ -1885,6 +1958,8 @@ export class TurnLifecycle {
     const runningThreadId = running?.threadId ?? threadId;
     if (running) this.#keepTurnTiming(turnId, running);
     this.#runningTurns.delete(turnId);
+    this.#turnRetries.delete(turnId);
+    this.#capacityNotices.delete(turnId);
     this.#reportedFailures.delete(turnId);
     this.#quietEmptyAnswers.delete(turnId);
     this.#markEnded(turnId);
@@ -1925,7 +2000,7 @@ export class TurnLifecycle {
         if (message.subagents && this.#trackSubagents(agentId, turnId, message.subagents))
           this.#hooks.emitRuntimeSnapshot();
         message.status = status;
-        markIncompleteImageGeneration(message, status);
+        markIncompleteMediaGeneration(message, status);
         changedIds.add(message.id);
       }
       for (const { delivery } of deliveries) {
@@ -2500,7 +2575,7 @@ function dropPlaceholderAnswers(snapshot: ConversationSnapshot, turnId: string):
       message.itemType === CONVERSATION_SUBAGENTS_ITEM_TYPE
     )
       continue;
-    if (message.attachments?.length || message.imageGeneration) continue;
+    if (message.attachments?.length || message.imageGeneration || message.videoGeneration) continue;
     if (!message.text.trim() || /[\p{L}\p{N}]/u.test(message.text)) continue;
     snapshot.messages.splice(index, 1);
   }
@@ -2514,7 +2589,8 @@ function isEmptyAttemptText(message: ConversationMessage | undefined, turnId: st
     (message.itemType === "agentMessage" || message.itemType === "commentary") &&
     !message.text.trim() &&
     !message.attachments?.length &&
-    !message.imageGeneration
+    !message.imageGeneration &&
+    !message.videoGeneration
   );
 }
 

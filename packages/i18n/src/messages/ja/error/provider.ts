@@ -189,6 +189,8 @@ export const messages = {
   "error.provider.cliBusyUpdate": "{provider} CLI はターンを処理中です。終わるまで待ってから更新してください。",
   "error.provider.cliSelectFailed": "OpenBot はインストール済みの管理対象 CLI を選択できませんでした。",
   "error.provider.noAuthenticatedAccount": "{provider} は認証済みのアカウントを返しませんでした。",
+  "error.provider.codexModelProvider":
+    "このコンピューターの Codex は別のモデルプロバイダーを使用しています。このプロバイダーは ChatGPT のサインインや OpenAI API キーを使用しません。ChatGPT エージェントは今すぐこのプロバイダーを使用できます。ChatGPT アカウントを使用するには、Codex のモデルプロバイダーを OpenAI に戻してください。",
   "error.provider.signInExpired":
     "{provider} のサインインの有効期限が切れました。続けるには、もう一度サインインしてください。",
   "error.provider.cliActivateFailed": "OpenBot は管理対象 CLI を有効にできませんでした。",
@@ -234,6 +236,8 @@ export const messages = {
     "別の Codex アプリ (Codex デスクトップアプリ、Codex CLI、IDE 拡張機能など) がこのチャットを開いています。Codex のチャットに書き込めるアプリは一度に 1 つだけです。そのアプリでチャットを閉じてから、メッセージをもう一度送信してください。",
   "error.provider.realtimeLimitZero":
     "OpenBot のリアルタイム CPU 制限が 0 のため、Linux がプロバイダーを停止しました。この制限はシステムから来ています。rtkit をインストールして起動し (`rtkit-daemon`)、`systemctl --user restart xdg-desktop-portal` を実行してから OpenBot を再起動してください。rtkit がない間は、xdg-desktop-portal を再起動するだけでは解決しません。",
+  "error.provider.cpuUnsupported":
+    "このコンピューターのプロセッサーでは、このプロバイダーを実行できません。別のプロバイダーを使用してください。",
   "error.provider.opencodeDatabaseNewer":
     "新しいバージョンの OpenCode がデータベースを変更したため、OpenCode はデータベースを開けませんでした。OpenCode をバージョン 2 以降に更新してから、もう一度お試しください。",
   "error.provider.opencodeNoAnswer":
@@ -267,6 +271,8 @@ export const messages = {
     "Gemini は現在このモデルを使用できません。別のモデルを選んでから、もう一度お試しください。\n{detail}",
   "error.provider.antigravityServiceFailure":
     "Google の Gemini サービスがリクエストを完了しませんでした。数分後にもう一度お試しください。\n{detail}",
+  "error.provider.antigravityRequestRejected":
+    "Gemini がこのリクエストを拒否しました。別のモデルを選んでから、メッセージをもう一度送信してください。再び失敗する場合は、新しいチャットを始めてください。\n{detail}",
   "error.provider.antigravityConnectionLost":
     "Gemini はエージェントとの接続が切れたため停止しました。続けるには、メッセージを送信してください。",
   "error.provider.antigravityRemoteWindowsSignIn":
@@ -308,6 +314,8 @@ export const messages = {
   "error.provider.hermesVersionUnreadable": "Hermes Agent のバージョンを読み取れません。",
   "error.provider.hermesSignIn":
     "Hermes を使うには、Nous Portal でサインインするか、ターミナルで `hermes setup` を実行してください。",
+  "error.provider.hermesTurnFailed":
+    "Hermes はこのターンを完了できませんでした。返信に理由が書かれている場合は、その指示に従ってください。書かれていない場合は、このエージェントの MCP サーバーが利用できない可能性があります。サーバーの設定 › MCP で確認してから、メッセージをもう一度送信してください。",
   "error.provider.usageLimitReached": "アカウントが使用量の上限に達しました。",
   "error.provider.claudeContextFull":
     "このチャットは Claude には長くなりすぎました。OpenBot はチャット履歴を引き継いだ新しい Claude Code セッションを開始しました。もう一度お試しください。",

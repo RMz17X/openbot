@@ -111,6 +111,11 @@ export const messages = {
   "marketplace.app.remove.confirmTitle": "{name} verwijderen?",
   "marketplace.app.remove.keep": "Behouden",
   "marketplace.app.connection": "Verbinding",
+  "marketplace.app.access.use": "Mag gebruiken",
+  "marketplace.app.access.noAgents": "Geen agents",
+  "marketplace.app.access.agentsOf": "Agents die {name} mogen gebruiken",
+  "marketplace.app.access.chooseAgents": "{name}: {summary}. Agents kiezen",
+  "marketplace.app.access.level": "Toegang van {role} tot {name}",
   "marketplace.app.setup.account": "Log via de browser in met je {name}-account.",
   "marketplace.app.setup.key": "Vereist een API-sleutel van je {name}-account.",
   "marketplace.app.setup.keySaved": "{field} opgeslagen op {host}.",
@@ -238,6 +243,16 @@ export const messages = {
     "Maak met Higgsfield een productfoto van een keramische mok op een houten tafel.",
   "marketplace.plugin.higgsfield.prompt.clip":
     "Maak met Higgsfield een video van 5 seconden met golven bij zonsondergang.",
+  "marketplace.plugin.sunra.tagline": "AI-afbeeldingen, -video's, -audio en 3D",
+  "marketplace.plugin.sunra.description":
+    "Met Sunra maken agents afbeeldingen, video's, audio en 3D-modellen met modellen zoals GPT Image, Nano Banana, Seedream, FLUX, Seedance, Kling en Veo, controleren ze het creditsaldo en halen ze de resultaten op. Resultaten komen in een project in het Sunra-account van de gebruiker. Elke gebruiker meldt zich in de browser aan bij een eigen Sunra-account. Sunra noemt eerst de kosten van elke generatie en gebruikt pas na bevestiging credits van dat account.",
+  "marketplace.plugin.sunra.app":
+    "Afbeeldingen, video, audio en 3D genereren, credits en resultaten, via de MCP-server van Sunra met aanmelden in de browser.",
+  "marketplace.plugin.sunra.prompt.balance": "Hoeveel Sunra-credits heb ik?",
+  "marketplace.plugin.sunra.prompt.poster":
+    "Maak met Sunra een poster van een nachtmarkt in de regen, in staand formaat.",
+  "marketplace.plugin.sunra.prompt.clip":
+    "Maak met Sunra een video van 5 seconden van een papieren bootje op een rivier. Vertel me eerst wat het kost.",
   "marketplace.plugin.elevenlabs.tagline": "Spraak, stemmen en spraakagenten",
   "marketplace.plugin.elevenlabs.description":
     "Met ElevenLabs zetten agenten tekst om in spraak, werken ze met stemmen, en maken, testen en bekijken ze ElevenLabs-spraakagenten en hun gesprekken. Gegenereerde audio komt terug als een kortlevende downloadlink. Elke gebruiker meldt zich in de browser aan bij een eigen ElevenLabs-account, en elke generatie gebruikt credits van dat account.",
@@ -558,6 +573,14 @@ export const messages = {
   "marketplace.skills.origin.local": "Gemaakt op deze computer",
   "marketplace.skills.origin.workspace": "In de map van deze agent",
   "marketplace.skills.origin.marketplace": "Uit de Marktplaats · versie {version}",
+  "marketplace.skills.origin.github": "Van GitHub · {repository}",
+  "marketplace.skills.github.search": "Zoek, of plak een GitHub-link",
+  "marketplace.skills.github.reading": "Vaardigheden zoeken in de repository",
+  "marketplace.skills.github.trust":
+    "OpenBot heeft vaardigheden van GitHub niet gecontroleerd. Lees een vaardigheid voordat je die toevoegt.",
+  "marketplace.skills.github.source": "GitHub · {repository} op {commit}",
+  "marketplace.skills.github.open": "GitHub",
+  "marketplace.skills.github.openName": "{repository} openen op GitHub",
   "marketplace.skills.status.notAdded": "Niet toegevoegd",
   "marketplace.skills.status.on": "Aan op {agents}",
   "marketplace.skills.agentCount": { one: "{count} agent", other: "{count} agents" },

@@ -182,6 +182,8 @@ export const messages = {
   "error.provider.cliBusyUpdate": "{provider} CLI가 턴을 처리하는 중이에요. 끝날 때까지 기다린 후 업데이트하세요.",
   "error.provider.cliSelectFailed": "OpenBot이 설치된 관리형 CLI를 선택할 수 없었어요.",
   "error.provider.noAuthenticatedAccount": "{provider}이(가) 인증된 계정을 반환하지 않았어요.",
+  "error.provider.codexModelProvider":
+    "이 컴퓨터의 Codex는 다른 모델 제공자를 사용하고, 이 제공자는 ChatGPT 로그인이나 OpenAI API 키를 사용하지 않아요. ChatGPT 에이전트는 지금 이 제공자를 사용할 수 있어요. ChatGPT 계정을 사용하려면 Codex의 모델 제공자를 OpenAI로 다시 설정하세요.",
   "error.provider.signInExpired": "{provider} 로그인이 만료되었어요. 계속하려면 다시 로그인하세요.",
   "error.provider.cliActivateFailed": "OpenBot이 관리형 CLI를 활성화할 수 없었어요.",
   "error.provider.noMainlandChinaSignIn": "{provider}에는 중국 본토용 로그인이 없습니다.",
@@ -227,6 +229,8 @@ export const messages = {
     "다른 Codex 앱(Codex 데스크톱 앱, Codex CLI, IDE 확장 프로그램 등)이 이 채팅을 열어 두었어요. Codex 채팅에는 한 번에 하나의 앱만 쓸 수 있어요. 그 앱에서 채팅을 닫은 후 메시지를 다시 보내 주세요.",
   "error.provider.realtimeLimitZero":
     "OpenBot의 실시간 CPU 제한이 0이어서 Linux가 공급자를 중지했습니다. 이 제한은 시스템에서 옵니다. rtkit을 설치하고 시작한 다음(`rtkit-daemon`), `systemctl --user restart xdg-desktop-portal`을 실행하고 OpenBot을 다시 시작하세요. rtkit이 없으면 xdg-desktop-portal만 다시 시작해서는 해결되지 않습니다.",
+  "error.provider.cpuUnsupported":
+    "이 컴퓨터의 프로세서에서는 이 제공자를 실행할 수 없어요. 다른 제공자를 사용해 주세요.",
   "error.provider.opencodeDatabaseNewer":
     "더 새로운 OpenCode 버전이 데이터베이스를 변경해서 OpenCode가 데이터베이스를 열 수 없었어요. OpenCode를 버전 2 이상으로 업데이트한 후 다시 시도해 주세요.",
   "error.provider.opencodeNoAnswer": "OpenCode 모델이 답변 없이 턴을 끝냈어요. 다시 시도하거나 다른 모델을 선택하세요.",
@@ -257,6 +261,8 @@ export const messages = {
     "Gemini가 지금은 이 모델을 사용할 수 없어요. 다른 모델을 선택한 후 다시 시도해 주세요.\n{detail}",
   "error.provider.antigravityServiceFailure":
     "Google의 Gemini 서비스가 요청을 완료하지 못했어요. 몇 분 후 다시 시도해 주세요.\n{detail}",
+  "error.provider.antigravityRequestRejected":
+    "Gemini가 이 요청을 거부했어요. 다른 모델을 선택한 후 메시지를 다시 보내 주세요. 다시 실패하면 새 채팅을 시작해 주세요.\n{detail}",
   "error.provider.antigravityConnectionLost":
     "Gemini가 에이전트와의 연결이 끊겨 중지됐어요. 계속하려면 메시지를 보내 주세요.",
   "error.provider.antigravityRemoteWindowsSignIn":
@@ -294,6 +300,8 @@ export const messages = {
   "error.provider.hermesVersionUnreadable": "Hermes Agent 버전을 읽을 수 없습니다.",
   "error.provider.hermesSignIn":
     "Hermes를 사용하려면 Nous Portal로 로그인하거나 터미널에서 `hermes setup`을 실행하세요.",
+  "error.provider.hermesTurnFailed":
+    "Hermes가 이번 턴을 완료하지 못했습니다. 응답에 이유가 있으면 그 안내를 따르세요. 없으면 이 에이전트의 MCP 서버를 사용할 수 없는 상태일 수 있습니다. 서버 설정 › MCP에서 확인한 다음 메시지를 다시 보내세요.",
   "error.provider.usageLimitReached": "계정이 사용 한도에 도달했어요.",
   "error.provider.claudeContextFull":
     "이 채팅이 Claude가 처리하기에 너무 길어졌어요. OpenBot이 채팅 기록으로 새 Claude Code 세션을 시작했어요. 다시 시도해 주세요.",

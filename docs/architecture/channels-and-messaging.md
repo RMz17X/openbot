@@ -719,6 +719,12 @@ transport for its events. `messaging-types.ts` is the seam; the core never reads
   the exception: the router passes them to `MessagingThreads.outboundTool` from any thread, their
   arguments name an enabled connection and a place, and `MessagingService` answers them through
   `MessagingThreads.setOutbound` with the adapter's `places` and `postAnswer`, after `redactText`.
+  A `messaging_history` call that names a connection and a place goes the same way
+  (`isMessagingOutboundCall`): `MessagingService` reads the adapter's `recent` only for a place that
+  `places` lists. `outboundTool` refuses this read in a thread that has a messaging link, and in a
+  turn with a delivery that has a `messaging` origin or a `messagingReturn`, or that an agent sent
+  from such a turn (`MailboxStore.turnServesExternalChat` follows the chain of requests), so a
+  person in an external chat cannot make an agent or a teammate in the chain read a different place.
   A Slack post with live user mentions (`slackPingedUsers`) stores one `projection_messaging_pings`
   row for each person, with the calling agent and the redacted post, unless a person's mention opened
   the thread. In a thread with pings, a reply without a mention counts only from a pinged person,
@@ -728,8 +734,10 @@ transport for its events. `messaging-types.ts` is the seam; the core never reads
   that no reply opened. A thread `message` event that mentions OpenBot is
   left to its `app_mention` event, so the order of the two events does not decide the route.
 - **Quiet answer.** In Slack threads the guidance lets the agent answer only `NO_REPLY` when a
-  message needs no answer. `finalPost` then keeps the reaction and posts nothing, and the adapter's
-  `remove` deletes the status post. An adapter without `remove` edits it to the no-answer text.
+  message needs no answer. In WhatsApp chats it does so when the agent must not answer, for example
+  when its instructions say not to answer a contact. `finalPost` then keeps the reaction and posts
+  nothing, and the adapter's `remove` deletes the status post. An adapter without `remove` edits it
+  to the no-answer text.
 - **Order.** The one-turn-per-agent rule is unchanged, so Slack requests wait behind the agent's own
   work and behind channel work that holds the host. The Slack thread shows a waiting post.
 - **Replies.** `MessagingThreads` reports each turn start and end. `MessagingService` posts a status

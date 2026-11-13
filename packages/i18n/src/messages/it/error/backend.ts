@@ -65,6 +65,8 @@ export const messages = {
     "La compattazione non riduce questa chat: dopo due compattazioni usa ancora il {percent}% della finestra di contesto del modello, quindi OpenBot smette di compattarla. Strumenti e istruzioni usano la maggior parte della finestra. Disattiva i server MCP o l'uso del computer che questo agente non usa, oppure scegli un modello con una finestra più grande. Poi avvia una nuova chat.",
   "error.backend.contextCompactionStopped":
     "Due compattazioni di fila di questa chat non sono riuscite, quindi OpenBot smette di compattarla automaticamente. Ogni tentativo invia l'intera chat al modello e consuma il limite del tuo piano. Seleziona «Compatta ora» per riprovare, oppure avvia una nuova chat.",
+  "error.backend.providerModelAtCapacity":
+    "Il modello è al limite della capacità. Il provider riproverà tra qualche minuto. Per continuare ora, interrompi il turno e scegli un altro modello.",
   "error.backend.providerRetrying":
     "Il provider non è riuscito a completare questa richiesta {attempts} volte e riprova. Se l'agente non continua, interrompi il turno.",
   "error.backend.providerRetryingLargeContext":
@@ -168,6 +170,10 @@ export const messages = {
   "error.backend.attachBetween": "Allega da 1 a {limit} file.",
   "error.backend.attachmentNotFile": "L'allegato non è un file: {path}",
   "error.backend.generatedImageTooLarge": "L'immagine generata supera il limite di 100 MB.",
+  "error.backend.generatedVideoTooLarge": "Il video generato supera il limite di 100 MB.",
+  "error.backend.videoGenerationFailed": "La generazione del video non è riuscita.",
+  "error.backend.videoGenerationNoVideo": "La generazione del video non ha restituito alcun video.",
+  "error.backend.videoGenerationInterrupted": "La generazione del video è stata interrotta.",
   "error.backend.attachmentNotRegularFile": "Si possono allegare solo file normali: {name}",
   "error.backend.attachmentCopyFailed": "OpenBot non è riuscito a copiare {name}.",
   "error.backend.routineNameRequired": "Il nome della routine è obbligatorio.",
@@ -231,6 +237,8 @@ export const messages = {
   "error.backend.messageDeleteBusy":
     "Questo messaggio fa parte di un turno in corso. Eliminalo quando il turno finisce.",
   "error.backend.messageDeleteForbidden": "Puoi eliminare solo i messaggi che hai inviato.",
+  "error.backend.messagePinNotFound": "Questo messaggio non è nella chat.",
+  "error.backend.messagePinLimit": "Questa chat ha 50 messaggi fissati. Rimuovine uno prima di fissarne un altro.",
   "error.backend.routineFlowHandoffFailed": "La routine non è riuscita a passare il lavoro a questo agente.",
   "error.backend.mcpServerLimit": "OpenBot conserva fino a {limit} server MCP.",
   "error.backend.mcpServerNameTaken": "Esiste già un server MCP chiamato {name}.",
@@ -262,6 +270,8 @@ export const messages = {
   "error.backend.mcpServerExited":
     "Il server si è fermato prima di rispondere. Esegui il comando in un terminale per vedere l'errore.",
   "error.backend.mcpServerFailedToStart": "Il server non si è avviato: {reason}",
+  "error.backend.mcpToolSchemaRefused":
+    "Il suo strumento {tool} ha un formato di input che questo provider non riesce a leggere. Gli agenti con altri provider ricevono ancora il server.",
   "error.backend.mcpServerSignInForProvider":
     "{provider} non è riuscito a usare il server MCP {name} perché il server chiede l’accesso. Apri le impostazioni MCP e scegli Accedi.",
   "error.backend.mcpServerFailedForProvider":
@@ -294,6 +304,13 @@ export const messages = {
   "error.backend.sectionNameTooLong": "Il nome della sezione è troppo lungo.",
   "error.backend.sidebarFolderTooDeep": "Le cartelle possono avere solo tre livelli.",
   "error.backend.sidebarFolderMoveInvalid": "Questa cartella non può essere spostata lì.",
+  "error.backend.libraryFolderName": "Il nome di una cartella deve avere da 1 a {limit} caratteri.",
+  "error.backend.libraryFolderLimit": "Un server può avere al massimo {limit} cartelle della Libreria.",
+  "error.backend.libraryFolderFileLimit": "Ci sono troppi file nelle cartelle della Libreria.",
+  "error.backend.libraryFolderTooDeep": "Le cartelle della Libreria possono avere solo {limit} livelli.",
+  "error.backend.libraryFolderGone": "La cartella non esiste o è già stata eliminata.",
+  "error.backend.libraryFolderOtherAgent": "Un file può andare solo in una cartella del suo agente.",
+  "error.backend.libraryFolderMoveInvalid": "Questa cartella non può essere spostata lì.",
   "error.backend.sectionNameDuplicate": "I nomi delle sezioni devono essere univoci.",
   "error.backend.directMessageRequired": "Scrivi prima un messaggio.",
   "error.backend.directMessageTooLong": "Un messaggio diretto può avere fino a {limit} caratteri.",

@@ -160,6 +160,8 @@ export const messages = {
   "error.provider.cliBusyUpdate": "{provider} CLI 正在处理对话，请等它结束后再更新。",
   "error.provider.cliSelectFailed": "OpenBot 无法选择已安装的托管 CLI。",
   "error.provider.noAuthenticatedAccount": "{provider} 未返回已验证的账号。",
+  "error.provider.codexModelProvider":
+    "此电脑上的 Codex 使用其他模型提供方，该提供方不使用 ChatGPT 登录或 OpenAI API 密钥。ChatGPT 智能体现在可以使用该提供方。要使用你的 ChatGPT 账号，请将 Codex 的模型提供方改回 OpenAI。",
   "error.provider.signInExpired": "你的 {provider} 登录已过期，请重新登录以继续。",
   "error.provider.cliActivateFailed": "OpenBot 无法激活托管的 CLI。",
   "error.provider.noMainlandChinaSignIn": "{provider} 没有中国大陆的登录方式。",
@@ -202,6 +204,7 @@ export const messages = {
     "另一个 Codex 应用（例如 Codex 桌面应用、Codex CLI 或 IDE 扩展）打开了此聊天。同一时间只有一个应用可以写入 Codex 聊天。请在该应用中关闭此聊天，然后重新发送消息。",
   "error.provider.realtimeLimitZero":
     "由于 OpenBot 的实时 CPU 限制为 0，Linux 停止了该提供方。此限制来自你的系统。请安装并启动 rtkit（`rtkit-daemon`），运行 `systemctl --user restart xdg-desktop-portal`，然后重新启动 OpenBot。缺少 rtkit 时，仅重启 xdg-desktop-portal 没有作用。",
+  "error.provider.cpuUnsupported": "这台电脑的处理器无法运行此服务商。请使用其他服务商。",
   "error.provider.opencodeDatabaseNewer":
     "OpenCode 无法打开它的数据库，因为较新的 OpenCode 版本已更改了数据库。请把 OpenCode 更新到版本 2 或更高，然后重试。",
   "error.provider.opencodeNoAnswer": "OpenCode 模型结束本轮对话时没有给出回答。请重试或改用其他模型。",
@@ -229,6 +232,8 @@ export const messages = {
     "Google 提示已达到 Gemini 用量上限。上限可能只针对某一个模型，因此你的套餐用量页面可能显示还有剩余。请选择其他 Gemini 模型，或等待重置。\n{detail}",
   "error.provider.antigravityModelUnavailable": "Gemini 目前无法使用该模型。请改用其他模型后重试。\n{detail}",
   "error.provider.antigravityServiceFailure": "Google 的 Gemini 服务未能完成该请求。请过几分钟再试。\n{detail}",
+  "error.provider.antigravityRequestRejected":
+    "Gemini 拒绝了此请求。请改用其他模型，然后重新发送消息。如果仍然失败，请开始新对话。\n{detail}",
   "error.provider.antigravityConnectionLost": "Gemini 与其代理的连接已断开，已停止。请发送一条消息以继续。",
   "error.provider.antigravityRemoteWindowsSignIn":
     "在 Windows 主机上，Gemini 会在主机本身打开 Google 页面。请在主机电脑上连接 Gemini。",
@@ -263,6 +268,8 @@ export const messages = {
   "error.provider.hermesNotStarted": "无法启动 Hermes Agent。请在终端中运行 `hermes --version`。",
   "error.provider.hermesVersionUnreadable": "无法读取 Hermes Agent 的版本。",
   "error.provider.hermesSignIn": "要使用 Hermes，请使用 Nous Portal 登录，或在终端中运行 `hermes setup`。",
+  "error.provider.hermesTurnFailed":
+    "Hermes 未能完成本轮。如果它的回复说明了原因，请按回复操作。如果没有，此智能体的某个 MCP 服务器可能不可用：请在 服务器设置 › MCP 中检查，然后重新发送消息。",
   "error.provider.usageLimitReached": "该账号已达到用量上限。",
   "error.provider.claudeContextFull":
     "此聊天对 Claude 来说已经太长。OpenBot 已带着聊天记录开启新的 Claude Code 会话，请重试。",

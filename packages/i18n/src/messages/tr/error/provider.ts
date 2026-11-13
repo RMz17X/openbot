@@ -185,6 +185,8 @@ export const messages = {
     "{provider} CLI bir tur üzerinde çalışıyor. Bitmesini bekleyin, ardından güncelleyin.",
   "error.provider.cliSelectFailed": "OpenBot kurulu yönetilen CLI'yi seçemedi.",
   "error.provider.noAuthenticatedAccount": "{provider} kimliği doğrulanmış bir hesap döndürmedi.",
+  "error.provider.codexModelProvider":
+    "Bu bilgisayardaki Codex başka bir model sağlayıcısı kullanıyor ve bu sağlayıcı ChatGPT oturumu veya OpenAI API anahtarı kullanmıyor. ChatGPT ajanları bu sağlayıcıyı şimdi kullanabilir. ChatGPT hesabınızı kullanmak için Codex model sağlayıcısını yeniden OpenAI olarak ayarlayın.",
   "error.provider.signInExpired": "{provider} oturumunuzun süresi doldu. Devam etmek için yeniden oturum açın.",
   "error.provider.cliActivateFailed": "OpenBot yönetilen CLI'yi etkinleştiremedi.",
   "error.provider.noMainlandChinaSignIn": "{provider} için Çin anakarası oturum açma yok.",
@@ -231,6 +233,8 @@ export const messages = {
     "Bu sohbet başka bir Codex uygulamasında açık; örneğin Codex masaüstü uygulaması, Codex CLI veya bir IDE uzantısı. Bir Codex sohbetine aynı anda yalnızca bir uygulama yazabilir. Sohbeti o uygulamada kapatın, sonra mesajınızı yeniden gönderin.",
   "error.provider.realtimeLimitZero":
     "OpenBot'un gerçek zamanlı CPU sınırı 0 olduğu için Linux sağlayıcıyı durdurdu. Bu sınır sisteminizden geliyor. rtkit'i kurup başlatın (`rtkit-daemon`), `systemctl --user restart xdg-desktop-portal` komutunu çalıştırın, ardından OpenBot'u yeniden başlatın. rtkit eksikken yalnızca xdg-desktop-portal'ı yeniden başlatmak işe yaramaz.",
+  "error.provider.cpuUnsupported":
+    "Bu bilgisayarın işlemcisi bu sağlayıcıyı çalıştıramıyor. Başka bir sağlayıcı kullanın.",
   "error.provider.opencodeDatabaseNewer":
     "Daha yeni bir OpenCode sürümü veritabanını değiştirdiği için OpenCode veritabanını açamadı. OpenCode'u 2 veya daha yeni bir sürüme güncelleyin, sonra yeniden deneyin.",
   "error.provider.opencodeNoAnswer":
@@ -263,6 +267,8 @@ export const messages = {
     "Gemini şu anda bu modeli kullanamıyor. Başka bir model seçin, sonra yeniden deneyin.\n{detail}",
   "error.provider.antigravityServiceFailure":
     "Google'ın Gemini hizmeti isteği tamamlamadı. Birkaç dakika sonra yeniden deneyin.\n{detail}",
+  "error.provider.antigravityRequestRejected":
+    "Gemini bu isteği reddetti. Başka bir model seçin, sonra mesajınızı yeniden gönderin. Yine başarısız olursa yeni bir sohbet başlatın.\n{detail}",
   "error.provider.antigravityConnectionLost":
     "Gemini, aracısıyla bağlantısını kaybetti ve durdu. Devam etmek için bir mesaj gönderin.",
   "error.provider.antigravityRemoteWindowsSignIn":
@@ -302,6 +308,8 @@ export const messages = {
   "error.provider.hermesVersionUnreadable": "Hermes Agent sürümü okunamıyor.",
   "error.provider.hermesSignIn":
     "Hermes'i kullanmak için Nous Portal ile oturum açın veya bir terminalde `hermes setup` komutunu çalıştırın.",
+  "error.provider.hermesTurnFailed":
+    "Hermes bu turu bitiremedi. Yanıtı bir neden veriyorsa onu izleyin. Vermiyorsa bu ajanın bir MCP sunucusu kullanılamıyor olabilir: Sunucu ayarları › MCP bölümünden kontrol edin, sonra mesajınızı yeniden gönderin.",
   "error.provider.usageLimitReached": "Hesap kullanım sınırına ulaştı.",
   "error.provider.claudeContextFull":
     "Bu sohbet Claude için çok uzun hale geldi. OpenBot sohbet geçmişiyle yeni bir Claude Code oturumu başlattı. Tekrar deneyin.",

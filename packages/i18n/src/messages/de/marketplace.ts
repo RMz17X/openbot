@@ -123,6 +123,11 @@ export const messages = {
   "marketplace.app.remove.confirmTitle": "{name} entfernen?",
   "marketplace.app.remove.keep": "Behalten",
   "marketplace.app.connection": "Verbindung",
+  "marketplace.app.access.use": "Kann nutzen",
+  "marketplace.app.access.noAgents": "Keine Agenten",
+  "marketplace.app.access.agentsOf": "Agenten, die {name} nutzen können",
+  "marketplace.app.access.chooseAgents": "{name}: {summary}. Agenten wählen",
+  "marketplace.app.access.level": "Zugriff von {role} auf {name}",
   "marketplace.app.setup.account": "Melde dich im Browser mit deinem {name}-Konto an.",
   "marketplace.app.setup.key": "Benötigt einen API-Schlüssel aus deinem {name}-Konto.",
   "marketplace.app.setup.keySaved": "{field} auf {host} gespeichert.",
@@ -257,6 +262,16 @@ export const messages = {
     "Erstelle mit Higgsfield ein Produktfoto einer Keramiktasse auf einem Holztisch.",
   "marketplace.plugin.higgsfield.prompt.clip":
     "Erstelle mit Higgsfield ein 5-Sekunden-Video von Wellen bei Sonnenuntergang.",
+  "marketplace.plugin.sunra.tagline": "KI-Bilder, -Videos, -Audio und 3D",
+  "marketplace.plugin.sunra.description":
+    "Sunra lässt Agenten Bilder, Videos, Audio und 3D-Modelle mit Modellen wie GPT Image, Nano Banana, Seedream, FLUX, Seedance, Kling und Veo erzeugen, das Guthaben an Credits prüfen und die Ergebnisse abrufen. Ergebnisse landen in einem Projekt im Sunra-Konto des Nutzers. Jeder Nutzer meldet sich im Browser bei seinem eigenen Sunra-Konto an. Sunra nennt zuerst die Kosten jeder Generierung und verbraucht Credits dieses Kontos erst nach der Bestätigung.",
+  "marketplace.plugin.sunra.app":
+    "Bild-, Video-, Audio- und 3D-Generierung, Credits und Ergebnisse über den MCP-Server von Sunra mit Anmeldung im Browser.",
+  "marketplace.plugin.sunra.prompt.balance": "Wie viele Sunra-Credits habe ich?",
+  "marketplace.plugin.sunra.prompt.poster":
+    "Erstelle mit Sunra ein Poster von einem Nachtmarkt im Regen, im Hochformat.",
+  "marketplace.plugin.sunra.prompt.clip":
+    "Erstelle mit Sunra ein 5-Sekunden-Video von einem Papierboot auf einem Fluss. Nenne mir zuerst die Kosten.",
   "marketplace.plugin.elevenlabs.tagline": "Sprache, Stimmen und Sprachagenten",
   "marketplace.plugin.elevenlabs.description":
     "Mit ElevenLabs wandeln Agenten Text in Sprache um, arbeiten mit Stimmen und erstellen, testen und prüfen ElevenLabs-Sprachagenten und ihre Gespräche. Erzeugtes Audio kommt als kurzlebiger Download-Link zurück. Jeder Benutzer meldet sich im Browser bei seinem eigenen ElevenLabs-Konto an, und jede Erzeugung verbraucht Credits dieses Kontos.",
@@ -588,6 +603,14 @@ export const messages = {
   "marketplace.skills.origin.local": "Auf diesem Computer erstellt",
   "marketplace.skills.origin.workspace": "Im Ordner dieses Agenten",
   "marketplace.skills.origin.marketplace": "Aus dem Marketplace · Version {version}",
+  "marketplace.skills.origin.github": "Von GitHub · {repository}",
+  "marketplace.skills.github.search": "Suchen oder GitHub-Link einfügen",
+  "marketplace.skills.github.reading": "Fähigkeiten im Repository werden gesucht",
+  "marketplace.skills.github.trust":
+    "OpenBot hat Fähigkeiten von GitHub nicht geprüft. Lies eine Fähigkeit, bevor du sie hinzufügst.",
+  "marketplace.skills.github.source": "GitHub · {repository} bei {commit}",
+  "marketplace.skills.github.open": "GitHub",
+  "marketplace.skills.github.openName": "{repository} auf GitHub öffnen",
   "marketplace.skills.status.notAdded": "Nicht hinzugefügt",
   "marketplace.skills.status.on": "Aktiv bei {agents}",
   "marketplace.skills.agentCount": { one: "{count} Agent", other: "{count} Agenten" },

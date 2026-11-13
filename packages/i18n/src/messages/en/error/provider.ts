@@ -177,6 +177,8 @@ export const messages = defineMessages("error.provider", {
   "error.provider.cliBusyUpdate": "The {provider} CLI is working on a turn. Wait for it to finish, then update.",
   "error.provider.cliSelectFailed": "OpenBot could not select the installed managed CLI.",
   "error.provider.noAuthenticatedAccount": "{provider} did not return an authenticated account.",
+  "error.provider.codexModelProvider":
+    "Codex on this computer uses a different model provider, and that provider does not use a ChatGPT sign-in or an OpenAI API key. ChatGPT agents can use that provider now. To use your ChatGPT account, set the Codex model provider back to OpenAI.",
   "error.provider.signInExpired": "Your {provider} sign-in expired. Sign in again to continue.",
   "error.provider.cliActivateFailed": "OpenBot could not activate the managed CLI.",
   "error.provider.noMainlandChinaSignIn": "{provider} has no sign-in for mainland China.",
@@ -221,6 +223,7 @@ export const messages = defineMessages("error.provider", {
     "Another Codex app has this chat open, such as the Codex desktop app, the Codex CLI or an IDE extension. Only one app at a time can write to a Codex chat. Close the chat in that app, then send your message again.",
   "error.provider.realtimeLimitZero":
     "Linux stopped the provider because OpenBot has a real-time CPU limit of 0. The limit comes from your system. Install and start rtkit (`rtkit-daemon`), run `systemctl --user restart xdg-desktop-portal`, then restart OpenBot. Restarting xdg-desktop-portal alone does not help while rtkit is missing.",
+  "error.provider.cpuUnsupported": "The processor of this computer cannot run this provider. Use a different provider.",
   "error.provider.opencodeDatabaseNewer":
     "OpenCode could not open its database because a newer OpenCode version changed it. Update OpenCode to version 2 or later, then try again.",
   "error.provider.opencodeNoAnswer":
@@ -252,6 +255,8 @@ export const messages = defineMessages("error.provider", {
     "Gemini cannot use this model now. Choose another model, then try again.\n{detail}",
   "error.provider.antigravityServiceFailure":
     "Google's Gemini service did not complete the request. Try again in a few minutes.\n{detail}",
+  "error.provider.antigravityRequestRejected":
+    "Gemini refused this request. Choose another model, then send your message again. If it fails again, start a new chat.\n{detail}",
   "error.provider.antigravityConnectionLost":
     "Gemini lost the connection to its agent and stopped. Send a message to continue.",
   "error.provider.antigravityRemoteWindowsSignIn":
@@ -287,6 +292,8 @@ export const messages = defineMessages("error.provider", {
   "error.provider.hermesNotStarted": "Hermes Agent could not start. Run `hermes --version` in a terminal.",
   "error.provider.hermesVersionUnreadable": "Unable to read the Hermes Agent version.",
   "error.provider.hermesSignIn": "Sign in with Nous Portal, or run `hermes setup` in a terminal, to use Hermes.",
+  "error.provider.hermesTurnFailed":
+    "Hermes could not finish this turn. If its reply gives a reason, do what it says. If not, an MCP server of this agent can be unavailable: check it in Server settings › MCP, then send your message again.",
   "error.provider.usageLimitReached": "The account reached its usage limit.",
   "error.provider.claudeContextFull":
     "This chat became too long for Claude. OpenBot started a new Claude Code session with the chat history. Try again.",

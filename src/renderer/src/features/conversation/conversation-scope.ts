@@ -14,6 +14,7 @@ import {
   type UpdateAgentInput,
 } from "@openbot/contracts/ipc";
 import { AGENT_FAST_MODE_CAPABILITY } from "@openbot/contracts/team-protocol/agent-fast-mode-v1";
+import { AGENT_SPEED_CAPABILITY } from "@openbot/contracts/team-protocol/agent-speed-v1";
 import { toast } from "@openbot/ui";
 import type { QuestionPromptComposerAnswer } from "@openbot/ui/components/QuestionPromptBubble";
 import type { QuoteRequest } from "@openbot/ui/features/conversation/ComposerEditor";
@@ -63,6 +64,7 @@ import { createComposerActions } from "./stores/composer-actions";
 import { conversationOwnerId, createComposerStore, currentConversationTarget } from "./stores/composer-store";
 import { createMcpServersStore } from "./stores/mcp-servers-store";
 import { createMessageActions } from "./stores/message-actions";
+import { createMessagePinsStore } from "./stores/message-pins-store";
 import { createPanelsStore } from "./stores/panels-store";
 import { PENDING_SEND_ID_PREFIX, type PendingSend, pendingSendMessage } from "./stores/pending-send-store";
 import { createQueueStore } from "./stores/queue-store";
@@ -91,6 +93,8 @@ const handledSettingsRequests = new WeakSet<AgentSettingsRequest>();
  * mounts again, after a channel or another page, must not scroll back to the message that was picked before.
  */
 const handledMessageFocusRequests = new WeakSet<NonNullable<ConversationProps["messageFocusRequest"]>>();
+/** How many frames a message focus request waits for the virtualized row of its message to be drawn. */
+const MESSAGE_FOCUS_ROW_FRAMES = 4;
 
 /** An http or https page that the built-in browser can show. A relayed sign-in page needs this computer's browser. */
 function builtInBrowserPage(url: string): boolean {
@@ -357,18 +361,23 @@ export function createConversationViewScope(props: ConversationProps) {
   } = sideQuestions;
   /**
    * Save on a skill question: the host writes the skill in the background, not in a turn of the
-   * agent. False when the host saved nothing or cannot be asked; then the card sends the user's yes.
+   * agent. When the host saved nothing or cannot be asked, the user's yes (`reply`) goes to the agent.
+   * The yes goes to the chat of the click, because the user can open another chat while the host
+   * writes (#7593). False when the chat cannot send the yes now.
    */
-  async function saveSkillSuggestion(messageId: string): Promise<boolean> {
+  async function saveSkillSuggestion(messageId: string, reply: string): Promise<boolean> {
+    const target = currentTarget();
     const agentId = props.agent?.id;
-    if (!agentId) return false;
-    const input = { agentId, messageId };
-    const save = props.runtime
-      ? props.runtime.saveSkillSuggestion?.(input)
-      : conversationPort().agent.saveSkillSuggestion(input, props.server?.id);
-    // A failed request falls back to the yes, so the lesson is not lost.
-    const result = await save?.catch(() => null);
-    return result?.saved === true;
+    if (agentId) {
+      const input = { agentId, messageId };
+      const save = props.runtime
+        ? props.runtime.saveSkillSuggestion?.(input)
+        : conversationPort().agent.saveSkillSuggestion(input, props.server?.id);
+      // A failed request falls back to the yes, so the lesson is not lost.
+      const result = await save?.catch(() => null);
+      if (result?.saved === true) return true;
+    }
+    return sendCardMessage(reply, target);
   }
   const skills = createSkillsStore({ props, settingsOpen });
   const { installedSkills, installedSkillsLoadFailed } = skills;
@@ -429,6 +438,8 @@ export function createConversationViewScope(props: ConversationProps) {
   const currentChatErrorRun = () => currentChatErrorEntry()?.run ?? null;
   /** The page that fixes the account behind the shown error (#2419). */
   const currentChatErrorLink = () => currentChatErrorEntry()?.link ?? null;
+  /** The provider's text behind a general sentence, for the user to copy (#6410). */
+  const currentChatErrorDetails = () => currentChatErrorEntry()?.details ?? null;
   /** True while a file import for the chat waits. An import for another chat does not stop this one. */
   const attachmentBusy = (target = currentTarget()) =>
     target !== undefined && importingDrafts().has(composerDraftKey(target));
@@ -521,11 +532,15 @@ export function createConversationViewScope(props: ConversationProps) {
     providerOffline,
   } = activity;
   // A sent message makes room for the working agent's line at once. The chat then moves one time,
-  // with the message, and not again when the line shows.
+  // with the message, and not again when the line shows. The value names the chat, so that a switch
+  // between two chats that both send makes the room again after the activity store resets it.
   createEffect(
-    () => !channel && currentPendingSends().length > 0,
-    (sending) => {
-      if (sending) setAgentActivitySpaceReserved(true);
+    () =>
+      !channel && currentPendingSends().length > 0
+        ? agentConversationKey(props.server?.id ?? "local", props.agent?.id ?? "")
+        : undefined,
+    (sendingChat) => {
+      if (sendingChat) setAgentActivitySpaceReserved(true);
     },
   );
   /** The name of what the agent's turns wait for. OpenCode or Pi serves a custom endpoint, so it names the endpoint (#3234). */
@@ -972,6 +987,7 @@ export function createConversationViewScope(props: ConversationProps) {
     draftLocked: threadQueue.draftLocked,
     keepsAttachment: threadQueue.keepsAttachment,
   });
+  const messagePins = createMessagePinsStore({ props });
   /** Moves the open thread's caret to the end of the dictated text. */
   const [threadFocusRequest, setThreadFocusRequest] = createSignal(0);
   const voice = createVoiceStore({
@@ -1415,12 +1431,15 @@ export function createConversationViewScope(props: ConversationProps) {
   };
   /**
    * The Speed select of the model pickers, in the chat header and in the agent settings: on this
-   * computer, or on a joined server with `agent-fast-mode-v1`. The picker shows it only for a model
-   * that the host lists with a fast tier (Codex, and Claude since its client lists `fast`). A joined
-   * server lists no Ultrafast tier, so its picker offers Standard and Fast.
+   * computer, or on a joined server with `agent-speed-v1` or `agent-fast-mode-v1`. The picker shows it
+   * only for a model that the host lists with a fast tier (Codex, and Claude since its client lists
+   * `fast`). Only `agent-speed-v1` lists Ultrafast tiers and Claude models, so on an older host the
+   * picker offers Standard and Fast, and no Claude fast mode.
    */
   const fastModeChange = () =>
-    props.server?.kind === "local" || serverSupportsCapability(props.server, AGENT_FAST_MODE_CAPABILITY)
+    props.server?.kind === "local" ||
+    serverSupportsCapability(props.server, AGENT_SPEED_CAPABILITY) ||
+    serverSupportsCapability(props.server, AGENT_FAST_MODE_CAPABILITY)
       ? (next: boolean, nextUltrafast: boolean) => requestFastMode(next, nextUltrafast)
       : undefined;
   /**
@@ -1714,32 +1733,51 @@ export function createConversationViewScope(props: ConversationProps) {
       agentId: props.agent?.id,
       loaded: props.loaded,
       messageIds: props.messages.map((message) => message.id).join("\u0000"),
+      index: props.messageFocusRequest ? timelineIndexById().get(props.messageFocusRequest.messageId) : undefined,
     }),
-    ({ request, agentId, loaded }) => {
+    ({ request, agentId, loaded, index }) => {
       if (!request || request.agentId !== agentId || !loaded || handledMessageFocusRequests.has(request)) return;
-      requestAnimationFrame(() => {
-        // A message in a group of agent messages has no row of its own, so the group row is the target.
-        const messageId = CSS.escape(request.messageId);
-        const target = scrollElement?.querySelector<HTMLElement>(
-          `[data-chat-search-message="${messageId}"], [data-chat-search-group~="${messageId}"]`,
-        );
-        if (!target) return;
-        handledMessageFocusRequests.add(request);
-        // The message the user picked replaces the opening at the unread divider.
-        unreadOpening = { ...unreadOpening, pending: false, holding: false };
-        stickToLatest = false;
-        // A page that loaded just before the request queued a scroll to the latest message. That scroll
-        // must not move the transcript away from the message the user picked, so it is cancelled and
-        // its other updates run here.
-        if (latestScrollFrame !== undefined) cancelAnimationFrame(latestScrollFrame);
-        if (latestScrollSettleFrame !== undefined) cancelAnimationFrame(latestScrollSettleFrame);
-        latestScrollFrame = undefined;
-        latestScrollSettleFrame = undefined;
-        updateVirtualScrollMargin();
-        target.scrollIntoView({ behavior: "auto", block: "center", inline: "nearest" });
-        updateScrollFade();
-        updateUnreadDividerVisibility();
-      });
+      const focus = (frame: number) =>
+        requestAnimationFrame(() => {
+          if (handledMessageFocusRequests.has(request)) return;
+          // A message in a group of agent messages has no row of its own, so the group row is the target.
+          const messageId = CSS.escape(request.messageId);
+          const target = scrollElement?.querySelector<HTMLElement>(
+            `[data-chat-search-message="${messageId}"], [data-chat-search-group~="${messageId}"]`,
+          );
+          if (!target) {
+            // A virtualized chat draws only the rows near the view, as after a tab opens at the latest
+            // message. The row of the message is drawn first, then found in a later frame.
+            if (index === undefined || frame >= MESSAGE_FOCUS_ROW_FRAMES) return;
+            messageVirtualizer.scrollToIndex(index);
+            focus(frame + 1);
+            return;
+          }
+          handledMessageFocusRequests.add(request);
+          // The message the user picked replaces the opening at the unread divider.
+          unreadOpening = { ...unreadOpening, pending: false, holding: false };
+          stickToLatest = false;
+          // A page that loaded just before the request queued a scroll to the latest message. That scroll
+          // must not move the transcript away from the message the user picked, so it is cancelled and
+          // its other updates run here.
+          if (latestScrollFrame !== undefined) cancelAnimationFrame(latestScrollFrame);
+          if (latestScrollSettleFrame !== undefined) cancelAnimationFrame(latestScrollSettleFrame);
+          latestScrollFrame = undefined;
+          latestScrollSettleFrame = undefined;
+          // A glide to the bottom that started before, as when a tab opens, also stops.
+          stopChatGlides();
+          updateVirtualScrollMargin();
+          target.scrollIntoView({ behavior: "auto", block: "center", inline: "nearest" });
+          updateScrollFade();
+          updateUnreadDividerVisibility();
+          // The rows above the message measure after this scroll, so the message centres again once.
+          requestAnimationFrame(() => {
+            if (stickToLatest || !target.isConnected) return;
+            target.scrollIntoView({ behavior: "auto", block: "center", inline: "nearest" });
+            updateScrollFade();
+          });
+        });
+      focus(0);
     },
   );
 
@@ -1872,7 +1910,6 @@ export function createConversationViewScope(props: ConversationProps) {
         if (lastConversationIdentity !== undefined) closeChatSearch(false);
         lastConversationIdentity = conversationIdentity;
         setStickToLatest(true);
-        setAgentActivitySpaceReserved(false);
         holdChatGlides();
       }
       if (loaded !== lastLoaded) {
@@ -2484,6 +2521,7 @@ export function createConversationViewScope(props: ConversationProps) {
     threadVoiceLiveText,
     threadVoiceOwned,
     replyJump,
+    messagePins,
     voiceConversationAvailable,
     startVoiceConversation,
     sideQuestionAvailable,
@@ -2559,6 +2597,7 @@ export function createConversationViewScope(props: ConversationProps) {
     currentChatErrorReference,
     currentChatErrorRun,
     currentChatErrorLink,
+    currentChatErrorDetails,
     currentChatConversationKey,
     dismissCurrentChatErrors,
     dismissAwaitingReplies,

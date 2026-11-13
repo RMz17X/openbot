@@ -177,13 +177,16 @@ function openCodeFailureCause(error: unknown): CauseCode | null {
 
 export const OPENCODE_ACP_FLAVOR: AcpFlavor = {
   // OpenCode 2.x has a session that 1.x wrote after the one-time `session_v2` copy. It answers with
-  // invalid params and the ID in data.sessionId. The same code with another message is a session of
-  // another directory, which is not missing.
+  // invalid params and the ID in data.sessionId. OpenCode also refuses each resume of a session that
+  // it made in another directory, with data.cwd (#7622): the agent's workspace moved. The agent must
+  // work in its workspace, so the session cannot reopen; the caller replaces it with the transcript.
   sessionNotFound: (error, sessionId) =>
     error.code === -32602
       ? isRecord(error.data) &&
         error.data.sessionId === sessionId &&
-        error.message === `Invalid params: session not found: ${sessionId}`
+        (error.message === `Invalid params: session not found: ${sessionId}` ||
+          (typeof error.data.cwd === "string" &&
+            error.message === `Invalid params: session ${sessionId} does not belong to cwd: ${error.data.cwd}`))
       : null,
   turnFailure: (error, detail, redact, log, model, endpoint) => {
     const authRequired = openCodeAuthRequired(error, model, endpoint);
@@ -224,6 +227,9 @@ export const OPENCODE_ACP_FLAVOR: AcpFlavor = {
   // OpenCode 2.2.7 sends `usage_update` and has no ACP method that compacts. It compacts by itself
   // only when the context is full, so a long chat sent an almost full context with each request (#7171).
   contextCompaction: "handoff",
+  // OpenCode 2.2.7 loads a session from its own store with all of its messages. Each idle release
+  // added one more copy of the instructions to a long chat (#7171).
+  reopenKeepsPrompts: true,
   // OpenCode 2.2.0 gives each step's message its own ID. Text of two steps was joined into one line.
   messagePerId: true,
   // OpenCode 2.1.4 adds each session's MCP servers to the session's directory under their names. A

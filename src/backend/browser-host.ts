@@ -1261,8 +1261,10 @@ export class BrowserHost {
         Effect.gen({ self: this }, function* () {
           return yield* untilStopped(
             tab,
+            // A reload gets the page's files from the site again. A site can send a bad file that
+            // the browser keeps for hours (#7772); a normal reload used it again and the page stayed blank.
             navigateAndWait(tab.contents, () => {
-              tab.contents.reload();
+              tab.contents.reloadIgnoringCache();
               return true;
             }),
           );
@@ -1600,8 +1602,9 @@ export class BrowserHost {
     if (args.method !== "password" && args.digits < 4)
       return yield* browserFailure(new Error(sourceText("error.backend.authDigitsRange")));
     if (
-      (args.method === "password" && args.targets.length !== 1) ||
-      (args.targets.length !== 1 && args.targets.length !== args.digits) ||
+      (args.method === "password"
+        ? args.targets.length > 2
+        : args.targets.length !== 1 && args.targets.length !== args.digits) ||
       (args.submission === "click") !== Boolean(args.submitTarget)
     )
       return yield* browserFailure(
@@ -1611,7 +1614,7 @@ export class BrowserHost {
             : args.submission !== "click" && args.submitTarget
               ? "Invalid authentication targets: submitTarget is only for submission=click."
               : args.method === "password"
-                ? "Invalid authentication targets: method=password needs exactly one field target."
+                ? "Invalid authentication targets: method=password needs one field target, or a password and its confirmation field."
                 : `Invalid authentication targets: use one field target for the whole code, or ${args.digits} digit field targets.`,
         ),
       );
@@ -1629,7 +1632,13 @@ export class BrowserHost {
             tab.diagnostics.clearDiagnostics();
             return yield* boundEngineOperation(
               tab,
-              tab.engine.prepareSecret(args.targets, url.origin, args.submission, args.submitTarget),
+              tab.engine.prepareSecret(
+                args.targets,
+                url.origin,
+                args.method === "password",
+                args.submission,
+                args.submitTarget,
+              ),
               10_000,
               "Authentication target resolution timed out.",
               keepQueueBlocked,
@@ -1934,11 +1943,13 @@ export class BrowserHost {
     return connected;
   }
 
-  endTakeover(tabId: string): void {
+  /** `completed`: the person selected Done, so a bot check that was on the page is one they could not pass. */
+  endTakeover(tabId: string, completed = false): void {
     const tab = this.#tabs.get(tabId);
     if (tab) {
       tab.engine.invalidateReferences();
       tab.diagnostics.clearDiagnostics();
+      if (completed && tab.checkOrigin) tab.checkAfterTakeover = tab.checkOrigin;
     }
     this.#takeoverTabIds.delete(tabId);
     this.#syncAttachedView();
@@ -2051,7 +2062,7 @@ export class BrowserHost {
                   return;
                 case "reload":
                   yield* navigateAndWait(tab.contents, () => {
-                    tab.contents.reload();
+                    tab.contents.reloadIgnoringCache();
                     return true;
                   });
               }
@@ -2867,7 +2878,7 @@ export class BrowserHost {
             yield* navigateAndWait(
               tab.contents,
               () => {
-                tab.contents.reload();
+                tab.contents.reloadIgnoringCache();
                 return true;
               },
               operationTimeout,

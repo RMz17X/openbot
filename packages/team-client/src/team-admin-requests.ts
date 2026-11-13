@@ -37,6 +37,7 @@ import {
   isHiddenAgentsSnapshot,
   isSidebarPinsSnapshot,
   isWhatsAppGroupList,
+  isWhatsAppWorkingMessageList,
   type MessagingWorkspaceInput,
   type RemoveWhatsAppSenderInput,
   type ResetAgentSessionSettingInput,
@@ -49,6 +50,7 @@ import {
   type SetMessagingEnabledInput,
   type SetOwnServerNotificationLevelInput,
   type SetWhatsAppOwnNumberInput,
+  type SetWhatsAppWorkingMessageInput,
   type SidebarPin,
   type SidebarPinsSnapshot,
   type StartWhatsAppLinkInput,
@@ -56,6 +58,7 @@ import {
   type WhatsAppLinkState,
   type WhatsAppOverview,
   type WhatsAppSenderInput,
+  type WhatsAppWorkingMessageList,
 } from "@openbot/contracts/ipc";
 import { AGENT_ACCESS_ROUTES } from "@openbot/contracts/team-protocol/agent-access-v1";
 import { AGENT_COLORS_ROUTES } from "@openbot/contracts/team-protocol/agent-colors-v1";
@@ -82,6 +85,7 @@ import { HOST_KEY_ROTATION_ROUTES } from "@openbot/contracts/team-protocol/host-
 import { HOST_MEMBER_UPDATE_ROUTES } from "@openbot/contracts/team-protocol/host-member-update-v1";
 import { HOST_PERSONALITY_ROUTES } from "@openbot/contracts/team-protocol/host-personality-v1";
 import { HOST_RELEASE_ROUTES } from "@openbot/contracts/team-protocol/host-release-v1";
+import { HOST_RESTART_ROUTES } from "@openbot/contracts/team-protocol/host-restart-v1";
 import { HOST_TIMEZONE_ROUTES } from "@openbot/contracts/team-protocol/host-timezone-v1";
 import { LOCAL_SERVERS_ROUTES } from "@openbot/contracts/team-protocol/local-servers-v1";
 import { MEMORY_REVIEW_ROUTES } from "@openbot/contracts/team-protocol/memory-review-v1";
@@ -93,6 +97,7 @@ import { PROVIDERS_V8_ROUTES } from "@openbot/contracts/team-protocol/providers-
 import { SIDEBAR_PINS_ROUTES } from "@openbot/contracts/team-protocol/sidebar-pins-v1";
 import { SKILL_LEARNING_ROUTES } from "@openbot/contracts/team-protocol/skill-learning-v1";
 import { WHATSAPP_CONNECTOR_ROUTES } from "@openbot/contracts/team-protocol/whatsapp-connector-v1";
+import { WHATSAPP_WORKING_MESSAGE_ROUTES } from "@openbot/contracts/team-protocol/whatsapp-working-message-v1";
 // Admin requests to one host: agent settings and skills, shared tables, agent share links, the server name and logo,
 // the server timezone, the browser profiles, the server key, the agent memory limit, the memory review, the prompt cache time, the default provider, the Discord roles that can use OpenBot, the app update, MCP servers, storage, hosted sites and providers.
 //
@@ -146,6 +151,7 @@ import {
   decodeCustomAgentSummaries,
   decodeCustomProviderResult,
   decodeCustomProviderSummaries,
+  decodeGithubSkillSource,
   decodeHostAddedAgent,
   decodeHostAgentMemoryLimit,
   decodeHostAgentTemplatePreview,
@@ -161,15 +167,18 @@ import {
   decodeHostPasswordManagerStatus,
   decodeHostPersonality,
   decodeHostProviderAccountModels,
+  decodeHostProviderAccountPools,
   decodeHostProviderAccounts,
   decodeHostProviderAccountUsage,
   decodeHostReleaseStatus,
   decodeHostSkillLearning,
   decodeHostTimezoneSettings,
   decodeHostUpdateStatus,
+  decodeHostVaultCodes,
   decodeHostVaultImport,
   decodeHostVaultState,
   decodeInstalledSkills,
+  decodeMcpAccessSnapshot,
   decodeMcpServerConfigs,
   decodeMcpSignInAppState,
   decodeMcpSignInStates,
@@ -191,6 +200,7 @@ import {
   decodeStorageUsage,
   type GetStorageUsageInput,
   type GitHubConnectorRepositories,
+  type GithubSkillSource,
   type HostAddMessagingOrchestratorInput,
   type HostAgentMemoryLimit,
   type HostBrowsingMemory,
@@ -216,6 +226,7 @@ import {
   isAgentModel,
   isAgentStatus,
   isSharedTable,
+  type McpAccessSnapshot,
   type McpServerConfig,
   type McpSignInAppInput,
   type McpSignInAppState,
@@ -253,7 +264,9 @@ import {
   type SetAgentProviderAccountInput,
   type SetBrowserProfileProxyInput,
   type SetEnabledSkillInput,
+  type SetMcpAccessInput,
   type SetMcpServerEnabledInput,
+  type SetProviderAccountPoolInput,
   type SetProviderApiKeyInput,
   type SetRoutineResultDestinationInput,
   type SharedTable,
@@ -271,6 +284,7 @@ import {
   type VaultHostImportResult,
   type VaultSaveInput,
   type VaultState,
+  type VaultTwoStepCodes,
   withHostProviderAccountModels,
 } from "@openbot/contracts/ipc";
 import {
@@ -312,15 +326,18 @@ import { BROWSER_PROFILES_ROUTES } from "@openbot/contracts/team-protocol/browse
 import { BROWSER_PROXIES_ROUTES } from "@openbot/contracts/team-protocol/browser-proxies-v1";
 import { CONNECTORS_ROUTES } from "@openbot/contracts/team-protocol/connectors-v1";
 import { EVENTS_ROUTES } from "@openbot/contracts/team-protocol/events-v1";
+import { GITHUB_SKILLS_ROUTES } from "@openbot/contracts/team-protocol/github-skills-v1";
 import { HOST_ADMIN_ROUTES } from "@openbot/contracts/team-protocol/host-admin-v1";
 import { HOST_UPDATE_ROUTES } from "@openbot/contracts/team-protocol/host-update-v1";
 import { HOSTED_SITES_ROUTES } from "@openbot/contracts/team-protocol/hosted-sites-v1";
+import { MCP_ACCESS_ROUTES } from "@openbot/contracts/team-protocol/mcp-access-v1";
 import { MCP_SIGN_IN_APP_ROUTES } from "@openbot/contracts/team-protocol/mcp-sign-in-app-v1";
 import { MCP_SIGN_IN_ROUTES } from "@openbot/contracts/team-protocol/mcp-sign-in-v1";
 import { MCP_ROUTES } from "@openbot/contracts/team-protocol/mcp-v1";
 import { ONEPASSWORD_CONNECTOR_ROUTES } from "@openbot/contracts/team-protocol/onepassword-connector-v1";
 import { PASSWORD_MANAGERS_ROUTES } from "@openbot/contracts/team-protocol/password-managers-v1";
 import { PROVIDER_ACCOUNT_MODELS_ROUTES } from "@openbot/contracts/team-protocol/provider-account-models-v1";
+import { PROVIDER_ACCOUNT_POOL_ROUTES } from "@openbot/contracts/team-protocol/provider-account-pool-v1";
 import type {
   ProviderAccountRelay,
   ProviderAccountRelayProvider,
@@ -351,6 +368,7 @@ import type { TeamProtocolV2Json } from "@openbot/contracts/team-protocol/v2";
 import { VAULT_IMPORT_ROUTES } from "@openbot/contracts/team-protocol/vault-import-v1";
 import { VAULT_ROUTES } from "@openbot/contracts/team-protocol/vault-v1";
 import { VAULT_V2_ROUTES } from "@openbot/contracts/team-protocol/vault-v2";
+import { VAULT_V3_ROUTES } from "@openbot/contracts/team-protocol/vault-v3";
 import { WEBHOOK_SENDER_SECRET_ROUTES } from "@openbot/contracts/team-protocol/webhook-sender-secret-v1";
 import { WEBHOOK_TESTS_ROUTES } from "@openbot/contracts/team-protocol/webhook-tests-v1";
 import { Effect, Schema } from "effect";
@@ -432,6 +450,14 @@ export function listAgentSkills(
   agentId: string,
 ): Effect.Effect<InstalledSkill[], TeamAdminRequestError> {
   return adminCall(() => request("POST", SKILLS_ADMIN_ROUTES.list, decodeInstalledSkills, { agentId }));
+}
+
+/** The host reads a public GitHub link and pins its commit (`github-skills-v1`). */
+export function readGithubSkills(
+  request: TeamApiRequest,
+  link: string,
+): Effect.Effect<GithubSkillSource, TeamAdminRequestError> {
+  return adminCall(() => request("POST", GITHUB_SKILLS_ROUTES.read, decodeGithubSkillSource, { link }));
 }
 
 /** Only ids cross the wire: the host downloads the skill with its own account. */
@@ -758,6 +784,11 @@ export function setHostTimezone(
   return adminCall(() => request("POST", HOST_TIMEZONE_ROUTES.update, decodeHostTimezoneSettings, { timezone }));
 }
 
+/** An owner or admin restarts a self-hosted server now (`host-restart-v1`). The host answers, then closes. */
+export function requestHostRestart(request: TeamApiRequest): Effect.Effect<void, TeamAdminRequestError> {
+  return adminCall(() => request("POST", HOST_RESTART_ROUTES.restart, ignoreResponse, {}));
+}
+
 /** Any member can read the server personality (`host-personality-v1`). */
 export function getHostPersonality(request: TeamApiRequest): Effect.Effect<HostPersonality, TeamAdminRequestError> {
   return adminCall(() => request("POST", HOST_PERSONALITY_ROUTES.settings, decodeHostPersonality, {}));
@@ -1065,6 +1096,28 @@ export function setMcpServerEnabled(
   return adminCall(() => request("POST", MCP_ROUTES.toggle, decodeMcpServerConfigs, { ...input }));
 }
 
+/** Who gets each MCP server of the host (`mcp-access-v1`). A member reads only `mine`. */
+export function getHostMcpAccess(request: TeamApiRequest): Effect.Effect<McpAccessSnapshot, TeamAdminRequestError> {
+  return adminCall(() => request("POST", MCP_ACCESS_ROUTES.read, decodeMcpAccessSnapshot, {}));
+}
+
+/**
+ * A full replace of the access of one MCP server. The host answers only an owner or admin, and refuses
+ * a revision other than the one it holds with 409.
+ */
+export function setHostMcpAccess(
+  request: TeamApiRequest,
+  input: SetMcpAccessInput,
+): Effect.Effect<McpAccessSnapshot, TeamAdminRequestError> {
+  return adminCall(() =>
+    request("POST", MCP_ACCESS_ROUTES.set, decodeMcpAccessSnapshot, {
+      revision: input.revision,
+      mcpServerId: input.mcpServerId,
+      access: { agents: input.access.agents, everyone: input.access.everyone, roles: { ...input.access.roles } },
+    }),
+  );
+}
+
 /** The host makes the connection with its own stored credentials, and opens no browser. */
 export function testMcpServer(
   request: TeamApiRequest,
@@ -1350,23 +1403,45 @@ export function listProviderAccounts(
 
 /**
  * `listProviderAccounts` with, on a host with `provider-account-models-v1`, the models that each
- * account after the first serves and the provider's own sign-in does not. When that read fails, the
- * accounts come without them, as from an older host.
+ * account after the first serves and the provider's own sign-in does not, and on a host with
+ * `provider-account-pool-v1`, the pools that are on. When one of these reads fails, the accounts come
+ * without it, as from an older host.
  */
 export function listProviderAccountsWithModels(
   request: TeamApiRequest,
   withModels: boolean,
+  withPools: boolean,
 ): Effect.Effect<HostProviderAccounts, TeamAdminRequestError> {
-  if (!withModels) return listProviderAccounts(request);
+  if (!withModels && !withPools) return listProviderAccounts(request);
   return Effect.all(
     [
       listProviderAccounts(request),
-      adminCall(() => request("POST", PROVIDER_ACCOUNT_MODELS_ROUTES.list, decodeHostProviderAccountModels, {})).pipe(
-        Effect.orElseSucceed(() => null),
-      ),
+      withModels
+        ? adminCall(() =>
+            request("POST", PROVIDER_ACCOUNT_MODELS_ROUTES.list, decodeHostProviderAccountModels, {}),
+          ).pipe(Effect.orElseSucceed(() => null))
+        : Effect.succeed(null),
+      withPools
+        ? adminCall(() => request("POST", PROVIDER_ACCOUNT_POOL_ROUTES.list, decodeHostProviderAccountPools, {})).pipe(
+            Effect.orElseSucceed(() => null),
+          )
+        : Effect.succeed(null),
     ],
     { concurrency: "unbounded" },
-  ).pipe(Effect.map(([accounts, models]) => (models ? withHostProviderAccountModels(accounts, models) : accounts)));
+  ).pipe(
+    Effect.map(([accounts, models, pools]) => {
+      const withAccountModels = models ? withHostProviderAccountModels(accounts, models) : accounts;
+      return pools ? { ...withAccountModels, pools } : withAccountModels;
+    }),
+  );
+}
+
+/** `provider-account-pool-v1`: turns the pool of a provider's accounts on the host on or off. */
+export function setProviderAccountPool(
+  request: TeamApiRequest,
+  input: SetProviderAccountPoolInput,
+): Effect.Effect<void, TeamAdminRequestError> {
+  return adminCall(() => request("POST", PROVIDER_ACCOUNT_POOL_ROUTES.update, ignoreResponse, { ...input }));
 }
 
 /** The readings of the accounts after the first. */
@@ -1922,33 +1997,53 @@ export function passwordManagerRequest(
   );
 }
 
-/** The routes of `vault-v2` when the host serves it, else of `vault-v1`, which has no API keys. */
-function vaultRoutes(v2: boolean) {
-  return v2 ? VAULT_V2_ROUTES : VAULT_ROUTES;
+/**
+ * The newest Vault capability of the host: 3 is `vault-v3` with two-step keys, 2 is `vault-v2` with API
+ * keys, 1 is `vault-v1`.
+ */
+type HostVaultVersion = 1 | 2 | 3;
+
+function vaultRoutes(version: HostVaultVersion) {
+  return version === 3 ? VAULT_V3_ROUTES : version === 2 ? VAULT_V2_ROUTES : VAULT_ROUTES;
 }
 
 /**
- * The host's Vault (`vault-v2`, or `vault-v1` without API keys). No list item carries a password, a
- * card number, a security code or an API key.
+ * The host's Vault (`vault-v3`, `vault-v2` without two-step keys, or `vault-v1` without API keys). No
+ * list item carries a password, a card number, a security code, an API key or a two-step key.
  */
-export function listHostVault(request: TeamApiRequest, v2: boolean): Effect.Effect<VaultState, TeamAdminRequestError> {
-  return adminCall(() => request("POST", vaultRoutes(v2).list, decodeHostVaultState, {}));
+export function listHostVault(
+  request: TeamApiRequest,
+  version: HostVaultVersion,
+): Effect.Effect<VaultState, TeamAdminRequestError> {
+  return adminCall(() => request("POST", vaultRoutes(version).list, decodeHostVaultState, {}));
+}
+
+/** The current two-step code of each host login with a key (`vault-v3`). The key stays on the host. */
+export function listHostVaultCodes(request: TeamApiRequest): Effect.Effect<VaultTwoStepCodes, TeamAdminRequestError> {
+  return adminCall(() => request("POST", VAULT_V3_ROUTES.codes, decodeHostVaultCodes, {}));
 }
 
 /** Adds or changes one item of the host's Vault. A null secret keeps the saved one; a new one goes to the host once. */
 export function saveHostVaultItem(
   request: TeamApiRequest,
   input: VaultSaveInput,
-  v2: boolean,
+  version: HostVaultVersion,
 ): Effect.Effect<VaultState, TeamAdminRequestError> {
   // Only a card has approved sites, and an absent list keeps them all. Only a login has a two-step
-  // key, and an absent key keeps the saved one. JSON has no undefined, so an absent field stays out.
-  const { fillSites, twoStepKey, ...item } = { fillSites: undefined, twoStepKey: undefined, ...input };
+  // key, and an absent key keeps the saved one. Absent agents keep the saved agents. JSON has no
+  // undefined, so an absent field stays out.
+  const { fillSites, twoStepKey, agents, ...item } = {
+    fillSites: undefined,
+    twoStepKey: undefined,
+    agents: undefined,
+    ...input,
+  };
   return adminCall(() =>
-    request("POST", vaultRoutes(v2).save, decodeHostVaultState, {
+    request("POST", vaultRoutes(version).save, decodeHostVaultState, {
       ...item,
       ...(fillSites === undefined ? {} : { fillSites }),
       ...(twoStepKey === undefined ? {} : { twoStepKey }),
+      ...(agents === undefined ? {} : { agents }),
     }),
   );
 }
@@ -1956,9 +2051,9 @@ export function saveHostVaultItem(
 export function deleteHostVaultItem(
   request: TeamApiRequest,
   id: string,
-  v2: boolean,
+  version: HostVaultVersion,
 ): Effect.Effect<VaultState, TeamAdminRequestError> {
-  return adminCall(() => request("POST", vaultRoutes(v2).delete, decodeHostVaultState, { id }));
+  return adminCall(() => request("POST", vaultRoutes(version).delete, decodeHostVaultState, { id }));
 }
 
 /** Adds the logins of a CSV password export (`vault-import-v1`). The answer has only the counts. */
@@ -2285,4 +2380,31 @@ export function whatsappConnectorSetOwnNumber(
   input: SetWhatsAppOwnNumberInput,
 ): Effect.Effect<void, TeamAdminRequestError> {
   return adminCall(() => request("POST", WHATSAPP_CONNECTOR_ROUTES.ownNumber, ignoreResponse, { ...input }));
+}
+
+/**
+ * The "Working on it…" setting of each WhatsApp number of the host (`whatsapp-working-message-v1`).
+ * Merge it into the overview with `withWhatsAppWorkingMessages`.
+ */
+export function whatsappConnectorWorkingMessages(
+  request: TeamApiRequest,
+): Effect.Effect<WhatsAppWorkingMessageList, TeamAdminRequestError> {
+  return adminCall(() =>
+    request(
+      "POST",
+      WHATSAPP_WORKING_MESSAGE_ROUTES.list,
+      (value) => {
+        if (!isWhatsAppWorkingMessageList(value)) throw new Error("Invalid WhatsApp working message response.");
+        return value;
+      },
+      {},
+    ),
+  );
+}
+
+export function whatsappConnectorSetWorkingMessage(
+  request: TeamApiRequest,
+  input: SetWhatsAppWorkingMessageInput,
+): Effect.Effect<void, TeamAdminRequestError> {
+  return adminCall(() => request("POST", WHATSAPP_WORKING_MESSAGE_ROUTES.update, ignoreResponse, { ...input }));
 }

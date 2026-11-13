@@ -8,6 +8,7 @@ import {
   AGENT_SESSION_SETTINGS_CAPABILITY,
   AGENT_SESSION_SETTINGS_ROUTES,
 } from "@openbot/contracts/team-protocol/agent-session-settings-v1";
+import { AGENT_SPEED_CAPABILITY, AGENT_SPEED_ROUTES } from "@openbot/contracts/team-protocol/agent-speed-v1";
 import {
   BROWSER_SECRET_VAULT_CAPABILITY,
   BROWSER_SECRET_VAULT_ROUTES,
@@ -129,6 +130,11 @@ import {
 } from "@openbot/contracts/team-protocol/conversation-unread-from-v1";
 import { MESSAGE_DELETE_CAPABILITY, MESSAGE_DELETE_ROUTES } from "@openbot/contracts/team-protocol/message-delete-v1";
 import {
+  decodeMessagePinsResponse,
+  MESSAGE_PINS_CAPABILITY,
+  MESSAGE_PINS_ROUTES,
+} from "@openbot/contracts/team-protocol/message-pins-v1";
+import {
   PROVIDER_ACCOUNTS_CAPABILITY,
   PROVIDER_ACCOUNTS_ROUTES,
 } from "@openbot/contracts/team-protocol/provider-accounts-v1";
@@ -146,8 +152,10 @@ import type { AgentService } from "../../backend/agent-service";
 import { runCauseEffect } from "../../backend/effect-boundary";
 import type { SidebarLayoutStore } from "../../backend/sidebar-layout-store";
 import type { HostService } from "../host-service";
+import type { LibraryFoldersService } from "../library-folders-service";
 import { runMessageDelete } from "../message-delete-refusal";
 import { type MessageLinkRelay, openHttpLink } from "../message-link-relay";
+import { runMessagePin } from "../message-pin-refusal";
 import type { ModelVisibility } from "../model-visibility";
 import {
   decodeAccountUsageFromHost,
@@ -170,6 +178,7 @@ import {
   decodeRemoteTaskPage,
   decodeRemoteTaskReadState,
   decodeRemoteTaskReadStates,
+  decodeRemoteTaskWindow,
   decodeSidebarLayoutSnapshot,
   decodeSidebarPinsFromHost,
 } from "../remote-agent-decoding";
@@ -202,6 +211,7 @@ import {
   parsePasteMessageLink,
   parsePromptResponse,
   parseQueueEdit,
+  parseReadAgentTaskAround,
   parseReadAgentTaskPage,
   parseReadConversationPage,
   parseRenameAgentTask,
@@ -212,6 +222,7 @@ import {
   parseSendMessage,
   parseSetAgentAvatar,
   parseSetChannelImage,
+  parseSetMessagePinned,
   parseSidebarFolderAction,
   parseStartAgentTask,
   parseSteerQueuedMessage,
@@ -282,6 +293,8 @@ function logRejectedModels<T>(models: T, source: "local" | "remote"): T {
 export interface AgentIpcDependencies {
   service: AgentService;
   sidebarLayout: SidebarLayoutStore;
+  /** The Library folders of this computer: a deleted agent takes its folders with it. */
+  libraryFolders: Pick<LibraryFoldersService, "removeAgent">;
   sidebarPins: SidebarPinStore;
   host: HostService;
   remoteServers: RemoteServerManager;
@@ -295,6 +308,7 @@ export interface AgentIpcDependencies {
 export function agentIpcHandlers({
   service,
   sidebarLayout,
+  libraryFolders,
   sidebarPins,
   host,
   remoteServers,
@@ -447,14 +461,20 @@ export function agentIpcHandlers({
           const models = remoteServers.request(serverId, TEAM_API_ROUTES.agents.models, (value) =>
             decodeAgentModelOptions(logRejectedModels(value, "remote")),
           );
-          // The released model list drops the fast tier and the picker listing, so a host with
-          // `agent-fast-mode-v1` or `model-visibility-v1` gives them on their own routes. Both are
-          // optional: when a route fails, the picker gets the models with no Fast switch or listing.
+          // The released model list drops the fast tiers and the picker listing, so a host with
+          // `agent-speed-v1` (or the older `agent-fast-mode-v1`) or `model-visibility-v1` gives them on
+          // their own routes. Both are optional: when a route fails, the picker gets the models with
+          // no Speed select or listing. Only `agent-speed-v1` lists Ultrafast tiers and Claude models.
+          const fastRoute = remoteServers.supportsCapability(serverId, AGENT_SPEED_CAPABILITY)
+            ? AGENT_SPEED_ROUTES.models
+            : remoteServers.supportsCapability(serverId, AGENT_FAST_MODE_CAPABILITY)
+              ? AGENT_FAST_MODE_ROUTES.models
+              : null;
           return runCauseEffect(
             Effect.gen(function* () {
-              const fast = remoteServers.supportsCapability(serverId, AGENT_FAST_MODE_CAPABILITY)
+              const fast = fastRoute
                 ? remoteServers
-                    .request(serverId, AGENT_FAST_MODE_ROUTES.models, decodeAgentFastModels, {
+                    .request(serverId, fastRoute, decodeAgentFastModels, {
                       method: "POST",
                       body: {},
                     })
@@ -590,7 +610,12 @@ export function agentIpcHandlers({
           runCauseEffect(remoteServers.request(serverId, CHANNEL_ROUTES.list, decodeChannelSummaries)),
       }),
       readChannel: scopedHandler(parseChannelRead, {
-        local: (input) => service.channels.store.page(input.channelId, input.beforeSequence),
+        local: (input) => {
+          const page = service.channels.store.page(input.channelId, input.beforeSequence);
+          // An older page adds only messages: the view keeps the tasks of the first page.
+          if (input.beforeSequence !== undefined) return page;
+          return { ...page, tasks: service.channels.store.withSeenDependencies(input.channelId, page.tasks) };
+        },
         remote: (input, serverId) =>
           runCauseEffect(
             remoteServers.request(serverId, CHANNEL_ROUTES.read, decodeChannelPage, { method: "POST", body: input }),
@@ -834,7 +859,7 @@ export function agentIpcHandlers({
           if (input.busyMessageMode !== undefined) {
             throw new Error(sourceText("error.agent.busyMessageModeLocalOnly"));
           }
-          // The released agent route does not carry the task limit; the renderer sends it on `agent-task-limit-v1`.
+          // The released agent route does not carry the task limit; mobile sets it on `agent-task-limit-v1`.
           if (input.taskLimit !== undefined) {
             throw new Error(sourceText("error.agent.taskLimitLocalOnly"));
           }
@@ -953,6 +978,7 @@ export function agentIpcHandlers({
         local: async (agentId) => {
           await runCauseEffect(service.deleteAgent(agentId));
           await runCauseEffect(sidebarLayout.removeAgent(agentId));
+          await runCauseEffect(libraryFolders.removeAgent(agentId));
         },
         remote: async (agentId, serverId) => {
           await runCauseEffect(
@@ -1134,6 +1160,39 @@ export function agentIpcHandlers({
           );
         },
       }),
+      // A joined server has pinned messages through `message-pins-v1`. An older host has no route for
+      // them, so the chat shows none there and the renderer hides Pin.
+      listPinnedMessages: scopedHandler(parseAgentId, {
+        local: (agentId) => service.listPinnedMessages(agentId),
+        remote: (agentId, serverId) => {
+          if (!remoteServers.supportsCapability(serverId, MESSAGE_PINS_CAPABILITY)) return { agentId, pins: [] };
+          return runCauseEffect(
+            remoteServers.request(serverId, MESSAGE_PINS_ROUTES.list, decodeMessagePinsResponse, {
+              method: "POST",
+              body: { agentId },
+            }),
+          );
+        },
+      }),
+      // The user of this computer pins as the person with no sender, as the messages they send have none.
+      setMessagePinned: scopedHandler(parseSetMessagePinned, {
+        local: (input) => runMessagePin(service.setMessagePinned(input, { kind: "person", sender: null })),
+        remote: (input, serverId) => {
+          if (!remoteServers.supportsCapability(serverId, MESSAGE_PINS_CAPABILITY))
+            throw new Error(sourceText("error.team.messagePinsUnsupported"));
+          return runCauseEffect(
+            remoteServers.request(serverId, MESSAGE_PINS_ROUTES.set, decodeMessagePinsResponse, {
+              method: "POST",
+              body: {
+                agentId: input.agentId,
+                taskId: input.taskId ?? null,
+                messageId: input.messageId,
+                pinned: input.pinned,
+              },
+            }),
+          );
+        },
+      }),
       // The agent-waits-v1 codec has already checked the empty reply. The host says why it refuses.
       cancelWait: scopedHandler(parseCancelAgentWait, {
         local: (parsed) => service.cancelWait(parsed.agentId, parsed.waitId),
@@ -1205,6 +1264,24 @@ export function agentIpcHandlers({
                 agentId: parsed.agentId,
                 taskId: parsed.taskId,
                 beforeMessageId: parsed.beforeMessageId,
+                limit: parsed.limit,
+              },
+            }),
+          );
+        },
+      }),
+      readTaskAround: scopedHandler(parseReadAgentTaskAround, {
+        local: (parsed) => service.readTaskAround(parsed),
+        remote: (parsed, serverId) => {
+          // The client opens a pin of a side thread only on a host with pins, which reads around a message.
+          if (!remoteServers.supportsCapability(serverId, MESSAGE_PINS_CAPABILITY)) taskRemoteUnsupported();
+          return runCauseEffect(
+            remoteServers.request(serverId, MESSAGE_PINS_ROUTES.readThread, decodeRemoteTaskWindow, {
+              method: "POST",
+              body: {
+                agentId: parsed.agentId,
+                taskId: parsed.taskId,
+                messageId: parsed.messageId,
                 limit: parsed.limit,
               },
             }),

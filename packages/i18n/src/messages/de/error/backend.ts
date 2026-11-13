@@ -68,6 +68,8 @@ export const messages = {
     "Die Komprimierung macht diesen Chat nicht kleiner: Nach zwei Komprimierungen nutzt er noch {percent}% des Kontextfensters des Modells, daher komprimiert OpenBot ihn nicht mehr. Tools und Anweisungen nutzen den größten Teil des Fensters. Schalte die MCP-Server oder die Computersteuerung aus, die dieser Agent nicht braucht, oder wähle ein Modell mit größerem Fenster. Starte dann einen neuen Chat.",
   "error.backend.contextCompactionStopped":
     "Zwei Komprimierungen dieses Chats sind nacheinander fehlgeschlagen, daher komprimiert OpenBot ihn nicht mehr automatisch. Jeder Versuch sendet den ganzen Chat an das Modell und verbraucht dein Planlimit. Wähle „Jetzt komprimieren“, um es erneut zu versuchen, oder starte einen neuen Chat.",
+  "error.backend.providerModelAtCapacity":
+    "Das Modell ist ausgelastet. Der Anbieter versucht es in einigen Minuten erneut. Um sofort weiterzumachen, stoppe den Durchlauf und wähle ein anderes Modell.",
   "error.backend.providerRetrying":
     "Der Anbieter hat diese Anfrage {attempts}-mal nicht ausgeführt und versucht es erneut. Wenn der Agent nicht weitermacht, stoppe den Durchlauf.",
   "error.backend.providerRetryingLargeContext":
@@ -176,6 +178,10 @@ export const messages = {
   "error.backend.attachBetween": "Hänge zwischen 1 und {limit} Dateien an.",
   "error.backend.attachmentNotFile": "Der Anhang ist keine Datei: {path}",
   "error.backend.generatedImageTooLarge": "Das erstellte Bild überschreitet die Grenze von 100 MB.",
+  "error.backend.generatedVideoTooLarge": "Das erstellte Video überschreitet die Grenze von 100 MB.",
+  "error.backend.videoGenerationFailed": "Die Videoerstellung ist fehlgeschlagen.",
+  "error.backend.videoGenerationNoVideo": "Die Videoerstellung hat kein Video zurückgegeben.",
+  "error.backend.videoGenerationInterrupted": "Die Videoerstellung wurde unterbrochen.",
   "error.backend.attachmentNotRegularFile": "Nur reguläre Dateien können angehängt werden: {name}",
   "error.backend.attachmentCopyFailed": "OpenBot konnte {name} nicht kopieren.",
   "error.backend.routineNameRequired": "Ein Name für die Routine ist erforderlich.",
@@ -242,6 +248,9 @@ export const messages = {
   "error.backend.messageDeleteBusy":
     "Diese Nachricht gehört zu einem laufenden Durchlauf. Lösche sie, wenn der Durchlauf endet.",
   "error.backend.messageDeleteForbidden": "Du kannst nur die Nachrichten löschen, die du gesendet hast.",
+  "error.backend.messagePinNotFound": "Diese Nachricht ist nicht im Chat.",
+  "error.backend.messagePinLimit":
+    "Dieser Chat hat 50 angeheftete Nachrichten. Löse eine, bevor du eine weitere anheftest.",
   "error.backend.routineFlowHandoffFailed": "Die Routine konnte die Arbeit nicht an diesen Agenten übergeben.",
   "error.backend.mcpServerLimit": "OpenBot verwaltet bis zu {limit} MCP-Server.",
   "error.backend.mcpServerNameTaken": "Ein MCP-Server mit dem Namen {name} existiert bereits.",
@@ -274,6 +283,8 @@ export const messages = {
   "error.backend.mcpServerExited":
     "Der Server wurde beendet, bevor er geantwortet hat. Führe den Befehl in einem Terminal aus, um seinen Fehler zu sehen.",
   "error.backend.mcpServerFailedToStart": "Der Server ist nicht gestartet: {reason}",
+  "error.backend.mcpToolSchemaRefused":
+    "Sein Tool {tool} hat ein Eingabeformat, das dieser Anbieter nicht lesen kann. Agenten mit anderen Anbietern erhalten den Server weiterhin.",
   "error.backend.mcpServerSignInForProvider":
     "{provider} konnte den MCP-Server {name} nicht verwenden, weil der Server eine Anmeldung verlangt. Öffne die MCP-Einstellungen und wähle Anmelden.",
   "error.backend.mcpServerFailedForProvider":
@@ -306,6 +317,13 @@ export const messages = {
   "error.backend.sectionNameTooLong": "Der Abschnittsname ist zu lang.",
   "error.backend.sidebarFolderTooDeep": "Ordner können nur drei Ebenen tief sein.",
   "error.backend.sidebarFolderMoveInvalid": "Dieser Ordner kann nicht dorthin verschoben werden.",
+  "error.backend.libraryFolderName": "Ein Ordnername muss 1 bis {limit} Zeichen haben.",
+  "error.backend.libraryFolderLimit": "Ein Server kann bis zu {limit} Bibliotheksordner haben.",
+  "error.backend.libraryFolderFileLimit": "In den Bibliotheksordnern sind zu viele Dateien.",
+  "error.backend.libraryFolderTooDeep": "Bibliotheksordner können nur {limit} Ebenen tief sein.",
+  "error.backend.libraryFolderGone": "Der Ordner existiert nicht oder wurde bereits gelöscht.",
+  "error.backend.libraryFolderOtherAgent": "Eine Datei kann nur in einen Ordner ihres Agenten verschoben werden.",
+  "error.backend.libraryFolderMoveInvalid": "Dieser Ordner kann nicht dorthin verschoben werden.",
   "error.backend.sectionNameDuplicate": "Abschnittsnamen müssen eindeutig sein.",
   "error.backend.directMessageRequired": "Schreibe zuerst eine Nachricht.",
   "error.backend.directMessageTooLong": "Eine Direktnachricht kann bis zu {limit} Zeichen haben.",

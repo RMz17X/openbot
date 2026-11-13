@@ -310,3 +310,73 @@ port (see above) and clears the sign-in rate limit. It also drops the agent sess
 | The local team store | `/home/openbot/.config/OpenBot/openbot-team-server-v2.json` in the container |
 | The deploy script | `deploy/deploy-webui.sh` |
 | The verification script | `deploy/verify-webui.sh` |
+
+## Appendix: a generic host install
+
+The runbook above is the operator's path for this deployment. The section below is the
+generic one: it installs the daemon as a systemd unit on a host that has no OpenBot yet.
+It is kept because `deploy/openbot-server.service` is a template unit with a
+`@SERVICE_USER@` placeholder, and the operator path never needed it.
+
+### Install and start the host service
+
+The host process runs in headless server mode (`OPENBOT_SERVER=1`) and listens on `127.0.0.1:28417`.
+
+#### Option A: Install the new unit
+
+1. Copy the systemd unit file from `deploy/`:
+   ```bash
+   sudo cp deploy/openbot-server.service /etc/systemd/system/openbot-server.service
+   ```
+
+2. Edit `/etc/systemd/system/openbot-server.service` and set the service user:
+   Replace `@SERVICE_USER@` with your target user (for example `openbot`).
+
+3. Reload the systemd daemon:
+   ```bash
+   sudo systemctl daemon-reload
+   ```
+
+4. Enable and start the service:
+   ```bash
+   sudo systemctl enable --now openbot-server.service
+   ```
+
+5. Check service status:
+   ```bash
+   systemctl status openbot-server.service
+   ```
+
+#### Option B: Update an existing unit
+
+If an `openbot.service` already exists on the host, apply these changes:
+- Add `Environment=OPENBOT_SERVER=1` in the `[Service]` section.
+- Change `Restart=always` to `Restart=on-failure`.
+- Keep `RestartSec=10` (or `RestartSec=10s`).
+- Add `StartLimitIntervalSec=300` and `StartLimitBurst=5` in the `[Unit]` section to prevent infinite restart loops.
+
+Reload and restart:
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart openbot.service
+```
+
+### Verification with curl
+
+Verify API authentication directly with `curl`:
+
+1. Request a session token through the reverse proxy:
+   ```bash
+   curl -i -X POST http://localhost/v1/auth/login \
+     -H "Content-Type: application/json" \
+     -d '{"username":"owner","password":"<your-password>"}'
+   ```
+
+2. Direct request to the loopback Team API:
+   ```bash
+   curl -i -X POST http://127.0.0.1:28417/v1/auth/login \
+     -H "Content-Type: application/json" \
+     -d '{"username":"owner","password":"<your-password>"}'
+   ```
+
+Successful authentication returns HTTP status 200 with the session token JSON payload.

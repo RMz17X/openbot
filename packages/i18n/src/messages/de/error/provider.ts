@@ -191,6 +191,8 @@ export const messages = {
     "Die CLI von {provider} bearbeitet einen Durchlauf. Warte auf den Abschluss und aktualisiere dann.",
   "error.provider.cliSelectFailed": "OpenBot konnte die installierte verwaltete CLI nicht auswählen.",
   "error.provider.noAuthenticatedAccount": "{provider} hat kein authentifiziertes Konto zurückgegeben.",
+  "error.provider.codexModelProvider":
+    "Codex verwendet auf diesem Computer einen anderen Modellanbieter, und dieser Anbieter verwendet keine ChatGPT-Anmeldung und keinen OpenAI-API-Schlüssel. ChatGPT-Agenten können diesen Anbieter jetzt verwenden. Um dein ChatGPT-Konto zu verwenden, stelle den Modellanbieter von Codex wieder auf OpenAI.",
   "error.provider.signInExpired":
     "Deine Anmeldung bei {provider} ist abgelaufen. Melde dich erneut an, um fortzufahren.",
   "error.provider.cliActivateFailed": "OpenBot konnte die verwaltete CLI nicht aktivieren.",
@@ -238,6 +240,8 @@ export const messages = {
     "Eine andere Codex-App hat diesen Chat geöffnet, zum Beispiel die Codex-Desktop-App, die Codex CLI oder eine IDE-Erweiterung. Nur eine App kann gleichzeitig in einen Codex-Chat schreiben. Schließe den Chat in dieser App und sende deine Nachricht dann erneut.",
   "error.provider.realtimeLimitZero":
     "Linux hat den Anbieter beendet, weil OpenBot ein Echtzeit-CPU-Limit von 0 hat. Das Limit kommt von deinem System. Installiere und starte rtkit (`rtkit-daemon`), führe `systemctl --user restart xdg-desktop-portal` aus und starte OpenBot dann neu. Ein Neustart von xdg-desktop-portal allein hilft nicht, solange rtkit fehlt.",
+  "error.provider.cpuUnsupported":
+    "Der Prozessor dieses Computers kann diesen Anbieter nicht ausführen. Verwende einen anderen Anbieter.",
   "error.provider.opencodeDatabaseNewer":
     "OpenCode konnte seine Datenbank nicht öffnen, weil eine neuere OpenCode-Version sie geändert hat. Aktualisiere OpenCode auf Version 2 oder neuer und versuche es dann erneut.",
   "error.provider.opencodeNoAnswer":
@@ -274,6 +278,8 @@ export const messages = {
     "Gemini kann dieses Modell gerade nicht verwenden. Wähle ein anderes Modell und versuche es dann erneut.\n{detail}",
   "error.provider.antigravityServiceFailure":
     "Der Gemini-Dienst von Google hat die Anfrage nicht abgeschlossen. Versuche es in ein paar Minuten erneut.\n{detail}",
+  "error.provider.antigravityRequestRejected":
+    "Gemini hat diese Anfrage abgelehnt. Wähle ein anderes Modell und sende deine Nachricht erneut. Wenn es wieder fehlschlägt, starte einen neuen Chat.\n{detail}",
   "error.provider.antigravityConnectionLost":
     "Gemini hat die Verbindung zu seinem Agenten verloren und wurde beendet. Sende eine Nachricht, um fortzufahren.",
   "error.provider.antigravityRemoteWindowsSignIn":
@@ -312,6 +318,8 @@ export const messages = {
   "error.provider.hermesVersionUnreadable": "Die Version von Hermes Agent kann nicht gelesen werden.",
   "error.provider.hermesSignIn":
     "Melde dich mit Nous Portal an oder führe `hermes setup` in einem Terminal aus, um Hermes zu verwenden.",
+  "error.provider.hermesTurnFailed":
+    "Hermes konnte diesen Durchlauf nicht abschließen. Wenn die Antwort einen Grund nennt, folge ihm. Sonst ist vielleicht ein MCP-Server dieses Agenten nicht erreichbar: Prüfe ihn unter Servereinstellungen › MCP und sende deine Nachricht erneut.",
   "error.provider.usageLimitReached": "Das Konto hat sein Nutzungslimit erreicht.",
   "error.provider.claudeContextFull":
     "Dieser Chat ist für Claude zu lang geworden. OpenBot hat eine neue Claude-Code-Sitzung mit dem Chatverlauf gestartet. Versuche es erneut.",

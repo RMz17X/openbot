@@ -1,11 +1,13 @@
 import {
   type AgentSessionSettings,
   decodeAgentAnalytics,
+  decodeGithubSkillSource,
   decodeHostAnalytics,
   decodeHostProviderAccounts,
   decodeInstalledSkills,
   decodeProviderUsageResetOutcome,
   decodeProviderUsageResets,
+  type GithubSkillSource,
   type HostDefaultProvider,
   type HostProviderAccounts,
   isAgentHostSettings,
@@ -15,6 +17,7 @@ import {
   isAgentTaskPage,
   isAgentTaskReadState,
   isAgentTasksSnapshot,
+  isAgentTaskWindow,
   isConversationSnapshot,
   isHiddenAgentsSnapshot,
   isSidebarPinsSnapshot,
@@ -91,6 +94,7 @@ export const decodeRemoteAgentThreadQueues = guardedDecoder(isAgentThreadQueues,
 export const decodeRemoteAgentUsageLimits = guardedDecoder(isAgentUsageLimits, "remote usage limits");
 export const decodeRemoteTaskConversation = guardedDecoder(isConversationSnapshot, "remote task conversation");
 export const decodeRemoteTaskPage = guardedDecoder(isAgentTaskPage, "remote thread page");
+export const decodeRemoteTaskWindow = guardedDecoder(isAgentTaskWindow, "remote thread part");
 export const decodeRemoteTaskReadState = guardedDecoder(isAgentTaskReadState, "remote thread read state");
 const decodeTaskReadStates = guardedListDecoder(isAgentTaskReadState, "remote thread read states");
 export function decodeRemoteTaskReadStates(value: unknown): AgentTaskReadState[] {
@@ -271,6 +275,10 @@ export function decodeAgentSummaries(value: unknown): ClientAgentSummary[] {
 
 export function decodeInstalledSkillsFromHost(value: unknown): InstalledSkill[] {
   return decodeInstalledSkills(value);
+}
+
+export function decodeGithubSkillSourceFromHost(value: unknown): GithubSkillSource {
+  return decodeGithubSkillSource(value);
 }
 
 export function decodeAgentMemory(value: unknown): AgentMemory {

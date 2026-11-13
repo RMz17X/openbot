@@ -68,6 +68,8 @@ export const messages = {
     "La compaction ne réduit pas ce chat : après deux compactions, il utilise encore {percent} % de la fenêtre de contexte du modèle, donc OpenBot arrête de le compacter. Les outils et les instructions occupent la plus grande partie de la fenêtre. Désactive les serveurs MCP ou le contrôle de l'ordinateur dont cet agent n'a pas besoin, ou choisis un modèle avec une fenêtre plus grande. Puis démarre un nouveau chat.",
   "error.backend.contextCompactionStopped":
     "Deux compactages de suite de cette discussion ont échoué, donc OpenBot ne la compacte plus automatiquement. Chaque essai envoie toute la discussion au modèle et consomme la limite de votre forfait. Sélectionnez « Compacter » pour réessayer, ou démarrez une nouvelle discussion.",
+  "error.backend.providerModelAtCapacity":
+    "Le modèle est saturé. Le fournisseur réessaiera dans quelques minutes. Pour continuer maintenant, arrête le tour et choisis un autre modèle.",
   "error.backend.providerRetrying":
     "Le fournisseur a échoué {attempts} fois sur cette requête et réessaie. Si l'agent ne continue pas, arrête le tour.",
   "error.backend.providerRetryingLargeContext":
@@ -175,6 +177,10 @@ export const messages = {
   "error.backend.attachBetween": "Joignez entre 1 et {limit} fichiers.",
   "error.backend.attachmentNotFile": "La pièce jointe n’est pas un fichier : {path}",
   "error.backend.generatedImageTooLarge": "L’image générée dépasse la limite de 100 Mo.",
+  "error.backend.generatedVideoTooLarge": "La vidéo générée dépasse la limite de 100 Mo.",
+  "error.backend.videoGenerationFailed": "La génération de la vidéo a échoué.",
+  "error.backend.videoGenerationNoVideo": "La génération de la vidéo n’a renvoyé aucune vidéo.",
+  "error.backend.videoGenerationInterrupted": "La génération de la vidéo a été interrompue.",
   "error.backend.attachmentNotRegularFile": "Seuls les fichiers ordinaires peuvent être joints : {name}",
   "error.backend.attachmentCopyFailed": "OpenBot n’a pas pu copier {name}.",
   "error.backend.routineNameRequired": "Un nom de routine est requis.",
@@ -236,6 +242,9 @@ export const messages = {
   "error.backend.messageDeleteNotFound": "Ce message n’est pas dans le chat.",
   "error.backend.messageDeleteBusy": "Ce message fait partie d’un tour en cours. Supprimez-le à la fin du tour.",
   "error.backend.messageDeleteForbidden": "Vous ne pouvez supprimer que les messages que vous avez envoyés.",
+  "error.backend.messagePinNotFound": "Ce message n’est pas dans la discussion.",
+  "error.backend.messagePinLimit":
+    "Cette discussion contient 50 messages épinglés. Désépinglez-en un avant d’en épingler un autre.",
   "error.backend.routineFlowHandoffFailed": "La routine n’a pas pu transmettre le travail à cet agent.",
   "error.backend.mcpServerLimit": "OpenBot garde jusqu’à {limit} serveurs MCP.",
   "error.backend.mcpServerNameTaken": "Un serveur MCP nommé {name} existe déjà.",
@@ -268,6 +277,8 @@ export const messages = {
   "error.backend.mcpServerExited":
     "Le serveur s’est arrêté avant de répondre. Exécutez la commande dans un terminal pour voir son erreur.",
   "error.backend.mcpServerFailedToStart": "Le serveur n’a pas démarré : {reason}",
+  "error.backend.mcpToolSchemaRefused":
+    "Son outil {tool} a un format d’entrée que ce fournisseur ne peut pas lire. Les agents des autres fournisseurs reçoivent toujours le serveur.",
   "error.backend.mcpServerSignInForProvider":
     "{provider} n’a pas pu utiliser le serveur MCP {name}, car ce serveur demande une connexion. Ouvrez les réglages MCP et choisissez Se connecter.",
   "error.backend.mcpServerFailedForProvider":
@@ -301,6 +312,13 @@ export const messages = {
   "error.backend.sectionNameTooLong": "Le nom de la section est trop long.",
   "error.backend.sidebarFolderTooDeep": "Les dossiers ne peuvent avoir que trois niveaux.",
   "error.backend.sidebarFolderMoveInvalid": "Ce dossier ne peut pas être déplacé ici.",
+  "error.backend.libraryFolderName": "Le nom d’un dossier doit comporter de 1 à {limit} caractères.",
+  "error.backend.libraryFolderLimit": "Un serveur peut avoir jusqu’à {limit} dossiers de la Bibliothèque.",
+  "error.backend.libraryFolderFileLimit": "Il y a trop de fichiers dans les dossiers de la Bibliothèque.",
+  "error.backend.libraryFolderTooDeep": "Les dossiers de la Bibliothèque ne peuvent avoir que {limit} niveaux.",
+  "error.backend.libraryFolderGone": "Le dossier n’existe pas ou a déjà été supprimé.",
+  "error.backend.libraryFolderOtherAgent": "Un fichier ne peut aller que dans un dossier de son agent.",
+  "error.backend.libraryFolderMoveInvalid": "Ce dossier ne peut pas être déplacé ici.",
   "error.backend.sectionNameDuplicate": "Les noms de section doivent être uniques.",
   "error.backend.directMessageRequired": "Écrivez d’abord un message.",
   "error.backend.directMessageTooLong": "Un message direct peut contenir jusqu’à {limit} caractères.",

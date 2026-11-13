@@ -66,6 +66,8 @@ export const messages = {
     "Sıkıştırma bu sohbeti küçültmüyor: iki sıkıştırmadan sonra hâlâ modelin bağlam penceresinin %{percent} kadarını kullanıyor, bu yüzden OpenBot sıkıştırmayı durduruyor. Pencerenin çoğunu araçlar ve talimatlar kullanıyor. Bu ajanın ihtiyaç duymadığı MCP sunucularını veya bilgisayar kullanımını kapatın ya da daha büyük pencereli bir model seçin. Ardından yeni bir sohbet başlatın.",
   "error.backend.contextCompactionStopped":
     'Bu sohbetin art arda iki sıkıştırması başarısız oldu, bu yüzden OpenBot onu otomatik olarak sıkıştırmayı bırakıyor. Her deneme tüm sohbeti modele gönderir ve plan sınırınızı kullanır. Yeniden denemek için "Şimdi sıkıştır"ı seçin veya yeni bir sohbet başlatın.',
+  "error.backend.providerModelAtCapacity":
+    "Model kapasitesinin sınırında. Sağlayıcı birkaç dakika içinde yeniden deneyecek. Hemen devam etmek için turu durdurun ve başka bir model seçin.",
   "error.backend.providerRetrying":
     "Sağlayıcı bu isteği {attempts} kez tamamlayamadı ve yeniden deniyor. Ajan devam etmezse turu durdurun.",
   "error.backend.providerRetryingLargeContext":
@@ -162,6 +164,10 @@ export const messages = {
   "error.backend.attachBetween": "1 ila {limit} dosya ekleyin.",
   "error.backend.attachmentNotFile": "Ek bir dosya değil: {path}",
   "error.backend.generatedImageTooLarge": "Oluşturulan görsel 100 MB sınırını aşıyor.",
+  "error.backend.generatedVideoTooLarge": "Oluşturulan video 100 MB sınırını aşıyor.",
+  "error.backend.videoGenerationFailed": "Video oluşturulamadı.",
+  "error.backend.videoGenerationNoVideo": "Video oluşturma bir video döndürmedi.",
+  "error.backend.videoGenerationInterrupted": "Video oluşturma kesintiye uğradı.",
   "error.backend.attachmentNotRegularFile": "Yalnızca normal dosyalar eklenebilir: {name}",
   "error.backend.attachmentCopyFailed": "OpenBot {name} öğesini kopyalayamadı.",
   "error.backend.routineNameRequired": "Bir rutin adı gereklidir.",
@@ -217,6 +223,9 @@ export const messages = {
   "error.backend.messageDeleteNotFound": "Bu mesaj sohbette yok.",
   "error.backend.messageDeleteBusy": "Bu mesaj devam eden bir turun parçası. Tur bitince silin.",
   "error.backend.messageDeleteForbidden": "Yalnızca gönderdiğiniz mesajları silebilirsiniz.",
+  "error.backend.messagePinNotFound": "Bu mesaj sohbette değil.",
+  "error.backend.messagePinLimit":
+    "Bu sohbette 50 sabitlenmiş mesaj var. Başka bir mesaj sabitlemeden önce birini kaldırın.",
   "error.backend.routineFlowHandoffFailed": "Rutin işi bu ajana aktaramadı.",
   "error.backend.mcpServerLimit": "OpenBot en fazla {limit} MCP sunucusu tutar.",
   "error.backend.mcpServerNameTaken": "{name} adında bir MCP sunucusu zaten mevcut.",
@@ -248,6 +257,8 @@ export const messages = {
   "error.backend.mcpServerExited":
     "Sunucu yanıt vermeden durdu. Hatasını görmek için komutu bir terminalde çalıştırın.",
   "error.backend.mcpServerFailedToStart": "Sunucu başlamadı: {reason}",
+  "error.backend.mcpToolSchemaRefused":
+    "Sunucunun {tool} aracının giriş biçimini bu sağlayıcı okuyamıyor. Diğer sağlayıcılardaki ajanlar sunucuyu almaya devam ediyor.",
   "error.backend.mcpServerSignInForProvider":
     "{provider}, {name} MCP sunucusunu kullanamadı, çünkü sunucu oturum açmanızı istiyor. MCP ayarlarını açın ve Oturum aç'ı seçin.",
   "error.backend.mcpServerFailedForProvider":
@@ -279,6 +290,13 @@ export const messages = {
   "error.backend.sectionNameTooLong": "Bölüm adı çok uzun.",
   "error.backend.sidebarFolderTooDeep": "Klasörler en fazla üç seviye derinliğinde olabilir.",
   "error.backend.sidebarFolderMoveInvalid": "Bu klasör oraya taşınamaz.",
+  "error.backend.libraryFolderName": "Klasör adı 1 ile {limit} karakter arasında olmalıdır.",
+  "error.backend.libraryFolderLimit": "Bir sunucuda en fazla {limit} Kitaplık klasörü olabilir.",
+  "error.backend.libraryFolderFileLimit": "Kitaplık klasörlerinde çok fazla dosya var.",
+  "error.backend.libraryFolderTooDeep": "Kitaplık klasörleri en fazla {limit} düzey derinliğinde olabilir.",
+  "error.backend.libraryFolderGone": "Klasör yok veya zaten silinmiş.",
+  "error.backend.libraryFolderOtherAgent": "Bir dosya yalnızca kendi ajanının klasörüne konabilir.",
+  "error.backend.libraryFolderMoveInvalid": "Bu klasör oraya taşınamaz.",
   "error.backend.sectionNameDuplicate": "Bölüm adları benzersiz olmalıdır.",
   "error.backend.directMessageRequired": "Önce bir mesaj yazın.",
   "error.backend.directMessageTooLong": "Doğrudan mesaj en fazla {limit} karakter içerebilir.",

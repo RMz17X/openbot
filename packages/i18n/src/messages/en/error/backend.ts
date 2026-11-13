@@ -64,6 +64,8 @@ export const messages = defineMessages("error.backend", {
     "Compaction does not make this chat smaller: after two compactions it still uses {percent}% of the model's context window, so OpenBot stops compacting it. Tools and instructions use most of the window. Turn off the MCP servers or computer use that this agent does not need, or select a model with a larger window. Then start a new chat.",
   "error.backend.contextCompactionStopped":
     "Two compactions of this chat failed in a row, so OpenBot stops compacting it automatically. Each try sends the whole chat to the model and uses your plan limit. Select Compact now to try again, or start a new chat.",
+  "error.backend.providerModelAtCapacity":
+    "The model is at capacity. The provider tries again in a few minutes. To continue now, stop the turn and choose a different model.",
   "error.backend.providerRetrying":
     "The provider failed this request {attempts} times and tries again. If the agent does not continue, stop the turn.",
   "error.backend.providerRetryingLargeContext":
@@ -162,6 +164,10 @@ export const messages = defineMessages("error.backend", {
   "error.backend.attachBetween": "Attach between 1 and {limit} files.",
   "error.backend.attachmentNotFile": "Attachment is not a file: {path}",
   "error.backend.generatedImageTooLarge": "Generated image exceeds the 100 MB limit.",
+  "error.backend.generatedVideoTooLarge": "Generated video exceeds the 100 MB limit.",
+  "error.backend.videoGenerationFailed": "Video generation failed.",
+  "error.backend.videoGenerationNoVideo": "Video generation did not return a video.",
+  "error.backend.videoGenerationInterrupted": "Video generation was interrupted.",
   "error.backend.attachmentNotRegularFile": "Only regular files can be attached: {name}",
   "error.backend.attachmentCopyFailed": "OpenBot could not copy {name}.",
   "error.backend.routineNameRequired": "A routine name is required.",
@@ -218,6 +224,8 @@ export const messages = defineMessages("error.backend", {
   "error.backend.messageDeleteNotFound": "This message is not in the chat.",
   "error.backend.messageDeleteBusy": "This message is part of a running turn. Delete it when the turn ends.",
   "error.backend.messageDeleteForbidden": "You can delete only the messages that you sent.",
+  "error.backend.messagePinNotFound": "The message to pin is not in this chat.",
+  "error.backend.messagePinLimit": "This chat has 50 pinned messages. Unpin one before you pin another.",
   "error.backend.routineFlowHandoffFailed": "The routine could not pass the work on to this agent.",
   "error.backend.mcpServerLimit": "OpenBot keeps up to {limit} MCP servers.",
   "error.backend.mcpServerNameTaken": "An MCP server named {name} already exists.",
@@ -248,6 +256,8 @@ export const messages = defineMessages("error.backend", {
   "error.backend.mcpServerExited":
     "The server stopped before it answered. Run the command in a terminal to see its error.",
   "error.backend.mcpServerFailedToStart": "The server did not start: {reason}",
+  "error.backend.mcpToolSchemaRefused":
+    "Its tool {tool} has an input format that this provider cannot read. Agents on other providers still get the server.",
   "error.backend.mcpServerSignInForProvider":
     "{provider} could not use the MCP server {name}, because the server asks for a sign-in. Open the MCP settings and choose Sign in.",
   "error.backend.mcpServerFailedForProvider":
@@ -281,6 +291,13 @@ export const messages = defineMessages("error.backend", {
   "error.backend.sectionNameTooLong": "Section name is too long.",
   "error.backend.sidebarFolderTooDeep": "Folders can go only three levels deep.",
   "error.backend.sidebarFolderMoveInvalid": "This folder cannot move there.",
+  "error.backend.libraryFolderName": "A folder name must have 1 to {limit} characters.",
+  "error.backend.libraryFolderLimit": "A server can have up to {limit} Library folders.",
+  "error.backend.libraryFolderFileLimit": "Too many files are in Library folders.",
+  "error.backend.libraryFolderTooDeep": "Library folders can go only {limit} levels deep.",
+  "error.backend.libraryFolderGone": "The folder does not exist or is already deleted.",
+  "error.backend.libraryFolderOtherAgent": "A file can go only into a folder of its agent.",
+  "error.backend.libraryFolderMoveInvalid": "This folder cannot go there.",
   "error.backend.sectionNameDuplicate": "Section names must be unique.",
   "error.backend.directMessageRequired": "Write a message first.",
   "error.backend.directMessageTooLong": "A direct message can have up to {limit} characters.",

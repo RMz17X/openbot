@@ -48,7 +48,6 @@ function refuseBundledCredentials(): Plugin {
     },
   };
 }
-
 function enOnlyLanguageCatalogs(): Plugin {
   const i18nSource = normalizePath(fileURLToPath(new URL("../../packages/i18n/src/", import.meta.url)));
   const eagerModules = new Set(["./app-catalogs", "./source-catalogs", "./format-catalogs", "./locale-loading"]);

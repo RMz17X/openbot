@@ -137,6 +137,11 @@ export const messages = {
   "marketplace.app.remove.confirmTitle": "{name} kaldırılsın mı?",
   "marketplace.app.remove.keep": "Koru",
   "marketplace.app.connection": "Bağlantı",
+  "marketplace.app.access.use": "Kullanabilir",
+  "marketplace.app.access.noAgents": "Ajan yok",
+  "marketplace.app.access.agentsOf": "{name} kullanabilen ajanlar",
+  "marketplace.app.access.chooseAgents": "{name}: {summary}. Ajanları seç",
+  "marketplace.app.access.level": "{role} rolünün {name} erişimi",
   "marketplace.app.setup.account": "Tarayıcıda {name} hesabınızla oturum açın.",
   "marketplace.app.setup.key": "{name} hesabınızdan bir API anahtarı gerekir.",
   "marketplace.app.setup.keySaved": "{field}, {host} üzerinde kayıtlı.",
@@ -269,6 +274,15 @@ export const messages = {
   "marketplace.plugin.higgsfield.prompt.productShot":
     "Higgsfield ile ahşap masa üzerinde seramik bir kupanın ürün fotoğrafını yap.",
   "marketplace.plugin.higgsfield.prompt.clip": "Higgsfield ile gün batımında dalgaların 5 saniyelik bir videosunu yap.",
+  "marketplace.plugin.sunra.tagline": "Yapay zekâ ile görsel, video, ses ve 3D",
+  "marketplace.plugin.sunra.description":
+    "Sunra, ajanların GPT Image, Nano Banana, Seedream, FLUX, Seedance, Kling ve Veo gibi modellerle görsel, video, ses ve 3D model üretmesini, kredi bakiyesini kontrol etmesini ve sonuçları almasını sağlar. Sonuçlar kullanıcının Sunra hesabındaki bir projeye kaydedilir. Her kullanıcı tarayıcıda kendi Sunra hesabına giriş yapar. Sunra her üretimin maliyetini önce bildirir ve o hesabın kredilerini yalnızca onaydan sonra harcar.",
+  "marketplace.plugin.sunra.app":
+    "Sunra MCP sunucusu üzerinden, tarayıcıda girişle görsel, video, ses ve 3D üretimi, krediler ve sonuçlar.",
+  "marketplace.plugin.sunra.prompt.balance": "Kaç Sunra kredim var?",
+  "marketplace.plugin.sunra.prompt.poster": "Sunra ile yağmurda bir gece pazarının dikey formatta posterini yap.",
+  "marketplace.plugin.sunra.prompt.clip":
+    "Sunra ile nehirdeki kâğıt bir teknenin 5 saniyelik videosunu yap. Önce maliyetini söyle.",
   "marketplace.plugin.elevenlabs.tagline": "Konuşma, sesler ve sesli ajanlar",
   "marketplace.plugin.elevenlabs.description":
     "ElevenLabs, ajanların metni konuşmaya çevirmesini, seslerle çalışmasını ve ElevenLabs sesli ajanlarını ve konuşmalarını oluşturmasını, test etmesini ve incelemesini sağlar. Üretilen ses kısa ömürlü bir indirme bağlantısı olarak gelir. Her kullanıcı tarayıcıda kendi ElevenLabs hesabına giriş yapar ve her üretim o hesabın kredilerini kullanır.",
@@ -581,6 +595,13 @@ export const messages = {
   "marketplace.skills.origin.local": "Bu bilgisayarda oluşturuldu",
   "marketplace.skills.origin.workspace": "Bu ajanın klasöründe",
   "marketplace.skills.origin.marketplace": "Pazaryerinden · sürüm {version}",
+  "marketplace.skills.origin.github": "GitHub'dan · {repository}",
+  "marketplace.skills.github.search": "Arayın veya bir GitHub bağlantısı yapıştırın",
+  "marketplace.skills.github.reading": "Depoda beceriler aranıyor",
+  "marketplace.skills.github.trust": "OpenBot, GitHub'daki becerileri incelemedi. Bir beceriyi eklemeden önce okuyun.",
+  "marketplace.skills.github.source": "GitHub · {repository}, {commit} işlemesi",
+  "marketplace.skills.github.open": "GitHub",
+  "marketplace.skills.github.openName": "{repository} deposunu GitHub'da aç",
   "marketplace.skills.status.notAdded": "Eklenmedi",
   "marketplace.skills.status.on": "Açık: {agents}",
   "marketplace.skills.agentCount": { one: "{count} ajan", other: "{count} ajan" },
