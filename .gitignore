@@ -75,3 +75,7 @@ keys
 
 # graft's local graph cache — regenerable, not committed (run `graft build`).
 /graft/
+
+# Scratch probes written while working on the host. They are throwaway files that often carry a
+# credential that was pasted in for one run, and they must never reach the repository.
+/.probe/
