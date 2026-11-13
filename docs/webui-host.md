@@ -315,6 +315,29 @@ The symptom is a workspace that shows the agent list but never updates: the unre
 sidebar does not move and no message arrives without a reload. `deploy/verify-webui.sh` asks the
 socket for an upgrade and requires `101`, so it catches this.
 
+### The proxy must forward the scheme the caller used
+
+nginx listens on plain HTTP, so `$scheme` is always `http` there, whatever the browser used. A
+request that arrives through the Cloudflare Tunnel carries the scheme the browser used in
+`X-Forwarded-Proto`, and that is the scheme the daemon has to see.
+
+The daemon builds its public URLs from the forwarded protocol
+(`publicHttpBaseUrl` in `src/main/team-api/request-helpers.ts`), and it marks its cookies `Secure`
+only when the forwarded protocol is `https`
+(`src/main/remote-screen-gateway.ts`). A proxy that overwrites the header with `$scheme` therefore
+tells the daemon that a public HTTPS request was plain HTTP: the public URLs come out as `http://`,
+and the cookies lose `Secure`.
+
+`deploy/openbot.conf` maps the header into `$forwarded_proto` and sends that upstream, so:
+
+| Caller | `X-Forwarded-Proto` the daemon receives | Public origin |
+|---|---|---|
+| The public address, through the tunnel | `https` | `https://openbot.jetstream.web.id` |
+| The LAN address | `http` | `http://100.81.73.83:28420` |
+
+The same value is the fallback of the `Access-Control-Allow-Origin` answer for a request that names
+no origin, so the answer is the address the caller actually opened.
+
 ### The Android app needs the daemon's cloud connection
 
 The Android companion app reaches the host through the Cloudflare account service and Signal.

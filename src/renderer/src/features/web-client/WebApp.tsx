@@ -1,15 +1,5 @@
-import { agentTemplateIdFromWebAppSearch, WEB_APP_AGENT_TEMPLATE_PARAM } from "@openbot/contracts/agent-template-links";
-import { companySignInErrorKey, WEB_APP_COMPANY_SIGN_IN_ERROR_PARAM } from "@openbot/contracts/company-sign-in";
 import { type FirstTouch, readFirstTouch } from "@openbot/contracts/first-touch";
-import { inviteUrlFromWebAppSearch, WEB_APP_INVITE_FIELDS } from "@openbot/contracts/invite-links";
 import { type AppVariant, type CentralAuthState, type CentralAuthUser, isAvatarColor } from "@openbot/contracts/ipc";
-import {
-  type MarketplaceListingLink,
-  marketplaceListingFromWebAppSearch,
-  WEB_APP_MARKETPLACE_AGENT_PARAM,
-  WEB_APP_MARKETPLACE_SKILL_PARAM,
-} from "@openbot/contracts/marketplace-links";
-import { pluginSlugFromWebAppSearch, WEB_APP_PLUGIN_PARAM } from "@openbot/contracts/plugin-links";
 import { isBoolean, isDynamicRecord, isString } from "@openbot/contracts/runtime-values";
 import { formatLocale, resolveLocale } from "@openbot/i18n";
 import { sourceText } from "@openbot/i18n/source";
@@ -21,7 +11,6 @@ import { AppLoadingScreen } from "@openbot/ui/features/account/AppLoadingScreen"
 import { DirectLogin } from "@openbot/ui/features/account/DirectLogin";
 import { currentText } from "@openbot/ui/text";
 import { createEffect, createSignal, createStore, onSettled, Show } from "solid-js";
-import type { DesktopAnalyticsProperties } from "../../analytics";
 import {
   configureWebReports,
   reportNotification,
@@ -40,9 +29,19 @@ import { WebLanguageStep } from "./WebLanguageStep";
 import type { WebWorkspace } from "./WebWorkspace";
 import { createWebAccountCalls } from "./web-account";
 import { deleteSavedAgentPictures } from "./web-agent-pictures";
+import {
+  type BillingReturn,
+  companySignInIssue,
+  takeAgentTemplateLink,
+  takeBillingReturn,
+  takeCompanySignInError,
+  takeInviteLink,
+  takeMarketplaceLink,
+  takePluginLink,
+  takeStartLink,
+} from "./web-app-links";
 import { WebAppWorkspace } from "./web-app-workspace";
 import { createWebAppearancePreference } from "./web-appearance-preference";
-import { takeWebAppStart, WEB_APP_BILLING_PARAM, type WebAppStart } from "./web-billing";
 import type { WebRuntimeFactory } from "./web-client-context";
 import { DIRECT_HOST_USERNAME, readDirectSession, signInDirect, signOutDirect } from "./web-direct-session";
 import { takeHostingReturn } from "./web-hosted-servers";
@@ -84,101 +83,8 @@ class SignInIssueShown extends Error {}
 /** The email signs in with the company's provider, not with an email code. */
 class CompanySignInRequired extends Error {}
 
-/**
- * The error code of a company sign-in that came back without a session, from
- * `/app?companySignInError=<code>`. The query is removed after it is read.
- */
-function takeCompanySignInError(): string | null {
-  const url = new URL(window.location.href);
-  const code = url.searchParams.get(WEB_APP_COMPANY_SIGN_IN_ERROR_PARAM);
-  if (code === null) return null;
-  url.searchParams.delete(WEB_APP_COMPANY_SIGN_IN_ERROR_PARAM);
-  window.history.replaceState(window.history.state, "", url);
-  return code;
-}
-
 /** The email start answered that the company's provider signs this email in. */
 const COMPANY_SIGN_IN = Symbol("company sign-in");
-
-function companySignInIssue(code: string) {
-  return { code, message: sourceText(companySignInErrorKey(code)) };
-}
-
-/**
- * The shared agent a `/app?agent=<id>` link names. The query is removed after it is read, so a reload
- * does not open the preview again.
- */
-function takeAgentTemplateLink(): string | null {
-  const url = new URL(window.location.href);
-  if (!url.searchParams.has(WEB_APP_AGENT_TEMPLATE_PARAM)) return null;
-  const id = agentTemplateIdFromWebAppSearch(url.search);
-  url.searchParams.delete(WEB_APP_AGENT_TEMPLATE_PARAM);
-  window.history.replaceState(window.history.state, "", url);
-  return id;
-}
-
-/**
- * The invitation a `/app?api=…&server=…&fingerprint=…&invite=…` link names, as the `/join` page
- * passes it on. The fields are removed after they are read, so the secret does not stay in the
- * address bar or the history, and a reload does not open the dialog again.
- */
-function takeInviteLink(): string | null {
-  const url = new URL(window.location.href);
-  if (!WEB_APP_INVITE_FIELDS.some((field) => url.searchParams.has(field))) return null;
-  const inviteUrl = inviteUrlFromWebAppSearch(url.search, { allowLocalDevelopmentApiUrl: import.meta.env.DEV });
-  for (const field of WEB_APP_INVITE_FIELDS) url.searchParams.delete(field);
-  window.history.replaceState(window.history.state, "", url);
-  return inviteUrl;
-}
-
-/** The plugin listing a `/app?plugin=<slug>` link names. The query is removed after it is read. */
-function takePluginLink(): string | null {
-  const url = new URL(window.location.href);
-  if (!url.searchParams.has(WEB_APP_PLUGIN_PARAM)) return null;
-  const slug = pluginSlugFromWebAppSearch(url.search);
-  url.searchParams.delete(WEB_APP_PLUGIN_PARAM);
-  window.history.replaceState(window.history.state, "", url);
-  return slug;
-}
-
-/**
- * The agent or skill a `/app?marketplaceAgent=<id>` or `/app?marketplaceSkill=<slug>` link names.
- * The query is removed after it is read.
- */
-function takeMarketplaceLink(): MarketplaceListingLink | null {
-  const url = new URL(window.location.href);
-  const params = [WEB_APP_MARKETPLACE_AGENT_PARAM, WEB_APP_MARKETPLACE_SKILL_PARAM];
-  if (!params.some((param) => url.searchParams.has(param))) return null;
-  const link = marketplaceListingFromWebAppSearch(url.search);
-  for (const param of params) url.searchParams.delete(param);
-  window.history.replaceState(window.history.state, "", url);
-  return link;
-}
-
-type BillingReturn = DesktopAnalyticsProperties<"billing_return_viewed">;
-
-/**
- * A return from Stripe to Billing: `/app?billing=portal` from the Customer Portal, or
- * `/app?billing=license` from license Checkout, with `&cancelled=1` when the user went back. The
- * query is removed after it is read.
- */
-function takeBillingReturn(): BillingReturn | null {
-  const url = new URL(window.location.href);
-  const kind = url.searchParams.get(WEB_APP_BILLING_PARAM);
-  if (kind === null) return null;
-  const outcome = url.searchParams.get("cancelled") === "1" ? "cancelled" : "completed";
-  for (const name of [WEB_APP_BILLING_PARAM, "cancelled"]) url.searchParams.delete(name);
-  window.history.replaceState(window.history.state, "", url);
-  return kind === "license" || kind === "portal" ? { outcome, kind } : { outcome };
-}
-
-/** What a `/app?start=<server|license>` link from the pricing page opens. The query is removed after it is read. */
-function takeStartLink(): WebAppStart | null {
-  const url = new URL(window.location.href);
-  const start = takeWebAppStart(url);
-  if (url.href !== window.location.href) window.history.replaceState(window.history.state, "", url);
-  return start;
-}
 
 export function WebApp(props: { createRuntime?: WebRuntimeFactory } = {}) {
   // This component renders the text provider, so it reads the text of the last provider that rendered.
