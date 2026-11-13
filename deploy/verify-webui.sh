@@ -111,13 +111,30 @@ if [ -z "${TEAM_API_PORT}" ]; then
   fail "the nginx upstream file names no Team API port"
   info "run: incus exec ${CONTAINER} -- /usr/local/bin/openbot-team-api-port.sh"
 else
+  # A daemon that just restarted needs a moment before the Team API binds its port. The wait is
+  # here, before the sign-in, because the sign-in must not be retried: a retry would spend an
+  # attempt of the rate-limit budget. The compatibility route costs no attempt.
+  READY=""
+  WAIT_TRIES=0
+  while [ "${WAIT_TRIES}" -lt 12 ]; do
+    READY="$(in_container "
+      curl -s -m 5 --interface '${CONTAINER_ADDRESS:-127.0.0.1}' \
+        -H 'OpenBot-Protocol-Version: ${PROTOCOL_VERSION}' \
+        -H 'OpenBot-App-Version: ${APP_VERSION}' \
+        'http://127.0.0.1:${TEAM_API_PORT}/v1/compatibility' 2>/dev/null || true")"
+    if printf '%s' "${READY}" | grep -q '"appVersion"'; then
+      break
+    fi
+    WAIT_TRIES=$((WAIT_TRIES + 1))
+    sleep 5
+  done
+  if [ "${WAIT_TRIES}" -ge 12 ]; then
+    info "the Team API did not answer within 60 seconds"
+  fi
+
   # Two paths are checked: the Team API itself, and the reverse proxy the browser uses. A port
   # that answers while the proxy cannot reach it is still a broken WebUI.
-  DIRECT_BODY="$(in_container "
-    curl -s -m 10 --interface '${CONTAINER_ADDRESS:-127.0.0.1}' \
-      -H 'OpenBot-Protocol-Version: ${PROTOCOL_VERSION}' \
-      -H 'OpenBot-App-Version: ${APP_VERSION}' \
-      'http://127.0.0.1:${TEAM_API_PORT}/v1/compatibility' 2>/dev/null || true")"
+  DIRECT_BODY="${READY}"
   PROXY_BODY="$(curl -s -m 10 \
     -H "OpenBot-Protocol-Version: ${PROTOCOL_VERSION}" \
     -H "OpenBot-App-Version: ${APP_VERSION}" \
