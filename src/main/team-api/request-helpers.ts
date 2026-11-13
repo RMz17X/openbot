@@ -255,6 +255,10 @@ export function firstHeaderValue(value: string | string[] | undefined): string |
  * never for a value that a caller can set to name itself: a caller that reaches the daemon
  * directly could put any address in these headers. The daemon binds a loopback port, so only the
  * local proxy can reach it, and the proxy replaces both headers with the address it saw.
+ *
+ * A proxy that forwards from the same host as the daemon, such as an Incus proxy device, makes
+ * the address of the proxy the client address of every caller, so every caller that arrives
+ * through it shares one bucket. A proxy that names the real client separates them.
  */
 export function forwardedClientAddress(request: IncomingMessage): string | null {
   const realIp = firstHeaderValue(request.headers["x-real-ip"]);
