@@ -49,6 +49,27 @@ if [ -z "${TEAM_API_PORT}" ]; then
 fi
 info "the Team API is on 127.0.0.1:${TEAM_API_PORT}"
 
+# A daemon that just restarted needs a moment before the Team API binds its port. The wait is
+# here, before the first sign-in, because a sign-in must not be retried: a retry would spend an
+# attempt of the rate-limit budget. The compatibility route costs no attempt.
+WAIT_TRIES=0
+while [ "${WAIT_TRIES}" -lt 12 ]; do
+  READY="$(in_container "
+    curl -s -m 5 \
+      -H 'OpenBot-Protocol-Version: ${PROTOCOL_VERSION}' \
+      -H 'OpenBot-App-Version: ${APP_VERSION}' \
+      'http://127.0.0.1:${TEAM_API_PORT}/v1/compatibility' 2>/dev/null || true")"
+  if printf '%s' "${READY}" | grep -q '"appVersion"'; then
+    break
+  fi
+  WAIT_TRIES=$((WAIT_TRIES + 1))
+  sleep 5
+done
+if [ "${WAIT_TRIES}" -ge 12 ]; then
+  fail "the Team API did not answer within 60 seconds"
+  exit 1
+fi
+
 # The sign-in goes straight to the Team API on the loopback port, with the client address in
 # X-Real-IP. The proxy is bypassed on purpose: the proxy adds a header of its own, and this
 # script needs to name the client address itself.
