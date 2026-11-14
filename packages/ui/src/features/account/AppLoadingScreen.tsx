@@ -30,7 +30,6 @@ export function AppLoadingScreen(props: AppLoadingScreenProps) {
   const [exited, setExited] = createSignal(false);
   let viewsMounted = false;
   let exitTimer: ReturnType<typeof setTimeout> | undefined;
-  let root: HTMLElement | undefined;
 
   function mountViews(): void {
     if (viewsMounted) return;
@@ -75,9 +74,6 @@ export function AppLoadingScreen(props: AppLoadingScreenProps) {
   return (
     <Show when={!exited()}>
       <main
-        ref={(element) => {
-          root = element;
-        }}
         class="app-loading"
         data-phase={phase()}
         role="status"
