@@ -19,6 +19,67 @@ OpenBot is ready for production use. A new release ships almost every day.
 > after the explicit first-launch consent.
 > Run only agents and tasks you trust, keep backups, and review [Security](#security) before use.
 
+## HIJILABS Fork Architecture (Headless Server Edition)
+
+Fork ini dikembangkan khusus oleh **HIJILABS** untuk menjalankan OpenBot sebagai backend headless daemon berkecepatan tinggi pada Linux server (`agent-server`), memisahkan antarmuka grafis desktop menjadi WebUI web-native mandiri, serta mengintegrasikan browser engine OpenBot secara langsung ke ekosistem **Hermes Agent via FastMCP**.
+
+### Perbandingan Komprehensif: Versi Desktop Electron vs. Versi Fork Headless Server
+
+| Komponen / Metrik | OpenBot Standar (Desktop Electron) | OpenBot Fork HIJILABS (Headless Server) |
+|---|---|---|
+| **Mode Eksekusi** | Aplikasi desktop GUI dengan jendela visual X11/Wayland. | **Headless murni (`OPENBOT_SERVER=1`)** tanpa jendela desktop. |
+| **Arsitektur Rendering** | Menjalankan 6 proses renderer Chromium di host untuk render UI, window frames, dan compositing. | **Nol renderer desktop di host**. WebUI di-render langsung oleh browser/ponsel klien via bundle Vite statis (`apps/webui/dist`). |
+| **Konsumsi RAM** | **~2.5 GB – 3.2 GB** (rentan memory leak dan OOM). | **~705 MB** stabil (`MemoryCurrent=740MB`), swap terkunci <128MB. |
+| **Jaringan & Akses Publik** | Terbatas pada akses lokal desktop atau WebRTC manual. | **HTTPS publik langsung (`https://openbotx.hijitoko.com/`)** via Cloudflare Tunnel (BITT) + WebSocket event streaming (`101 Switching Protocols`). |
+| **Autentikasi Owner** | Bergantung pada Cloudflare Workers + D1 OAuth luar. | **Local Owner mandiri (`rickicode`)** dengan password scrypt di `openbot-team-server-v2.json`, bypass dependency cloud. |
+| **Rate Limiting** | Rate limit global per-host (kolektif `127.0.0.1` saat di belakang reverse proxy memicu HTTP 429). | **Proxy-aware per-client IP (`X-Real-IP` / `X-Forwarded-For`)** dengan validasi `isIP`, mencegah lockout otomatis. |
+| **Stealth Anti-Bot Browser** | Fingerprint Electron Linux default (gagal di Iphey / Pixelscan). | **Windows 11 Chrome 133 Stealth Engine**: spoofing UA, Client Hints, `navigator.userAgentData`, dan `Screen.prototype` accessors; lolos audit Iphey & Pixelscan. |
+| **Integrasi Eksternal (Hermes)** | Tertutup hanya untuk CLI internal bawaan. | **Native FastMCP Bridge (`openbot-mcp`)** port `28430`: 15 tool untuk kontrol browser, screenshot stream, dan pointer/keyboard koordinat fraksional. |
+| **Routing LLM / Provider** | Default endpoint luar publik (berpotensi batas kuota/timeout). | **AxonRouter Production Direct (`https://axon.hijitoko.com/v1`)**: model `auto` dan `fast-free` dengan latensi sub-detik dan zero retry loops. |
+| **Animasi UI** | Animasi default desktop berat dengan blur & layout shifts. | **Ultra-Smooth Responsive UI**: Animasi blur berat dipangkas, animasi indikator progres ringan (spinner, bouncing dots, pulse) dipertahankan agar UI tetap hidup dan tidak kaku. |
+
+---
+
+### Rincian Perubahan & Peningkatan Teknis (Changelog Fork)
+
+#### 1. Headless Server Daemon & Static WebUI (`OPENBOT_SERVER=1`)
+- **Embedded Web Serving:** Daemon OpenBot (`/opt/openbot-daemon/openbot`) kini langsung menyajikan bundel statis WebUI pada port `28421` tanpa perlu server Nginx terpisah.
+- **Secure Context Native:** Penyajian melalui HTTPS Cloudflare Tunnel menjamin ketersediaan API browser modern seperti Web Locks (`navigator.locks`) dan Web Crypto (`crypto.subtle`).
+- **Resource Constraints (Systemd):**
+  - `MemoryLow=1500M` & `MemorySwapMax=128M` untuk menghentikan thrashing swap kernel.
+  - `Nice=-5`, `CPUWeight=400`, `IOWeight=400` untuk prioritas I/O dan penjadwalan CPU tinggi.
+  - `LimitNOFILE=65536` dan batasan cgroup terisolasi.
+
+#### 2. Autentikasi Mandiri & Pengamanan Rate Limiting
+- **Standalone Local Owner:** Akun lokal `rickicode` (role `owner`) di-inject langsung ke `openbot-team-server-v2.json` menggunakan format enkripsi `scrypt` (64-byte key, 16-byte base64url salt).
+- **Per-Caller Rate Limiting:** Perbaikan pada `src/main/team-server.ts` yang membaca `X-Real-IP` atau `X-Forwarded-For` untuk penghitungan sign-in attempts per IP unik, menyelesaikan bug 429 global saat berada di balik proxy.
+
+#### 3. Windows 11 Chrome 133 Stealth Fingerprint Engine
+- **Platform & User-Agent:**
+  - Header & DOM: `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36`
+  - Client Hints: `Sec-CH-UA-Platform: "Windows"` (versi `"15.0.0"`), brand Google Chrome `133`.
+- **Screen & Display:** Layar virtual Xvfb 1080p native (`1920x1080x24`), `Screen.prototype` accessors (`availHeight: 1040` memperhitungkan taskbar Windows).
+- **Font & Timezone:** Font Windows resmi (`Segoe UI`, `Arial`, `Verdana`) dan timezone sistem `Asia/Jakarta` (WIB, UTC+7), membersihkan kebocoran locale POSIX `"c"`.
+
+#### 4. Hermes FastMCP Bridge (`openbot-mcp`)
+- Service FastMCP independen (`openbot-mcp.service` di port `28430`) yang menghubungkan browser in-process OpenBot (`persist:openbot-browser`) ke Hermes Agent.
+- **15 Tools Tersedia:**
+  - `browser_open`, `browser_navigate`, `browser_reload`, `browser_close`, `browser_tabs`, `browser_activate`
+  - `browser_screenshot` (screencast JPEG instan)
+  - `browser_click`, `browser_type`, `browser_key`, `browser_scroll` (koordinat fraksional `0..1` via WebSocket binary stream)
+  - `browser_view`, `browser_page_text`, `openbot_agents`, `openbot_agent_chat`
+
+#### 5. De-bloating Monorepo & Pembersihan Telemetri
+- Memangkas paket monorepo yang tidak digunakan: `apps/mobile`, `apps/chat-bots`, `apps/billing`, `apps/status`.
+- Menghapus pelacakan analitik OpenPanel.
+- Merestorasi dan menstabilkan animasi penting (avatar running state, loading spinners, bouncing dots) agar visual tetap interaktif tanpa membebani performa browser.
+
+#### 6. Integrasi Terpadu AxonRouter Production
+- Konfigurasi OpenCode (`opencode.json`) dan SQLite OpenBot (`openbot.db`) diarahkan 100% ke gateway produksi `https://axon.hijitoko.com/v1`.
+- Seluruh endpoint legacy `cloudjkt02.com` dan model deprecated `step-5` dihapus total dari database dan katalog model.
+
+---
+
 ## What works
 
 - Prompt-driven agent creation and editing on desktop and mobile, with editable instructions, avatar, and section review before saving.
