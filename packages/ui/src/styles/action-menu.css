@@ -13,11 +13,11 @@
   --ui-menu-panel-shadow:
     inset 0 1px 0 var(--ui-menu-highlight), 0 0 0 1px var(--ui-menu-edge), 0 4px 6px -1px var(--ui-menu-shadow),
     0 2px 4px -2px var(--ui-menu-shadow);
-  --ui-menu-ease: cubic-bezier(0.16, 1, 0.3, 1);
-  --ui-menu-duration: 150ms;
+  --ui-menu-ease: var(--openbot-ease-spring);
+  --ui-menu-duration: var(--openbot-duration-micro);
   /* A submenu opens and closes with the same snappy spring curve. */
-  --ui-submenu-ease: cubic-bezier(0.16, 1, 0.3, 1);
-  --ui-submenu-duration: 160ms;
+  --ui-submenu-ease: var(--openbot-ease-spring);
+  --ui-submenu-duration: var(--openbot-duration-dialog);
 }
 
 .ui-popover-menu-surface {
@@ -31,7 +31,7 @@
     0 2px 4px -2px var(--openbot-shadow-popover-ambient);
   color: var(--openbot-text-primary);
   transform-origin: var(--kb-popover-content-transform-origin, center);
-  animation: ui-popover-in 160ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: ui-popover-in var(--openbot-duration-dialog) var(--openbot-ease-spring) both;
 }
 
 .ui-action-menu {

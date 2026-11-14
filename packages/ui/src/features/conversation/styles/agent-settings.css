@@ -916,14 +916,11 @@
   pointer-events: none;
   user-select: none;
   mask-image: linear-gradient(var(--openbot-text-primary) 45%, var(--openbot-transparent));
-  transition:
-    opacity 700ms var(--openbot-ease-out),
-    filter 700ms var(--openbot-ease-out);
+  transition: opacity var(--openbot-duration-panel) var(--openbot-ease-out);
 }
 
 .agent-memories-empty-list[data-clearing] {
   opacity: 0;
-  filter: blur(3px);
 }
 
 /* A new row opens from no height, so the rows under it move down. */

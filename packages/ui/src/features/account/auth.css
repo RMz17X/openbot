@@ -133,7 +133,7 @@
   transition:
     background-color var(--openbot-duration-hover) ease,
     border-color var(--openbot-duration-hover) ease,
-    transform var(--openbot-duration-fast) cubic-bezier(0.23, 1, 0.32, 1);
+    transform var(--openbot-duration-fast) var(--openbot-ease-spring);
 }
 
 .account-login > .account-login-primary {
@@ -1238,7 +1238,6 @@
 
   @keyframes account-login-copy-forward {
     from {
-      filter: blur(4px);
       opacity: 0;
       transform: translateX(10px);
     }
@@ -1246,7 +1245,6 @@
 
   @keyframes account-login-copy-back {
     from {
-      filter: blur(4px);
       opacity: 0;
       transform: translateX(-10px);
     }
@@ -1254,7 +1252,6 @@
 
   @keyframes account-login-panel-forward {
     from {
-      filter: blur(6px);
       opacity: 0;
       transform: translateX(16px) scale(0.985);
     }
@@ -1262,7 +1259,6 @@
 
   @keyframes account-login-panel-back {
     from {
-      filter: blur(6px);
       opacity: 0;
       transform: translateX(-16px) scale(0.985);
     }

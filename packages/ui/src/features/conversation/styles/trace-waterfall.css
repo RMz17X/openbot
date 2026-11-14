@@ -127,7 +127,6 @@
 .trace-total-value {
   --digit-dur: var(--openbot-duration-overlay);
   --digit-distance: var(--openbot-space-1);
-  --digit-blur: var(--openbot-space-0-5);
   --digit-ease: var(--openbot-ease-out);
 
   margin: 0;

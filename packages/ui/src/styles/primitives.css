@@ -2424,8 +2424,8 @@ html.ui-textarea-resizing {
   transform: translateY(0) scale(1);
   transform-origin: bottom center;
   transition:
-    opacity var(--openbot-duration-fast) ease,
-    transform var(--openbot-duration-fast) var(--openbot-ease-out);
+    opacity var(--openbot-duration-micro) var(--openbot-ease-spring),
+    transform var(--openbot-duration-micro) var(--openbot-ease-spring);
 
   @starting-style {
     opacity: 0;

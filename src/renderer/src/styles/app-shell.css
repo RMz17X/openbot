@@ -1106,7 +1106,6 @@ textarea {
   from {
     opacity: 0;
     scale: 0.6;
-    filter: blur(2px);
   }
 }
 
@@ -1282,7 +1281,7 @@ textarea {
     background-color var(--openbot-duration-hover) ease,
     color var(--openbot-duration-hover) ease,
     opacity var(--openbot-duration-normal) ease,
-    transform var(--openbot-duration-normal) cubic-bezier(0.23, 1, 0.32, 1);
+    transform var(--openbot-duration-normal) var(--openbot-ease-spring);
 }
 
 .sidebar-icon-button:hover {
@@ -1319,7 +1318,7 @@ textarea {
     background-color var(--openbot-duration-hover) ease,
     box-shadow var(--openbot-duration-hover) ease,
     color var(--openbot-duration-hover) ease,
-    transform var(--openbot-duration-fast) cubic-bezier(0.23, 1, 0.32, 1);
+    transform var(--openbot-duration-fast) var(--openbot-ease-spring);
 }
 
 .header-panel-toggle:hover {
@@ -2683,7 +2682,7 @@ textarea {
     0 3px 12px var(--openbot-shadow-popover-ambient),
     inset 0 1px var(--openbot-hover);
   transform-origin: var(--kb-popover-content-transform-origin);
-  animation: avatar-editor-in var(--openbot-duration-normal) cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: avatar-editor-in var(--openbot-duration-normal) var(--openbot-ease-spring) both;
 }
 
 @keyframes avatar-editor-in {

@@ -92,7 +92,6 @@
 .provider-update-toast-percent {
   --digit-dur: var(--openbot-duration-fast);
   --digit-distance: var(--openbot-space-1);
-  --digit-blur: 0px;
   --digit-ease: ease-out;
   display: inline-flex;
   justify-content: flex-end;

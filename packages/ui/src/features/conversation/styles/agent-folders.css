@@ -193,7 +193,7 @@
   grid-template-columns: 1fr 1fr;
   gap: var(--openbot-space-3);
   border-radius: var(--openbot-radius-lg);
-  background: rgba(15, 17, 23, 0.85);
+  background: color-mix(in srgb, var(--openbot-bg-canvas) 85%, transparent);
   pointer-events: none;
 }
 

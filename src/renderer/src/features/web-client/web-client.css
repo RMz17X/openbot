@@ -146,7 +146,7 @@
     align-items: center;
     justify-content: center;
     border-top: 1px solid var(--openbot-border);
-    background: var(--openbot-bg-sidebar, #121214);
+    background: var(--openbot-bg-sidebar);
     padding: var(--openbot-space-2) max(var(--openbot-space-3), env(safe-area-inset-left, 0px))
       calc(var(--openbot-space-2) + env(safe-area-inset-bottom, 0px))
       max(var(--openbot-space-3), env(safe-area-inset-right, 0px));

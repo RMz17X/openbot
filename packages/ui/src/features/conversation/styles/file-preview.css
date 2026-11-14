@@ -9,7 +9,6 @@
   transition:
     transform var(--panel-close-dur) var(--panel-ease),
     opacity var(--panel-close-dur) var(--panel-ease),
-    filter var(--panel-close-dur) var(--panel-ease),
     border-color var(--openbot-duration-slow) ease,
     box-shadow var(--openbot-duration-slow) ease;
 }
@@ -18,7 +17,6 @@
   transition:
     transform var(--panel-open-dur) var(--panel-ease),
     opacity var(--panel-open-dur) var(--panel-ease),
-    filter var(--panel-open-dur) var(--panel-ease),
     border-color var(--openbot-duration-slow) ease,
     box-shadow var(--openbot-duration-slow) ease;
 }

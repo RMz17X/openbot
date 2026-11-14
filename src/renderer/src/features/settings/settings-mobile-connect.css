@@ -111,13 +111,11 @@
 .settings-mobile-connect-qr-stage .ui-qr-code {
   transition:
     opacity var(--openbot-duration-normal) ease-out,
-    filter var(--openbot-duration-overlay) ease-out,
     transform var(--openbot-duration-overlay) var(--openbot-ease-out);
 }
 
 .settings-mobile-connect-qr-stage[data-success] .ui-qr-code {
   opacity: 0.18;
-  filter: blur(2px);
   transform: scale(0.97);
 }
 

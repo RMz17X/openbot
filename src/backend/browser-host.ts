@@ -2273,6 +2273,11 @@ export class BrowserHost {
     tab.viewInvalidations.add(invalidate);
     if (onCursor) tab.contents.on("cursor-changed", cursorChanged);
     return yield* Effect.gen({ self: this }, function* () {
+      if (tab.activeViewStop) {
+        const stopPrevious = tab.activeViewStop;
+        tab.activeViewStop = undefined;
+        yield* stopPrevious().pipe(Effect.ignore);
+      }
       const stop = yield* tab.engine.startScreencast(
         {
           quality: VIEW_FRAME_QUALITY,
@@ -2293,6 +2298,7 @@ export class BrowserHost {
       let stopped = false;
       const stopOnce = () =>
         Effect.gen({ self: this }, function* () {
+          if (tab.activeViewStop === stopOnce) tab.activeViewStop = undefined;
           tab.viewInvalidations.delete(invalidate);
           stopCursor();
           if (stopped) return;
@@ -2300,6 +2306,7 @@ export class BrowserHost {
           tab.engine.releaseViewButton();
           yield* stop();
         });
+      tab.activeViewStop = stopOnce;
       if (invalidated) yield* stopOnce();
       return stopOnce;
     }).pipe(

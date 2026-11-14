@@ -420,6 +420,14 @@
   --openbot-chat-marker-width: 680px;
   --openbot-duration-fast: 120ms;
   --openbot-duration-hover: 0ms;
+  /*
+   * The compositor window. A menu, a drawer, a popover or a status change that runs longer than
+   * 200ms reads as slow, and one that runs on a property the compositor cannot own (width, height,
+   * margin, filter) forces a layout or a repaint on every frame. These two are the bounds for
+   * that motion: 150ms for the smallest surfaces, 180ms for the ones a reader watches.
+   */
+  --openbot-duration-micro: 150ms;
+  --openbot-duration-panel: 180ms;
   --openbot-duration-dialog: 160ms;
   --openbot-duration-normal: 160ms;
   --openbot-duration-slow: 180ms;
@@ -436,8 +444,10 @@
   --openbot-agent-activity-exit-delay: 500ms;
   /* A loading indicator waits this long, so a fast answer replaces it before it shows. */
   --openbot-loading-indicator-delay: 400ms;
-  --openbot-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --openbot-ease-in-out: cubic-bezier(0.16, 1, 0.3, 1);
+  /* The spring curve. One curve for every micro-animation, so the surfaces open alike. */
+  --openbot-ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --openbot-ease-out: var(--openbot-ease-spring);
+  --openbot-ease-in-out: var(--openbot-ease-spring);
   --openbot-shadow-raised: 0 12px 32px var(--openbot-shadow-popover-ambient);
   --openbot-shadow-card: 0 0 0 transparent;
   --openbot-shadow-overlay: 0 12px 32px rgba(0, 0, 0, 0.48);

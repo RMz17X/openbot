@@ -225,8 +225,9 @@
   background: linear-gradient(to top, var(--window-glass-card) 28%, transparent 100%);
 }
 
-/* A sticky bar covers the rows that scroll under it. It keeps its clear tint and blurs the rows, so
- * their text does not mix with its own. */
+/* A sticky bar covers the rows that scroll under it. It keeps its clear tint and the rows behind it
+   stay readable through a clean translucent fill. A backdrop blur here would repaint the scrolled
+   content on every frame of the scroll, which is the one thing the bar must not cost. */
 :root[data-openbot-window-glass]
   .app-window
   :is(
@@ -237,7 +238,7 @@
     .trace-row[data-parent],
     .trace-axis-row
   ) {
-  backdrop-filter: blur(var(--openbot-space-4));
+  background: color-mix(in srgb, var(--openbot-bg-surface-raised) 72%, transparent);
 }
 
 /* The panels over the composer go under its top edge. The composer is clear here, so the part under

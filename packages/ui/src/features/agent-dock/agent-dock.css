@@ -356,7 +356,6 @@
 @keyframes agent-dock-swap {
   from {
     opacity: 0;
-    filter: blur(4px);
     transform: translateY(8px);
   }
 }

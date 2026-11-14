@@ -190,7 +190,7 @@
   place-items: center;
   border: 1px dashed color-mix(in srgb, var(--accent) 70%, var(--openbot-text-primary));
   border-radius: var(--openbot-radius-lg);
-  background: rgba(15, 17, 23, 0.85);
+  background: color-mix(in srgb, var(--openbot-bg-canvas) 85%, transparent);
   color: var(--text-primary);
   font-size: var(--openbot-text-lg);
   font-weight: 650;

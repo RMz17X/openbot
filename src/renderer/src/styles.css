@@ -116,7 +116,6 @@
   --digit-dur: 500ms;
   --digit-distance: 8px;
   --digit-stagger: 70ms;
-  --digit-blur: 2px;
   --digit-ease: cubic-bezier(0.34, 1.45, 0.64, 1);
   --digit-dir-x: 0;
   --digit-dir-y: 1;
@@ -126,7 +125,6 @@
   --stream-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --text-swap-dur: 150ms;
   --text-swap-translate-y: 4px;
-  --text-swap-blur: 2px;
   --text-swap-ease: ease-in-out;
   --modal-open-dur: 250ms;
   --modal-close-dur: 150ms;
@@ -136,7 +134,6 @@
   --page-slide-dur: 250ms;
   --page-fade-dur: 250ms;
   --page-slide-distance: 8px;
-  --page-blur: 3px;
   --page-stagger: 0ms;
   --page-exit-enabled: 1;
   --page-slide-ease: cubic-bezier(0.22, 1, 0.36, 1);
@@ -145,7 +142,6 @@
   --panel-close-dur: 350ms;
   --panel-translate-x: 0px;
   --panel-translate-y: 100px;
-  --panel-blur: 2px;
   --panel-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --resize-dur: 300ms;
   --resize-ease: cubic-bezier(0.22, 1, 0.36, 1);

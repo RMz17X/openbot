@@ -545,7 +545,6 @@
 @keyframes server-invites-empty-land {
   from {
     opacity: 0;
-    filter: blur(4px);
     transform: translateY(10px) scale(0.98);
   }
 }
@@ -553,7 +552,6 @@
 @keyframes server-invites-empty-leave {
   to {
     opacity: 0;
-    filter: blur(3px);
     transform: translateY(-4px);
   }
 }

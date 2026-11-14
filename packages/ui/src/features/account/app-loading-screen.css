@@ -39,7 +39,7 @@
 .app-loading-spinner {
   width: 32px;
   height: 32px;
-  color: var(--openbot-accent, #3b82f6);
+  color: var(--openbot-accent);
   animation: app-loading-spin 0.8s linear infinite;
 }
 
@@ -54,14 +54,14 @@
   font-family: var(--openbot-font-sans, system-ui, sans-serif);
   font-size: var(--openbot-text-base, 14px);
   font-weight: var(--openbot-weight-medium, 500);
-  color: var(--openbot-text-primary, #f3f4f6);
+  color: var(--openbot-text-primary);
   letter-spacing: -0.01em;
 }
 
 .app-loading-subtitle {
   font-family: var(--openbot-font-sans, system-ui, sans-serif);
   font-size: var(--openbot-text-xs, 12px);
-  color: var(--openbot-text-muted, #9ca3af);
+  color: var(--openbot-text-muted);
 }
 
 .app-loading:is([data-phase="fade"], [data-phase="exit"]) {

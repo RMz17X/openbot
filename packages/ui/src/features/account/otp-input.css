@@ -214,7 +214,6 @@
 
 @keyframes otp-character-enter {
   from {
-    filter: blur(2px);
     opacity: 0;
     transform: translateY(9px);
   }

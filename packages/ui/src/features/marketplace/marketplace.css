@@ -1160,8 +1160,7 @@ label.marketplace-skill-picker-row:hover {
    carry the change, not travel. The old page leaves faster than the new one arrives. The names
    apply only during a Marketplace transition, so other transitions of the app do not capture them. */
 html:active-view-transition-type(marketplace-forward, marketplace-back, marketplace-tab, marketplace-swap) {
-  --marketplace-skill-blur: calc(var(--openbot-space-0-5) * 1.5);
-  --marketplace-skill-blur-small: var(--openbot-space-0-5);
+  --marketplace-skill-distance: var(--openbot-space-3);
 }
 
 html:active-view-transition-type(marketplace-forward, marketplace-back, marketplace-tab, marketplace-swap)
@@ -1231,7 +1230,7 @@ html:dir(rtl):active-view-transition-type(marketplace-back)::view-transition-new
 
 /* Another kind in the side panel is a new list, not a step: it rises a little into place. */
 html:active-view-transition-type(marketplace-tab)::view-transition-old(marketplace-page) {
-  animation: marketplace-skill-blur-out var(--openbot-duration-normal) var(--openbot-ease-out) both;
+  animation: marketplace-skill-fade-out var(--openbot-duration-normal) var(--openbot-ease-out) both;
 }
 
 html:active-view-transition-type(marketplace-tab)::view-transition-new(marketplace-page) {
@@ -1240,11 +1239,11 @@ html:active-view-transition-type(marketplace-tab)::view-transition-new(marketpla
 
 /* Another source or sort is the same list with other rows: the rows change through a blur in place. */
 html:active-view-transition-type(marketplace-swap)::view-transition-old(marketplace-page) {
-  animation: marketplace-skill-blur-out var(--openbot-duration-fast) var(--openbot-ease-out) both;
+  animation: marketplace-skill-fade-out var(--openbot-duration-fast) var(--openbot-ease-out) both;
 }
 
 html:active-view-transition-type(marketplace-swap)::view-transition-new(marketplace-page) {
-  animation: marketplace-skill-blur-in var(--openbot-duration-normal) var(--openbot-ease-out) both;
+  animation: marketplace-skill-fade-in var(--openbot-duration-normal) var(--openbot-ease-out) both;
 }
 
 ::view-transition-old(marketplace-skill-source) {
@@ -1308,11 +1307,11 @@ html:active-view-transition-type(marketplace-group) [data-marketplace-shared] .m
 }
 
 ::view-transition-old(marketplace-group-title) {
-  animation: marketplace-skill-blur-out var(--openbot-duration-fast) var(--openbot-ease-out) both;
+  animation: marketplace-skill-fade-out var(--openbot-duration-fast) var(--openbot-ease-out) both;
 }
 
 ::view-transition-new(marketplace-group-title) {
-  animation: marketplace-skill-blur-in var(--openbot-duration-normal) var(--openbot-ease-out) both;
+  animation: marketplace-skill-fade-in var(--openbot-duration-normal) var(--openbot-ease-out) both;
 }
 
 ::view-transition-old(marketplace-group-row-1),
@@ -1330,23 +1329,22 @@ html:active-view-transition-type(marketplace-group) [data-marketplace-shared] .m
 ::view-transition-new(marketplace-group-row-4),
 ::view-transition-new(marketplace-group-row-5),
 ::view-transition-new(marketplace-group-row-6) {
-  animation: marketplace-skill-blur-in var(--openbot-duration-overlay) var(--openbot-ease-out) both;
+  animation: marketplace-skill-fade-in var(--openbot-duration-overlay) var(--openbot-ease-out) both;
 }
 
 /* The crumbs change their last name in place. */
 ::view-transition-old(marketplace-crumbs) {
-  animation: marketplace-skill-blur-out var(--openbot-duration-fast) var(--openbot-ease-out) both;
+  animation: marketplace-skill-fade-out var(--openbot-duration-fast) var(--openbot-ease-out) both;
 }
 
 ::view-transition-new(marketplace-crumbs) {
-  animation: marketplace-skill-blur-in var(--openbot-duration-normal) var(--openbot-ease-out) both;
+  animation: marketplace-skill-fade-in var(--openbot-duration-normal) var(--openbot-ease-out) both;
 }
 
 @keyframes marketplace-skill-page-out {
   to {
     opacity: 0;
     transform: translateX(var(--marketplace-skill-to));
-    filter: blur(var(--marketplace-skill-blur));
   }
 }
 
@@ -1354,7 +1352,6 @@ html:active-view-transition-type(marketplace-group) [data-marketplace-shared] .m
   from {
     opacity: 0;
     transform: translateX(var(--marketplace-skill-from));
-    filter: blur(var(--marketplace-skill-blur));
   }
 }
 
@@ -1362,21 +1359,18 @@ html:active-view-transition-type(marketplace-group) [data-marketplace-shared] .m
   from {
     opacity: 0;
     transform: translateY(var(--openbot-space-2));
-    filter: blur(var(--marketplace-skill-blur));
   }
 }
 
-@keyframes marketplace-skill-blur-out {
+@keyframes marketplace-skill-fade-out {
   to {
     opacity: 0;
-    filter: blur(var(--marketplace-skill-blur-small));
   }
 }
 
-@keyframes marketplace-skill-blur-in {
+@keyframes marketplace-skill-fade-in {
   from {
     opacity: 0;
-    filter: blur(var(--marketplace-skill-blur-small));
   }
 }
 

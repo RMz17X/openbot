@@ -489,7 +489,7 @@
   align-items: flex-start;
   color: var(--openbot-onboarding-desktop-indigo);
   pointer-events: none;
-  animation: provider-picker-callout-in 420ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  animation: provider-picker-callout-in 420ms var(--openbot-ease-spring) both;
 }
 
 .provider-picker-callout-title {
@@ -661,49 +661,42 @@ html:active-view-transition-type(open)::view-transition-new(*) {
 @keyframes first-run-step-out {
   to {
     opacity: 0;
-    filter: blur(6px);
   }
 }
 
 @keyframes first-run-step-in {
   from {
     opacity: 0;
-    filter: blur(6px);
   }
 }
 
 @keyframes first-run-step-rise {
   from {
     opacity: 0;
-    filter: blur(4px);
   }
 }
 
 @keyframes first-run-blur-out {
   to {
     opacity: 0;
-    filter: blur(8px);
   }
 }
 
 @keyframes first-run-blur-in {
   from {
     opacity: 0;
-    filter: blur(8px);
   }
 }
 
 @keyframes first-run-open-out {
   to {
     opacity: 0;
-    filter: blur(8px);
   }
 }
 
 @keyframes first-run-open-in {
   from {
     opacity: 0;
-    filter: blur(6px);
   }
 }
 

@@ -722,7 +722,6 @@
 @keyframes composer-dictation-word-in {
   from {
     opacity: 0;
-    filter: blur(2px);
   }
 }
 
@@ -848,7 +847,7 @@
   color: var(--openbot-queue-text);
   box-shadow: none;
   transform-origin: bottom center;
-  animation: mention-picker-in var(--openbot-duration-normal) cubic-bezier(0.23, 1, 0.32, 1) both;
+  animation: mention-picker-in var(--openbot-duration-normal) var(--openbot-ease-spring) both;
 }
 
 /*

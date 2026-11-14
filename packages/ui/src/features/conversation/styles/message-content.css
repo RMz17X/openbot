@@ -242,7 +242,7 @@
   transform-origin: 50% 0;
   transition:
     opacity var(--openbot-duration-slow) ease-out,
-    transform var(--openbot-duration-overlay) cubic-bezier(0.23, 1, 0.32, 1);
+    transform var(--openbot-duration-overlay) var(--openbot-ease-spring);
   will-change: top, left, transform;
 }
 
@@ -272,7 +272,7 @@
     0 3px 10px var(--openbot-shadow-popover-ambient),
     inset 0 0 0 1px var(--openbot-shadow-ring);
   color: var(--openbot-text-primary);
-  transition: width var(--openbot-duration-overlay) cubic-bezier(0.23, 1, 0.32, 1);
+  transition: width var(--openbot-duration-overlay) var(--openbot-ease-spring);
 }
 
 .selection-actions-content,
@@ -298,9 +298,9 @@
   opacity: 1;
   transform: translateX(0);
   transition:
-    max-width var(--openbot-duration-overlay) cubic-bezier(0.23, 1, 0.32, 1),
-    opacity var(--openbot-duration-overlay) cubic-bezier(0.23, 1, 0.32, 1),
-    transform var(--openbot-duration-overlay) cubic-bezier(0.23, 1, 0.32, 1);
+    max-width var(--openbot-duration-overlay) var(--openbot-ease-spring),
+    opacity var(--openbot-duration-overlay) var(--openbot-ease-spring),
+    transform var(--openbot-duration-overlay) var(--openbot-ease-spring);
 }
 
 .selection-actions-form-shell-hidden {
@@ -315,7 +315,7 @@
   flex: 0 0 auto;
   align-items: center;
   overflow: hidden;
-  transition: width var(--openbot-duration-overlay) cubic-bezier(0.23, 1, 0.32, 1);
+  transition: width var(--openbot-duration-overlay) var(--openbot-ease-spring);
 }
 
 .selection-actions-form input {
@@ -347,9 +347,9 @@
   opacity: 1;
   transform: translateX(0);
   transition:
-    max-width var(--openbot-duration-overlay) cubic-bezier(0.23, 1, 0.32, 1),
-    opacity var(--openbot-duration-overlay) cubic-bezier(0.23, 1, 0.32, 1),
-    transform var(--openbot-duration-overlay) cubic-bezier(0.23, 1, 0.32, 1);
+    max-width var(--openbot-duration-overlay) var(--openbot-ease-spring),
+    opacity var(--openbot-duration-overlay) var(--openbot-ease-spring),
+    transform var(--openbot-duration-overlay) var(--openbot-ease-spring);
 }
 
 .selection-actions-presets-hidden {
@@ -371,9 +371,9 @@
   overflow: hidden;
   opacity: 0;
   transition:
-    max-width var(--openbot-duration-overlay) cubic-bezier(0.23, 1, 0.32, 1),
-    opacity var(--openbot-duration-overlay) cubic-bezier(0.23, 1, 0.32, 1),
-    margin-inline-start var(--openbot-duration-overlay) cubic-bezier(0.23, 1, 0.32, 1);
+    max-width var(--openbot-duration-overlay) var(--openbot-ease-spring),
+    opacity var(--openbot-duration-overlay) var(--openbot-ease-spring),
+    margin-inline-start var(--openbot-duration-overlay) var(--openbot-ease-spring);
 }
 
 .selection-actions-presets-expanded .selection-actions-more-presets {
@@ -391,9 +391,9 @@
   opacity: 0;
   transform: scale(0.88);
   transition:
-    max-width var(--openbot-duration-overlay) cubic-bezier(0.23, 1, 0.32, 1),
-    opacity var(--openbot-duration-overlay) cubic-bezier(0.23, 1, 0.32, 1),
-    transform var(--openbot-duration-overlay) cubic-bezier(0.23, 1, 0.32, 1);
+    max-width var(--openbot-duration-overlay) var(--openbot-ease-spring),
+    opacity var(--openbot-duration-overlay) var(--openbot-ease-spring),
+    transform var(--openbot-duration-overlay) var(--openbot-ease-spring);
 }
 
 .selection-actions-send-shell-visible {
@@ -467,7 +467,7 @@
 }
 
 .selection-actions-expand svg {
-  transition: transform var(--openbot-duration-overlay) cubic-bezier(0.23, 1, 0.32, 1);
+  transition: transform var(--openbot-duration-overlay) var(--openbot-ease-spring);
 }
 
 /* The chevron points to the end side, where the extra presets open. `scale` mirrors it and keeps the
@@ -752,17 +752,14 @@
   display: grid;
   place-items: center;
   opacity: 0;
-  filter: blur(4px);
   scale: 0.25;
   transition:
     opacity var(--openbot-duration-slow) var(--openbot-ease-out),
-    filter var(--openbot-duration-slow) var(--openbot-ease-out),
     scale var(--openbot-duration-slow) var(--openbot-ease-out);
 }
 
 .message-code-copy-icons > span[data-visible="true"] {
   opacity: 1;
-  filter: blur(0);
   scale: 1;
 }
 

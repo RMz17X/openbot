@@ -79,7 +79,7 @@
   transition:
     border-color var(--openbot-duration-hover) ease,
     background-color var(--openbot-duration-hover) ease,
-    transform var(--openbot-duration-fast) cubic-bezier(0.23, 1, 0.32, 1);
+    transform var(--openbot-duration-fast) var(--openbot-ease-spring);
 }
 
 .provider-model-trigger:hover:not(:disabled),
@@ -257,7 +257,6 @@
   from {
     opacity: 0;
     scale: 0.6;
-    filter: blur(2px);
   }
 }
 

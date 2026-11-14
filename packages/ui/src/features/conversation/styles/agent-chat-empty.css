@@ -95,14 +95,12 @@
 
 .agent-chat-empty-showing {
   transition:
-    opacity calc(var(--openbot-duration-slow) * 3.5) var(--openbot-ease-out),
-    filter calc(var(--openbot-duration-slow) * 3.5) var(--openbot-ease-out),
-    transform calc(var(--openbot-duration-slow) * 3.5) var(--openbot-ease-out);
+    opacity var(--openbot-duration-panel) var(--openbot-ease-out),
+    transform var(--openbot-duration-panel) var(--openbot-ease-out);
 }
 
 .agent-chat-empty-showing[data-leaving] {
   opacity: 0;
-  filter: blur(3px);
   transform: translateY(-6px);
 }
 

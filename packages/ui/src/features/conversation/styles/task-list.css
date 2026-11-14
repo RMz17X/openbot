@@ -7,7 +7,6 @@
   --task-list-open: 320ms;
   --task-list-close: 200ms;
   --task-list-close-ease: cubic-bezier(0.32, 0.08, 0.24, 1);
-  --task-list-blur: 4px;
   --task-list-stagger: 28ms;
 
   box-sizing: border-box;
@@ -68,7 +67,7 @@
   transition: stroke-dashoffset var(--openbot-duration-slow) var(--task-list-ease);
 }
 
-/* The title and the running task share one cell, and swap with a blur when the list closes. */
+/* The title and the running task share one cell, and swap when the list closes. */
 .task-list-title {
   display: grid;
   min-width: 0;
@@ -85,7 +84,6 @@
   white-space: nowrap;
   transition:
     opacity var(--task-list-open) var(--task-list-ease),
-    filter var(--task-list-open) var(--task-list-ease),
     transform var(--task-list-open) var(--task-list-ease);
 }
 
@@ -99,7 +97,6 @@
 
 .task-list-title[data-showing="task"] .task-list-title-name,
 .task-list-title[data-showing="title"] .task-list-title-task {
-  filter: blur(var(--task-list-blur));
   opacity: 0;
 }
 
@@ -168,21 +165,19 @@
   transition: padding var(--task-list-open) var(--task-list-ease);
 }
 
-/* A closing list blurs and lifts away as one; an opening list focuses in row by row. The delay
- * stops growing after the eighth row, so a long plan does not wait for its last rows. */
+/* A closing list lifts away as one; an opening list focuses in row by row. The delay stops growing
+ * after the eighth row, so a long plan does not wait for its last rows. */
 .task-list-item {
   display: flex;
   min-width: 0;
   align-items: flex-start;
   gap: var(--openbot-space-3);
   padding: var(--openbot-space-0-5) 0;
-  filter: blur(var(--task-list-blur));
   opacity: 0;
   transform: translateY(calc(-1 * var(--openbot-space-1))) scale(0.98);
   transform-origin: left top;
   transition:
     opacity var(--task-list-close) var(--task-list-close-ease),
-    filter var(--task-list-close) var(--task-list-close-ease),
     transform var(--task-list-close) var(--task-list-close-ease);
 }
 
@@ -191,12 +186,10 @@
 }
 
 .task-list[data-open] .task-list-item {
-  filter: blur(0);
   opacity: 1;
   transform: none;
   transition:
     opacity var(--task-list-open) var(--task-list-ease),
-    filter var(--task-list-open) var(--task-list-ease),
     transform var(--task-list-open) var(--task-list-ease);
   transition-delay: calc(min(var(--task-list-index, 0), 8) * var(--task-list-stagger));
 }
@@ -277,7 +270,6 @@
 .task-list-item-progress {
   --digit-dur: var(--openbot-duration-overlay);
   --digit-distance: var(--openbot-space-1);
-  --digit-blur: var(--openbot-space-0-5);
   --digit-stagger: 40ms;
 
   display: inline-flex;
@@ -392,7 +384,6 @@
 
 @keyframes task-list-title-in {
   from {
-    filter: blur(var(--task-list-blur));
     opacity: 0;
     transform: translateY(var(--openbot-space-1));
   }

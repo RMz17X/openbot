@@ -133,7 +133,6 @@
   --page-slide-dur: 250ms;
   --page-fade-dur: 250ms;
   --page-slide-distance: 8px;
-  --page-blur: 3px;
   --page-stagger: 0ms;
   --page-exit-enabled: 1;
   --page-slide-ease: cubic-bezier(0.22, 1, 0.36, 1);
@@ -162,19 +161,16 @@
   opacity: 0;
   pointer-events: none;
   transform: translateX(calc(var(--t-page-from-x, 0px) * var(--page-exit-enabled)));
-  filter: blur(calc(var(--page-blur) * var(--page-exit-enabled)));
   transition:
     opacity var(--page-fade-dur) var(--page-fade-ease),
-    transform var(--page-slide-dur) var(--page-slide-ease),
-    filter var(--page-slide-dur) var(--page-slide-ease);
-  will-change: opacity, transform, filter;
+    transform var(--page-slide-dur) var(--page-slide-ease);
+  will-change: opacity, transform;
 }
 .t-page-slide[data-page="1"] .t-page[data-page-id="1"],
 .t-page-slide[data-page="2"] .t-page[data-page-id="2"] {
   opacity: 1;
   pointer-events: auto;
   transform: translateX(0);
-  filter: blur(0);
   transition-delay: var(--page-stagger);
 }
 
@@ -195,7 +191,6 @@
   .agent-skills-pages.t-page-slide .t-page {
     opacity: 0;
     transform: translateX(var(--t-page-from-x));
-    filter: blur(var(--page-blur));
   }
 }
 
@@ -227,7 +222,6 @@
   .skill-preview.t-stagger.is-shown .t-stagger-line {
     opacity: 0;
     transform: translateY(var(--stagger-distance));
-    filter: blur(var(--stagger-blur));
   }
 }
 
@@ -278,7 +272,6 @@
   .agent-skills-tab-content[data-selected] {
     opacity: 0;
     transform: translateY(var(--sliding-tabs-content-distance));
-    filter: blur(var(--sliding-tabs-content-blur));
   }
 }
 

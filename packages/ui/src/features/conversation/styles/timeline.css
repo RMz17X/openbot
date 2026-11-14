@@ -142,7 +142,7 @@
   color: inherit;
   transition:
     background-color var(--openbot-duration-hover) ease,
-    transform var(--openbot-duration-fast) cubic-bezier(0.23, 1, 0.32, 1);
+    transform var(--openbot-duration-fast) var(--openbot-ease-spring);
 }
 
 /*
@@ -176,7 +176,7 @@
   background: none;
   padding-inline: 0 var(--openbot-space-1-5);
   color: inherit;
-  transition: transform var(--openbot-duration-fast) cubic-bezier(0.23, 1, 0.32, 1);
+  transition: transform var(--openbot-duration-fast) var(--openbot-ease-spring);
 }
 
 .scroll-to-latest-button svg {
@@ -322,7 +322,7 @@
   line-height: 14px;
   text-decoration: underline;
   text-underline-offset: 2px;
-  transition: transform var(--openbot-duration-fast) cubic-bezier(0.23, 1, 0.32, 1);
+  transition: transform var(--openbot-duration-fast) var(--openbot-ease-spring);
 }
 
 .unread-messages-mark-read-label {
@@ -409,7 +409,6 @@
   from {
     opacity: 0;
     transform: scale(0.9);
-    filter: blur(2px);
   }
 }
 

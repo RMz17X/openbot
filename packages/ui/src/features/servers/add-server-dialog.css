@@ -917,7 +917,6 @@
   from {
     opacity: 0;
     transform: translateY(8px);
-    filter: blur(2px);
   }
 }
 

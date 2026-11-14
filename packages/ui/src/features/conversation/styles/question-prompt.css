@@ -14,7 +14,6 @@
   from {
     opacity: 0;
     transform: translateY(var(--page-slide-distance));
-    filter: blur(var(--page-blur));
   }
 }
 
@@ -51,7 +50,6 @@
   transition:
     opacity var(--page-fade-dur) var(--page-fade-ease),
     transform var(--page-slide-dur) var(--page-slide-ease),
-    filter var(--page-slide-dur) var(--page-slide-ease),
     visibility 0s linear var(--page-slide-dur);
 }
 
@@ -63,7 +61,6 @@
   inset-block-start: 0;
   inset-inline: 0;
   opacity: 0;
-  filter: blur(var(--page-blur));
   visibility: hidden;
 }
 
@@ -103,18 +100,12 @@
   min-height: 0;
   overflow: hidden;
   opacity: 0;
-  filter: blur(var(--text-swap-blur));
-  transition:
-    opacity var(--acc-collapse) var(--acc-ease),
-    filter var(--acc-collapse) var(--acc-ease);
+  transition: opacity var(--acc-collapse) var(--acc-ease);
 }
 
 .question-prompt-fold[data-open="true"] .question-prompt-fold-inner {
   opacity: 1;
-  filter: blur(0);
-  transition:
-    opacity var(--acc-expand) var(--acc-ease),
-    filter var(--acc-expand) var(--acc-ease);
+  transition: opacity var(--acc-expand) var(--acc-ease);
 }
 
 /* Question ------------------------------------------------------------------------------------ */

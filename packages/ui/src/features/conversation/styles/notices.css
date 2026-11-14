@@ -30,7 +30,7 @@
    */
   border-radius: var(--openbot-radius-card);
   background: var(--notice-surface);
-  animation: queue-panel-in var(--openbot-duration-normal) cubic-bezier(0.23, 1, 0.32, 1) both;
+  animation: queue-panel-in var(--openbot-duration-normal) var(--openbot-ease-spring) both;
 }
 
 /* The tone the usage rings already give a spent plan window, so one state keeps one colour. The

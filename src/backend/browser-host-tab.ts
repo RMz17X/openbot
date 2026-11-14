@@ -133,6 +133,8 @@ export interface BrowserHostTab {
   /** Counts the addresses loaded after the tab opened. A later load that aborts the first load does not close the tab. */
   loadGeneration: number;
   viewInvalidations: Set<() => void>;
+  /** The stop action of any view currently streaming this tab's screencast. */
+  activeViewStop?: (() => Effect.Effect<void>) | undefined;
   /**
    * The live view that made the last right-click, until the menu of that click opens. The menu then
    * goes to that view, and does not open on this screen.

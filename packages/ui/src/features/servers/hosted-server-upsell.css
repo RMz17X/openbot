@@ -73,12 +73,15 @@
   );
 }
 
-/* The glow: a wider ring of the beam colours, blurred by its parent, so the mask does not cut the blur. */
+/* The glow: a wider ring of the beam colours, softened by a mask instead of a blur. The ring turns
+   every frame, and a blur filter on a turning element is re-run on every one of those frames over
+   the whole glow area. A radial mask fades the ring at the edge of the box once, and the compositor
+   keeps it. */
 .hosted-upsell-beam-glow {
   position: absolute;
   inset: calc(-1 * var(--openbot-space-3));
   border-radius: inherit;
-  filter: blur(6px);
+  mask-image: radial-gradient(closest-side, var(--openbot-text-primary) 62%, var(--openbot-transparent) 100%);
   opacity: 0.5;
   pointer-events: none;
 }

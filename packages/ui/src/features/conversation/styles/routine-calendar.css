@@ -459,20 +459,17 @@
 @keyframes routine-planner-empty-life {
   0% {
     opacity: 0;
-    filter: blur(4px);
     transform: translateY(10px) scale(0.96);
   }
 
   8%,
   88% {
     opacity: 1;
-    filter: blur(0);
     transform: none;
   }
 
   100% {
     opacity: 0;
-    filter: blur(3px);
     transform: translateY(-4px);
   }
 }

@@ -119,7 +119,7 @@
 .openbot-dynamic-island-transition-root[data-mode-transitioning="true"]
   .dynamic-island-mode-layer[data-island-mode-layer="incoming"]
   [data-island-motion-content] {
-  filter: blur(4px);
+  opacity: 0.6;
 }
 
 .dynamic-island-surface-anchor {
@@ -139,7 +139,6 @@
   border-radius: var(--openbot-radius-xs);
   transition:
     border-radius var(--openbot-duration-slow) var(--openbot-ease-out),
-    filter var(--openbot-duration-slow) var(--openbot-ease-out),
     scale var(--openbot-duration-slow) var(--openbot-ease-out);
 }
 
@@ -152,7 +151,6 @@
    the eyes, so the blink keeps running. */
 .dynamic-island-shell[data-compact-resize] .dynamic-island-surface-logo {
   --app-logo-eye-squint: calc(1 - 0.45 * var(--dynamic-island-compact-motion, 1));
-  filter: blur(calc(0.8px * var(--dynamic-island-compact-motion, 1)));
   scale: calc(1 - 0.03 * var(--dynamic-island-compact-motion, 1));
 }
 
@@ -260,15 +258,13 @@
   place-items: center;
   opacity: 0;
   transition:
-    opacity 600ms var(--openbot-ease-in-out),
-    scale 650ms var(--openbot-ease-in-out),
-    filter 600ms var(--openbot-ease-in-out);
+    opacity var(--openbot-duration-panel) var(--openbot-ease-in-out),
+    scale var(--openbot-duration-panel) var(--openbot-ease-in-out);
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .dynamic-island-surface-idle-greeting-layer:not([data-active]) {
     scale: 0.88;
-    filter: blur(2px);
   }
 }
 
@@ -895,7 +891,7 @@ div.dynamic-island-surface-context-line span {
   grid-area: 1 / 1;
   display: inline-block;
   text-align: right;
-  will-change: transform, opacity, filter;
+  will-change: transform, opacity;
 }
 
 .dynamic-island-surface-question-progress-digit.is-outgoing {
@@ -931,13 +927,11 @@ div.dynamic-island-surface-context-line span {
 @keyframes dynamic-island-surface-swap {
   from {
     opacity: 0;
-    filter: blur(var(--text-swap-blur));
     transform: translateY(calc(var(--text-swap-translate-y) * -1)) scale(0.98);
   }
 
   to {
     opacity: 1;
-    filter: blur(0);
     transform: translateY(0) scale(1);
   }
 }
@@ -945,13 +939,11 @@ div.dynamic-island-surface-context-line span {
 @keyframes dynamic-island-surface-row-in {
   from {
     opacity: 0;
-    filter: blur(var(--text-swap-blur));
     transform: translateY(var(--text-swap-translate-y)) scale(0.98);
   }
 
   to {
     opacity: 1;
-    filter: blur(0);
     transform: translateY(0) scale(1);
   }
 }

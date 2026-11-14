@@ -215,7 +215,7 @@
   width: 280px;
   gap: var(--openbot-space-2);
   border-radius: var(--openbot-radius-lg);
-  background: rgba(20, 20, 24, 0.94);
+  background: color-mix(in srgb, var(--openbot-bg-surface) 94%, transparent);
   box-shadow:
     0 0 0 1px var(--openbot-border),
     var(--openbot-shadow-overlay);
@@ -1216,7 +1216,7 @@
 
 .diagram-chat,
 .diagram-chat-launcher.ui-button {
-  background: rgba(18, 18, 22, 0.94);
+  background: color-mix(in srgb, var(--openbot-bg-surface) 94%, transparent);
   box-shadow:
     0 0 0 1px var(--openbot-glass-border),
     var(--openbot-shadow-overlay);
@@ -1230,7 +1230,6 @@
   --diagram-chat-close-duration: var(--openbot-duration-island-content-exit);
   --diagram-chat-open-ease: cubic-bezier(0.34, 1.25, 0.64, 1);
   --diagram-chat-launcher-height: 36px;
-  --diagram-chat-blur: 2px;
   display: grid;
   align-items: end;
 }
@@ -1249,18 +1248,15 @@
   pointer-events: auto;
   transition:
     opacity var(--diagram-chat-open-duration) var(--openbot-ease-out),
-    filter var(--diagram-chat-open-duration) var(--openbot-ease-out),
     scale var(--diagram-chat-open-duration) var(--openbot-ease-out);
 }
 
 .diagram-chat-morph[data-open="true"] .diagram-chat-launcher.ui-button {
   scale: 0.97;
-  filter: blur(var(--diagram-chat-blur));
   opacity: 0;
   pointer-events: none;
   transition:
     opacity var(--openbot-duration-fast) var(--openbot-ease-out),
-    filter var(--openbot-duration-fast) var(--openbot-ease-out),
     scale var(--openbot-duration-fast) var(--openbot-ease-out);
 }
 
@@ -1289,22 +1285,18 @@
 
 /* The content settles a beat after the shape, so the panel reads as opening, not appearing. */
 .diagram-chat > * {
-  filter: blur(var(--diagram-chat-blur));
   opacity: 0;
   translate: 0 var(--openbot-space-2);
   transition:
     opacity var(--openbot-duration-fast) var(--openbot-ease-out),
-    filter var(--openbot-duration-fast) var(--openbot-ease-out),
     translate var(--openbot-duration-fast) var(--openbot-ease-out);
 }
 
 .diagram-chat-morph[data-open="true"] .diagram-chat > * {
-  filter: blur(0);
   opacity: 1;
   translate: 0 0;
   transition:
     opacity var(--diagram-chat-open-duration) var(--openbot-ease-out) var(--openbot-duration-fast),
-    filter var(--diagram-chat-open-duration) var(--openbot-ease-out) var(--openbot-duration-fast),
     translate var(--diagram-chat-open-duration) var(--openbot-ease-out) var(--openbot-duration-fast);
 }
 
@@ -1479,23 +1471,19 @@
 
 .diagram-empty-backdrop[data-leaving] .diagram-empty-world {
   opacity: 0;
-  filter: blur(4px);
 }
 
-/* A card lands: it rises out of a blur. */
+/* A card lands: it rises into place. */
 .diagram-empty-node {
   opacity: 0;
-  filter: blur(6px);
   transform: translateY(12px) scale(0.96);
   transition:
-    opacity 700ms var(--openbot-ease-out),
-    filter 700ms var(--openbot-ease-out),
-    transform 700ms var(--openbot-ease-out);
+    opacity var(--openbot-duration-panel) var(--openbot-ease-out),
+    transform var(--openbot-duration-panel) var(--openbot-ease-out);
 }
 
 .diagram-empty-node[data-shown] {
   opacity: 1;
-  filter: blur(0);
   transform: none;
 }
 

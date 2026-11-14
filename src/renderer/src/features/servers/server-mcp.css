@@ -33,7 +33,6 @@
   .settings-modal .server-mcp-panel.t-page-slide .t-page[data-page-id] {
     opacity: 0;
     transform: translateX(var(--t-page-from-x));
-    filter: blur(var(--page-blur));
   }
 }
 

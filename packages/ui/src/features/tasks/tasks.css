@@ -88,7 +88,6 @@
   from {
     opacity: 0;
     scale: 0.6;
-    filter: blur(2px);
   }
 }
 
@@ -579,7 +578,6 @@ html.panel-resizing .tasks-page-side {
 @keyframes tasks-page-empty-arrive {
   from {
     opacity: 0;
-    filter: blur(4px);
     translate: 0 10px;
     scale: 0.97;
   }
@@ -588,7 +586,6 @@ html.panel-resizing .tasks-page-side {
 /* An answered task leaves to make room for the next one. */
 .tasks-page-empty-row[data-age="3"] {
   opacity: 0;
-  filter: blur(3px);
   translate: 0 -8px;
 }
 
