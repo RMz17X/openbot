@@ -1,21 +1,19 @@
 /*
- * The app loading screen. In the `pile` scene, Web Animations from a recorded simulation move each
- * plush; CSS only places the pit over the whole screen and fades the screen. When the app is ready,
- * the crew hop out while the screen fades. When the app is ready very soon, the screen only fades.
- * The component sets --app-loading-at, the age of the run, so a second screen does not show again,
- * and --app-loading-exit-delay, the time before the fade, which waits for the rest of the rain.
+ * Clean, lightweight standard page loading screen.
+ * Replaces the heavy 3D plush simulation with a sleek, minimalist loader.
  */
 
 .app-loading {
-  --app-loading-at: 0s;
-  --app-loading-exit-delay: 300ms;
   position: absolute;
   z-index: var(--openbot-layer-dialog);
   inset: 0;
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
   background: var(--openbot-bg-canvas);
+  user-select: none;
   -webkit-app-region: drag;
 }
 
@@ -23,106 +21,72 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 28px;
-}
-
-/* The crew fill the screen. */
-.app-loading[data-scene="pile"] .app-loading-stage {
-  position: absolute;
-  inset: 0;
   justify-content: center;
+  gap: var(--openbot-space-4, 16px);
+  padding: var(--openbot-space-6, 24px);
+  text-align: center;
+  animation: app-loading-enter 200ms var(--openbot-ease-out) both;
 }
 
-.app-loading-pit-frame {
-  position: absolute;
-  inset: 0;
+.app-loading-spinner-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
 }
 
-/* The pit keeps its floor on the bottom of the screen, also when the window changes size. */
-.app-loading-pit {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  translate: -50% 0;
-  transform-origin: 50% 100%;
+.app-loading-spinner {
+  width: 32px;
+  height: 32px;
+  color: var(--openbot-accent, #3b82f6);
+  animation: app-loading-spin 0.8s linear infinite;
 }
 
-.app-loading-plush {
-  position: absolute;
-  top: 0;
-  left: 0;
-  visibility: hidden;
-  pointer-events: none;
-  user-select: none;
-  will-change: transform;
+.app-loading-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
 }
 
-.app-loading-squash {
-  width: 100%;
-  height: 100%;
-  will-change: transform;
+.app-loading-title {
+  font-family: var(--openbot-font-sans, system-ui, sans-serif);
+  font-size: var(--openbot-text-base, 14px);
+  font-weight: var(--openbot-weight-medium, 500);
+  color: var(--openbot-text-primary, #f3f4f6);
+  letter-spacing: -0.01em;
 }
 
-.app-loading-status {
-  min-height: 20px;
-  margin: 0;
-  color: var(--openbot-text-muted);
-  font-size: var(--openbot-text-md);
+.app-loading-subtitle {
+  font-family: var(--openbot-font-sans, system-ui, sans-serif);
+  font-size: var(--openbot-text-xs, 12px);
+  color: var(--openbot-text-muted, #9ca3af);
 }
 
-.app-loading-line {
-  display: block;
-}
-
-.app-loading:not([data-phase="loading"]) {
+.app-loading:is([data-phase="fade"], [data-phase="exit"]) {
+  animation: app-loading-exit 200ms var(--openbot-ease-out) forwards;
   pointer-events: none;
   -webkit-app-region: no-drag;
 }
 
-/* The fade also runs with reduced motion: its animationend removes the screen. */
-.app-loading:is([data-phase="fade"], [data-phase="exit"]) {
-  animation: app-loading-exit var(--openbot-duration-overlay) var(--openbot-ease-in-out) forwards;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  /* The app fades in while the crew hop out. The heavy views mounted before the hop. */
-  .app-loading[data-phase="exit"] {
-    animation-duration: 1100ms;
-    animation-delay: var(--app-loading-exit-delay);
+@keyframes app-loading-spin {
+  from {
+    transform: rotate(0deg);
   }
-
-  /* The stage waits before it shows, so a fast load does not flash the crew. */
-  .app-loading-stage {
-    animation: app-loading-enter var(--openbot-duration-overlay) var(--openbot-ease-out)
-      calc(250ms - var(--app-loading-at)) both;
-  }
-
-  .app-loading-line {
-    animation: app-loading-line-in 280ms var(--openbot-ease-out);
-  }
-
-  .app-loading:not([data-phase="loading"]) .app-loading-status {
-    animation: app-loading-fade 200ms var(--openbot-ease-out) forwards;
+  to {
+    transform: rotate(360deg);
   }
 }
 
 @keyframes app-loading-enter {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: scale(0.96);
   }
-}
-
-@keyframes app-loading-line-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-}
-
-@keyframes app-loading-fade {
   to {
-    opacity: 0;
+    opacity: 1;
+    transform: scale(1);
   }
 }
 
@@ -141,24 +105,29 @@
   background: var(--openbot-bg-canvas);
   border-bottom: 1px solid var(--openbot-border);
 }
+
 .server-connection-notice p {
   margin: 0;
 }
+
 .server-connection-detail {
   color: var(--openbot-text-muted);
   font-variant-numeric: tabular-nums;
   text-wrap: pretty;
 }
+
 .server-connection-actions {
   display: flex;
   gap: var(--openbot-space-2);
   -webkit-app-region: no-drag;
 }
+
 /* The toast of a long first load, like the GitHub star toast: a raised card with the 1px ring only.
    The buttons sit 8px from the bottom edge. */
 .server-connection-toast-host {
   width: var(--width);
 }
+
 .server-connection-toast {
   position: relative;
   display: grid;
@@ -172,12 +141,14 @@
   font-size: var(--openbot-text-md);
   line-height: var(--openbot-leading-md);
 }
+
 /* The close control sits on the corner, mostly outside the card, so the title keeps a small space. */
 .server-connection-toast-title {
   padding-right: var(--openbot-space-1);
   font-weight: var(--openbot-weight-semibold);
   text-wrap: balance;
 }
+
 .server-connection-toast-body {
   margin: 0;
   color: var(--openbot-text-secondary);
@@ -186,10 +157,12 @@
   font-variant-numeric: tabular-nums;
   text-wrap: pretty;
 }
+
 /* Retry is last, in the corner. With the grid gap, the button row is 12px below the words. */
 .server-connection-toast-actions {
   margin-top: var(--openbot-space-1);
 }
+
 .server-connection-content {
   position: relative;
   min-height: 0;
@@ -197,6 +170,7 @@
   display: flex;
   flex-direction: column;
 }
+
 .server-connection-content[hidden] {
   display: none;
 }

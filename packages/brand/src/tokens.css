@@ -420,14 +420,14 @@
   --openbot-chat-marker-width: 680px;
   --openbot-duration-fast: 120ms;
   --openbot-duration-hover: 0ms;
-  --openbot-duration-dialog: 100ms;
+  --openbot-duration-dialog: 160ms;
   --openbot-duration-normal: 160ms;
-  --openbot-duration-slow: 200ms;
-  --openbot-duration-overlay: 240ms;
-  --openbot-duration-toast-enter: 340ms;
-  --openbot-duration-toast-exit: 220ms;
-  --openbot-duration-island-content: 340ms;
-  --openbot-duration-island-content-exit: 220ms;
+  --openbot-duration-slow: 180ms;
+  --openbot-duration-overlay: 180ms;
+  --openbot-duration-toast-enter: 200ms;
+  --openbot-duration-toast-exit: 160ms;
+  --openbot-duration-island-content: 200ms;
+  --openbot-duration-island-content-exit: 160ms;
   /*
    * A new turn shows the working agent after this wait. The local host starts a turn at once, so a
    * shorter wait shows the agent while the sent message still moves in. Grok Bot shows it after 670–900ms.
@@ -436,8 +436,8 @@
   --openbot-agent-activity-exit-delay: 500ms;
   /* A loading indicator waits this long, so a fast answer replaces it before it shows. */
   --openbot-loading-indicator-delay: 400ms;
-  --openbot-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-  --openbot-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --openbot-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --openbot-ease-in-out: cubic-bezier(0.16, 1, 0.3, 1);
   --openbot-shadow-raised: 0 12px 32px var(--openbot-shadow-popover-ambient);
   --openbot-shadow-card: 0 0 0 transparent;
   --openbot-shadow-overlay: 0 12px 32px rgba(0, 0, 0, 0.48);

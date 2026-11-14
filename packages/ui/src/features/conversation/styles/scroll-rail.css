@@ -155,18 +155,15 @@
   padding: var(--openbot-space-3);
   border: 1px solid color-mix(in srgb, var(--openbot-text-primary) 8%, transparent);
   border-radius: var(--openbot-radius-lg);
-  background: var(--openbot-bg-glass);
-  backdrop-filter: blur(var(--openbot-space-4));
+  background: color-mix(in srgb, var(--openbot-bg-surface-raised, #18181b) 92%, transparent);
   font-size: var(--openbot-text-md);
   line-height: 18px;
   pointer-events: none;
   opacity: 0;
-  filter: blur(var(--openbot-space-1));
   transform: translateY(-50%) translateX(var(--openbot-space-1));
   transition:
-    opacity var(--chat-scroll-rail-quick) ease,
-    filter var(--chat-scroll-rail-quick) ease,
-    transform var(--chat-scroll-rail-quick) var(--chat-scroll-rail-ease);
+    opacity var(--chat-scroll-rail-quick) cubic-bezier(0.16, 1, 0.3, 1),
+    transform var(--chat-scroll-rail-quick) cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 :dir(rtl) .chat-scroll-rail-card {

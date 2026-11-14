@@ -13,8 +13,8 @@
   --wfn-ring-strong: color-mix(in srgb, var(--openbot-text-primary) 10%, transparent);
   --wfn-hover: color-mix(in srgb, var(--openbot-text-primary) 6%, transparent);
   --wfn-port: color-mix(in srgb, var(--openbot-text-primary) 10%, var(--openbot-bg-canvas));
-  --wfn-glass: color-mix(in srgb, var(--openbot-bg-surface-raised) 75%, transparent);
-  --wfn-glass-blur: blur(40px) saturate(1.4);
+  --wfn-glass: color-mix(in srgb, var(--openbot-bg-surface-raised) 92%, transparent);
+  --wfn-glass-blur: none;
   --wfn-radius-card: calc(var(--openbot-radius-lg) + var(--openbot-space-1));
   --wfn-small: calc(var(--openbot-text-sm) - 1px);
   --wfn-tiny: calc(var(--openbot-text-sm) - 2px);

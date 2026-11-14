@@ -2682,9 +2682,8 @@ textarea {
     0 22px 60px var(--openbot-bg-overlay),
     0 3px 12px var(--openbot-shadow-popover-ambient),
     inset 0 1px var(--openbot-hover);
-  backdrop-filter: blur(18px);
   transform-origin: var(--kb-popover-content-transform-origin);
-  animation: avatar-editor-in var(--openbot-duration-normal) cubic-bezier(0.23, 1, 0.32, 1) both;
+  animation: avatar-editor-in var(--openbot-duration-normal) cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @keyframes avatar-editor-in {

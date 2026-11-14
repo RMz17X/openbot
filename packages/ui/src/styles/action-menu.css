@@ -15,9 +15,9 @@
     0 2px 4px -2px var(--ui-menu-shadow);
   --ui-menu-ease: cubic-bezier(0.16, 1, 0.3, 1);
   --ui-menu-duration: 150ms;
-  /* A submenu opens and closes slower than the root menu, on a softer curve. */
-  --ui-submenu-ease: cubic-bezier(0.32, 0.72, 0, 1);
-  --ui-submenu-duration: var(--openbot-duration-slow);
+  /* A submenu opens and closes with the same snappy spring curve. */
+  --ui-submenu-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --ui-submenu-duration: 160ms;
 }
 
 .ui-popover-menu-surface {
@@ -30,6 +30,8 @@
     0 4px 6px -1px var(--openbot-shadow-popover-ambient),
     0 2px 4px -2px var(--openbot-shadow-popover-ambient);
   color: var(--openbot-text-primary);
+  transform-origin: var(--kb-popover-content-transform-origin, center);
+  animation: ui-popover-in 160ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .ui-action-menu {
@@ -315,11 +317,23 @@
   }
 }
 
+@keyframes ui-popover-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ui-action-menu,
   .ui-action-menu:not([data-expanded]),
   .ui-motion-tooltip,
-  .ui-motion-tooltip:not([data-expanded]) {
+  .ui-motion-tooltip:not([data-expanded]),
+  .ui-popover-menu-surface {
     animation: none;
   }
 

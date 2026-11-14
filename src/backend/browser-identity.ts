@@ -15,15 +15,13 @@ export function sessionBrowserUserAgent(userAgent: string): string {
 }
 
 /**
- * Google currently rejects its account identifier step without the Electron token.
- * Keep this exception on Google account requests; other sites use the session identity.
+ * The request User-Agent must always match clean desktop Chrome identity without any
+ * Electron or framework tokens, including on Google accounts authentication endpoints.
  */
 export function browserRequestUserAgent(url: string, userAgent: string, electronVersion: string): string {
-  const cleanAgent = sessionBrowserUserAgent(userAgent);
-  // Chromium requests some URLs that Node cannot parse, such as a host with an escaped space (#3775).
-  const hostname = URL.parse(url)?.hostname.replace(/\.+$/u, "");
-  if (hostname !== "accounts.google.com") return cleanAgent;
-  return cleanAgent.replace(/(Chrome\/[^\s]+)/u, `$1 Electron/${electronVersion}`);
+  void url;
+  void electronVersion;
+  return sessionBrowserUserAgent(userAgent);
 }
 
 // GREASE constants removed for static stealth brand definition.

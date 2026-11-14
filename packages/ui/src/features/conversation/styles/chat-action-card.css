@@ -19,6 +19,8 @@
   width: fit-content;
   max-width: min(100%, 520px);
   gap: var(--openbot-space-3);
+  content-visibility: auto;
+  contain-intrinsic-size: auto 120px;
 }
 
 .chat-action-card-header {

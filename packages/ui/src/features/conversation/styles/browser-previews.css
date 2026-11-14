@@ -173,9 +173,8 @@
   padding: var(--openbot-space-4);
   border: 1px solid var(--openbot-glass-border);
   border-radius: var(--openbot-radius-xl);
-  background: color-mix(in srgb, var(--openbot-bg-glass), var(--openbot-bg-control) 60%);
+  background: rgba(24, 24, 30, 0.95);
   box-shadow: var(--openbot-shadow-raised);
-  backdrop-filter: blur(32px) saturate(1.4);
 }
 
 .browser-secret-header {

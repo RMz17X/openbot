@@ -22,7 +22,6 @@ function matchChromePageValues(): void {
   // A masked `toString` called on an object with this key puts its map of replaced functions in
   // the object, so that the frames of one page share one map. A native `toString` throws instead.
   const nativesRequest = "matchChromePageValues:natives";
-  const onWindows = true;
   const onMac = false;
   // The window frame and toolbar of a Chrome window with no bookmarks bar.
   const frameWidth = 16;

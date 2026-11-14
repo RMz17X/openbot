@@ -289,6 +289,7 @@ const analyticsCaptureUrl = !app.isPackaged ? readAnalyticsCaptureUrl(process.en
 // Electron exposes FedCM without an account chooser, so every request fails with a NetworkError.
 // Sites such as Google Sign-In use FedCM when it exists and fall back to their popup when it does not.
 app.commandLine.appendSwitch("disable-features", "FedCm");
+app.commandLine.appendSwitch("disable-blink-features", "AutomationControlled");
 if (developmentRemoteDebuggingPort) {
   app.commandLine.appendSwitch("remote-debugging-port", developmentRemoteDebuggingPort);
   app.commandLine.appendSwitch("remote-debugging-address", "127.0.0.1");

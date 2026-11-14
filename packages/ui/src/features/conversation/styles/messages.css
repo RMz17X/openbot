@@ -1,5 +1,13 @@
 .message-entry {
   max-width: none;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 80px;
+}
+
+.message-entry:focus-within,
+.message-entry[data-streaming],
+.message-entry:has([data-streaming]) {
+  content-visibility: visible;
 }
 
 .message-entry > .ui-message-content {

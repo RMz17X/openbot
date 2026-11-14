@@ -27,7 +27,7 @@
   border-inline-start: 1px solid var(--openbot-border);
   background: var(--openbot-bg-canvas);
   color: var(--openbot-text-primary);
-  animation: settings-panel-in var(--openbot-duration-slow) cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation: settings-panel-in var(--openbot-duration-slow) cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 /* The panel sits at the inline end, so in right-to-left text it slides in from the left. */

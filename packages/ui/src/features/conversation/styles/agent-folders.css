@@ -193,9 +193,8 @@
   grid-template-columns: 1fr 1fr;
   gap: var(--openbot-space-3);
   border-radius: var(--openbot-radius-lg);
-  background: color-mix(in srgb, var(--background) 70%, transparent);
+  background: rgba(15, 17, 23, 0.85);
   pointer-events: none;
-  backdrop-filter: blur(3px);
 }
 
 /* The settings panel takes its own drops, so the overlay stops at its edge. */

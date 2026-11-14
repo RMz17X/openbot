@@ -310,9 +310,7 @@
   inset-inline-end: -8px;
   border: 1px solid var(--openbot-border-strong);
   border-radius: var(--openbot-radius-pill);
-  background: color-mix(in srgb, var(--openbot-bg-surface-raised) 72%, transparent);
-  backdrop-filter: blur(8px) saturate(1.1);
-  -webkit-backdrop-filter: blur(8px) saturate(1.1);
+  background: color-mix(in srgb, var(--openbot-bg-surface-raised) 90%, transparent);
   opacity: 0;
   scale: 0.9;
   transition:
@@ -2527,8 +2525,6 @@ html.ui-textarea-resizing {
   place-items: center;
   padding: var(--openbot-space-6);
   background: var(--openbot-dialog-overlay);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
   animation: ui-dialog-overlay-in var(--openbot-duration-overlay) var(--openbot-ease-out);
   /* The window swallows mouse events over a `-webkit-app-region: drag` area, such as the server rail
    * and the window headers, and hands them to the window manager instead. A click there while a
@@ -2541,6 +2537,10 @@ html.ui-textarea-resizing {
   border: 0;
   border-radius: var(--openbot-radius-card);
   box-shadow: 0 0 0 1px var(--openbot-dialog-ring);
+}
+
+.ui-dialog-content:not([data-dialog-surface="unstyled"]):not(.image-lightbox) {
+  animation: ui-dialog-content-in var(--openbot-duration-slow) var(--openbot-ease-out) both;
 }
 
 .ui-dialog-content[data-dialog-surface="unstyled"] {
@@ -2718,6 +2718,17 @@ html.ui-textarea-resizing {
 @keyframes ui-dialog-overlay-in {
   from {
     opacity: 0;
+  }
+}
+
+@keyframes ui-dialog-content-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
   }
 }
 

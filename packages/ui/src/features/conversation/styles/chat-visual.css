@@ -87,8 +87,6 @@
   border: 0;
   padding: var(--openbot-space-6);
   background: var(--openbot-dialog-overlay);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
   color: var(--openbot-text-primary);
   -webkit-app-region: no-drag;
 }

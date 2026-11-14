@@ -215,11 +215,10 @@
   width: 280px;
   gap: var(--openbot-space-2);
   border-radius: var(--openbot-radius-lg);
-  background: var(--openbot-bg-overlay);
+  background: rgba(20, 20, 24, 0.94);
   box-shadow:
     0 0 0 1px var(--openbot-border),
     var(--openbot-shadow-overlay);
-  backdrop-filter: blur(16px);
   padding: var(--openbot-space-3);
   font-size: var(--openbot-text-sm);
 }
@@ -1217,11 +1216,10 @@
 
 .diagram-chat,
 .diagram-chat-launcher.ui-button {
-  background: var(--openbot-bg-glass);
+  background: rgba(18, 18, 22, 0.94);
   box-shadow:
     0 0 0 1px var(--openbot-glass-border),
     var(--openbot-shadow-overlay);
-  backdrop-filter: blur(16px);
 }
 
 /* The launcher and the panel share one grid cell. Opening grows the panel out of the launcher's pill

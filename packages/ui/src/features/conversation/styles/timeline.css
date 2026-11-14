@@ -22,6 +22,8 @@
   inset: 0 0 auto;
   width: 100%;
   padding-top: var(--openbot-chat-entry-gap);
+  content-visibility: auto;
+  contain-intrinsic-size: auto 80px;
 }
 
 /* Rows the timeline marks as grouped (marker runs, same-sender messages) sit tighter. */
@@ -36,6 +38,8 @@
 .virtual-chat-list-static .virtual-chat-row {
   position: relative;
   inset: auto;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 80px;
 }
 
 /*

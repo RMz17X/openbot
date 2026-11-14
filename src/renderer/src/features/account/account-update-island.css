@@ -2,16 +2,16 @@
   --panel-open-dur: calc(var(--openbot-duration-slow) + var(--openbot-duration-slow));
   --panel-close-dur: calc(var(--openbot-duration-slow) + var(--openbot-duration-normal));
   --panel-translate-y: calc(100% - var(--openbot-space-3));
-  --panel-blur: var(--openbot-space-0-5);
+  --panel-blur: 0px;
   --panel-ease: var(--openbot-ease-out);
   --text-swap-dur: var(--openbot-duration-normal);
   --text-swap-translate-y: var(--openbot-space-1);
-  --text-swap-blur: var(--openbot-space-0-5);
+  --text-swap-blur: 0px;
   --text-swap-ease: var(--openbot-ease-in-out);
   --digit-dur: var(--openbot-duration-slow);
   --digit-distance: var(--openbot-space-1);
   --digit-stagger: calc(var(--openbot-duration-fast) - var(--openbot-duration-dialog));
-  --digit-blur: var(--openbot-space-0-5);
+  --digit-blur: 0px;
   --digit-ease: var(--openbot-ease-out);
   --digit-dir-x: 0;
   --digit-dir-y: 1;
@@ -28,8 +28,6 @@
   border-radius: var(--openbot-radius-lg) var(--openbot-radius-lg) var(--openbot-radius-md) var(--openbot-radius-md);
   background: var(--openbot-accent-strong);
   box-shadow: 0 0 0 1px var(--openbot-accent-soft);
-  -webkit-backdrop-filter: blur(var(--openbot-space-3));
-  backdrop-filter: blur(var(--openbot-space-3));
   padding: calc(var(--openbot-space-1) + 1px) var(--openbot-space-1-5)
     calc(var(--openbot-space-4) + var(--openbot-space-1) - 1px);
   grid-template-columns: minmax(0, 1fr) auto;
@@ -41,13 +39,11 @@
 .account-update-island.t-panel-slide {
   transform: translateY(var(--panel-translate-y));
   opacity: 0;
-  filter: blur(var(--panel-blur));
   pointer-events: none;
   transition:
     transform var(--panel-close-dur) var(--panel-ease),
-    opacity var(--panel-close-dur) var(--panel-ease),
-    filter var(--panel-close-dur) var(--panel-ease);
-  will-change: transform, opacity, filter;
+    opacity var(--panel-close-dur) var(--panel-ease);
+  will-change: transform, opacity;
 }
 
 .account-update-island.t-panel-slide[data-open="true"] {
