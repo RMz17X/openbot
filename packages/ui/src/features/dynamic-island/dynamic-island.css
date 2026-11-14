@@ -188,13 +188,12 @@
   transform-origin: center;
   transition:
     color var(--openbot-duration-normal) var(--openbot-ease-out),
-    filter var(--openbot-duration-slow) var(--openbot-ease-out),
     opacity var(--openbot-duration-island-content) cubic-bezier(0.22, 1.08, 0.36, 1),
     transform var(--openbot-duration-island-content) cubic-bezier(0.22, 1.08, 0.36, 1);
 }
 
-/* The compact content blurs a little while it moves with the surface, as much as the move is large.
-   The blur bridges the old and the new place, and a transition keeps it interruptible. */
+/* The compact content fades a little while it moves with the surface, as much as the move is
+   large. The fade bridges the old and the new place, and a transition keeps it interruptible. */
 .dynamic-island-shell[data-compact-resize] .dynamic-island-ear-content {
   opacity: calc(1 - 0.15 * var(--dynamic-island-compact-motion, 1));
 }

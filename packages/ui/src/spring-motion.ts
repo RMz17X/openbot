@@ -12,8 +12,29 @@ export const ISLAND_OPEN: Spring = { response: 0.5, dampingFraction: 0.8 };
 export const ISLAND_CLOSE: Spring = { response: 0.45, dampingFraction: 1 };
 export const ISLAND_CONTENT: Spring = { response: 0.34, dampingFraction: 0.88 };
 
-/** The ease-out curve for content that leaves the island. */
+/**
+ * The ease-out curve for content that leaves the island, and the one every surface in the app
+ * arrives with. It is the mirror of `--openbot-ease-spring` in the brand tokens.
+ */
 export const EASE_OUT = "cubic-bezier(0.16, 1, 0.3, 1)";
+
+/** The curve of content that leaves fast, so the exit reads before the surface is gone. */
+export const EASE_IN = "cubic-bezier(0.4, 0, 1, 1)";
+
+/**
+ * The durations of the app in milliseconds, mirrored from `--openbot-duration-*` in the brand
+ * tokens. A surface that appears or leaves runs at 150 to 200 milliseconds: long enough to be
+ * read as motion, short enough that the reader never waits for it.
+ */
+export const DURATION_FAST = 120;
+export const DURATION_MICRO = 150;
+export const DURATION_DIALOG = 160;
+export const DURATION_NORMAL = 160;
+export const DURATION_PANEL = 180;
+export const DURATION_SLOW = 180;
+export const DURATION_OVERLAY = 180;
+/** Content that swaps in place, such as a label or a menu that changes what it shows. */
+export const DURATION_SWAP = 200;
 
 /** The progress of a spring from 0 to 1 at `time` seconds. A damping fraction of 1 does not overshoot. */
 export function springProgress(time: number, spring: Spring): number {
@@ -50,12 +71,4 @@ export function computedScale(transform: string): number {
   const match = transform.match(/^matrix\(([^,]+)/);
   const scale = Number.parseFloat(match?.[1] ?? "");
   return Number.isFinite(scale) ? scale : 1;
-}
-
-/** The radius in pixels of the `blur()` in a computed `filter`, or 0 when it has none. */
-export function computedBlur(filter: string): number {
-  if (!filter || filter === "none") return 0;
-  const match = filter.match(/blur\(([-\d.]+)px\)/);
-  const blur = Number.parseFloat(match?.[1] ?? "");
-  return Number.isFinite(blur) ? blur : 0;
 }

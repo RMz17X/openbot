@@ -31,7 +31,6 @@ function contentIn(element: HTMLElement, delay = 0, motion = (rest: number) => `
   element.animate(
     springKeyframes(ISLAND_CONTENT, (progress) => ({
       opacity: clamp(progress * 1.5, 0, 1),
-      filter: `blur(${Math.max(0, 4 * (1 - progress))}px)`,
       transform: motion(1 - progress),
     })),
     { duration: ms(ISLAND_CONTENT), delay, easing: "linear", fill: "backwards" },
@@ -46,8 +45,8 @@ function rollIn(element: HTMLElement) {
 
 /**
  * The pill shell. It is in the page while it is open or closing: it grows out of a small capsule under
- * the bottom edge and goes back into it. `face` is a key: a new key brings the new content in with a
- * blur. The width follows the content on a spring.
+ * the bottom edge and goes back into it. `face` is a key: a new key brings the new content in.
+ * The width follows the content on a spring.
  */
 function MorphPill(props: {
   open: boolean;
@@ -124,8 +123,8 @@ function MorphPill(props: {
       closing = [
         face.animate(
           [
-            { opacity: 1, filter: "blur(0px)", transform: "none" },
-            { opacity: 0, filter: "blur(4px)", transform: "scale(0.96)" },
+            { opacity: 1, transform: "none" },
+            { opacity: 0, transform: "scale(0.96)" },
           ],
           { duration: ms(ISLAND_CLOSE) * 0.35, easing: EASE_OUT, fill: "forwards" },
         ),

@@ -154,20 +154,20 @@ export function morphInto(
   }
   face?.animate(
     [
-      { opacity: 0, filter: "blur(4px)" },
-      { opacity: 0, filter: "blur(4px)", offset: 0.3 },
-      { opacity: 1, filter: "blur(0)", offset: 0.75 },
-      { opacity: 1, filter: "blur(0)" },
+      { opacity: 0, transform: "scale(0.96)" },
+      { opacity: 0, transform: "scale(0.96)", offset: 0.3 },
+      { opacity: 1, transform: "none", offset: 0.75 },
+      { opacity: 1, transform: "none" },
     ],
     fade,
   );
   // The text is gone before the step shows, so the two never overlap.
   label.animate(
     [
-      { opacity: 1, filter: "blur(0)" },
-      { opacity: 1, filter: "blur(0)", offset: 0.15 },
-      { opacity: 0, filter: "blur(3px)", offset: 0.45 },
-      { opacity: 0, filter: "blur(3px)" },
+      { opacity: 1, transform: "none" },
+      { opacity: 1, transform: "none", offset: 0.15 },
+      { opacity: 0, transform: "scale(0.94)", offset: 0.45 },
+      { opacity: 0, transform: "scale(0.94)" },
     ],
     fade,
   );
@@ -456,12 +456,12 @@ function resize(shell: HTMLElement, from: IslandBox, to: IslandBox, spring: Spri
   );
 }
 
-/** The old content leaves before the island reaches its new size: it fades, blurs and moves a little. */
+/** The old content leaves before the island reaches its new size: it fades and moves a little. */
 function contentOut(element: HTMLElement, opacity: number, duration: number, motion: string) {
   return element.animate(
     [
-      { opacity, filter: "blur(0px)", transform: "none" },
-      { opacity: 0, filter: "blur(4px)", transform: motion },
+      { opacity, transform: "none" },
+      { opacity: 0, transform: motion },
     ],
     { duration, easing: EASE_OUT, fill: "forwards" },
   );
@@ -472,7 +472,6 @@ function contentIn(element: HTMLElement, delay: number, motion: (rest: number) =
   return element.animate(
     springKeyframes(ISLAND_CONTENT, (progress) => ({
       opacity: clamp(progress * 1.5, 0, 1),
-      filter: `blur(${Math.max(0, 4 * (1 - progress))}px)`,
       transform: motion(1 - progress),
     })),
     { duration: springMs(ISLAND_CONTENT), delay, easing: "linear", fill: "backwards" },
@@ -541,8 +540,8 @@ function swapIsland(before: IslandSnapshot, shell: HTMLElement) {
 }
 
 /**
- * The step changes: the island springs to the width of the new text, the old text moves up and blurs out,
- * and the new text comes in from below. The button stays at the end of the island.
+ * The step changes: the island springs to the width of the new text, the old text moves up and
+ * fades out, and the new text comes in from below. The button stays at the end of the island.
  */
 function rollIsland(before: IslandSnapshot, shell: HTMLElement) {
   const to = shell.getBoundingClientRect();

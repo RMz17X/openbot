@@ -21,6 +21,7 @@ import {
   Search,
   Settings,
 } from "@openbot/ui";
+import { EASE_OUT } from "@openbot/ui/spring-motion";
 import {
   createEffect,
   createMemo,
@@ -283,7 +284,7 @@ const SEAT_FADE = 24;
 const ADD_SEARCH_MIN = 9;
 /** The morph of the add list when the search changes its rows. The same move as the menu panels. */
 const ADD_MORPH_MS = 200;
-const ADD_MORPH_EASE = "cubic-bezier(0.32, 0.72, 0, 1)";
+const ADD_MORPH_EASE = EASE_OUT;
 /** The room around each part of the shape: the goo, the handle stroke and a hovered seat reach past the geometry. */
 const SHAPE_MARGIN = 14;
 /** The pointer moves this far, in px, before a press on a seat becomes a drag. A shorter move is a click. */
@@ -609,8 +610,8 @@ export function AgentDock(props: AgentDockProps) {
         addMorphs.push(
           row.animate(
             [
-              { opacity: 0, filter: "blur(2px)", transform: "translateY(4px)" },
-              { opacity: 1, filter: "blur(0)", transform: "none" },
+              { opacity: 0, transform: "translateY(4px) scale(0.96)" },
+              { opacity: 1, transform: "none" },
             ],
             timing,
           ),

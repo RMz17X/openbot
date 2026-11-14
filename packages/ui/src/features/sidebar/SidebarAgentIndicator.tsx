@@ -1,4 +1,5 @@
 import { Clock3, MessageCircleQuestionMark, MousePointer2, ShieldCheck, Tooltip, X } from "@openbot/ui";
+import { DURATION_PANEL, EASE_OUT } from "@openbot/ui/spring-motion";
 import type { JSX } from "@solidjs/web";
 import { createEffect, createMemo, createSignal, Show, untrack } from "solid-js";
 import type { AvatarMood } from "../../bloub-avatar";
@@ -57,7 +58,7 @@ function badgeSnapshot(state: SidebarAgentState | undefined): SidebarBadgeSnapsh
 }
 
 /** The pill grows or shrinks to the width of the new count, with the digit roll. */
-const SIDEBAR_BADGE_RESIZE: KeyframeAnimationOptions = { duration: 280, easing: "cubic-bezier(0.22, 1, 0.36, 1)" };
+const SIDEBAR_BADGE_RESIZE: KeyframeAnimationOptions = { duration: DURATION_PANEL, easing: EASE_OUT };
 
 /**
  * The badge on a sidebar avatar. The badge on screen follows `state` and moves with each change:

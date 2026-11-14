@@ -17,14 +17,12 @@ interface IdleGreetingParts {
 const SAMPLE_COUNT = 30;
 /** The motion starts as the crossfade from the previous greeting settles. */
 const MOTION_DELAY = 350;
-const TURN_BLUR_LIMIT = 1.4;
-const TURN_SPEED_BLUR_LIMIT = 0.4;
-const TURN_BLUR_PER_DEGREE_PER_MS = 0.75;
-const TURN_EDGE_BLUR = 1.2;
 const TURN_EDGE_FADE = 0.5;
-const TURN_EDGE_SHADE = 0.3;
-/** The look of a face at rest, so the last keyframe lists the same filter functions. */
-const FACE_AT_REST = { filter: "blur(0px) brightness(1)", opacity: "1" };
+/** How much the face shrinks as it turns edge-on. */
+const TURN_EDGE_SCALE = 0.06;
+const TURN_SPEED_SCALE = 0.04;
+/** The look of a face at rest, so the last keyframe lists the same properties. */
+const FACE_AT_REST = { opacity: "1", scale: "1" };
 const EDGE_SCALE_DIP = 0.07;
 
 /** Plays the motion of a greeting that just showed, and returns its animations to cancel. */
@@ -92,10 +90,18 @@ function playWave(parts: IdleGreetingParts): Animation[] {
       transform: "rotateY(360deg)",
       scale: "1",
     }),
-    animate(parts.front, duration, (t) => ({ rotate: `${wave(t)}deg`, ...turnLook(theta, t) }), {
-      rotate: "0deg",
-      ...FACE_AT_REST,
-    }),
+    animate(
+      parts.front,
+      duration,
+      (t) => {
+        const look = turnLook(theta, t);
+        return { rotate: `${wave(t)}deg`, opacity: look.opacity, scale: `${1 - look.shrink}` };
+      },
+      {
+        rotate: "0deg",
+        ...FACE_AT_REST,
+      },
+    ),
     ...faceTurn(parts.back, duration, theta),
   ];
 }
@@ -172,9 +178,16 @@ function playCheer(parts: IdleGreetingParts): Animation[] {
               const squash = clapAt(t);
               const across = squash < 0 ? 1 + 0.22 * squash : 1 + 0.06 * squash;
               const up = squash < 0 ? 1 - 0.05 * squash : 1;
-              return { scale: `${across} ${up}`, rotate: `${clapTilt(t)}deg`, ...turnLook(theta, t) };
+              const look = turnLook(theta, t);
+              // The turn shrinks the face and the clap squashes it: the two compose, so the
+              // squash is scaled by the shrink rather than replacing it.
+              return {
+                scale: `${across * (1 - look.shrink)} ${up * (1 - look.shrink)}`,
+                rotate: `${clapTilt(t)}deg`,
+                opacity: look.opacity,
+              };
             },
-            { scale: "1 1", rotate: "0deg", ...FACE_AT_REST },
+            { ...FACE_AT_REST, scale: "1 1", rotate: "0deg" },
             "forwards",
             54,
           ),
@@ -185,7 +198,17 @@ function playCheer(parts: IdleGreetingParts): Animation[] {
 
 function faceTurn(face: HTMLElement | undefined, duration: number, theta: (t: number) => number): Animation[] {
   if (!face) return [];
-  return [animate(face, duration, (t) => turnLook(theta, t), FACE_AT_REST)];
+  return [
+    animate(
+      face,
+      duration,
+      (t) => {
+        const look = turnLook(theta, t);
+        return { opacity: look.opacity, scale: `${1 - look.shrink}` };
+      },
+      FACE_AT_REST,
+    ),
+  ];
 }
 
 /**
@@ -210,18 +233,22 @@ function animate(
 }
 
 /**
- * How a face looks as the card turns, for an illusion of depth. Edge-on, the face blurs, fades and
- * darkens, as a card turning away from the light does; a fast turn adds a little motion blur. Both
+ * How a face looks as the card turns, for an illusion of depth. Edge-on, the face fades and
+ * shrinks, as a card turning away from the light does; a fast turn shrinks it a little more. Both
  * faces get the same look, and the one turned away is hidden by its back face.
+ *
+ * The fade and the shrink stand in for the blur and the shade a turn used to carry: a blur is
+ * redrawn on every frame of the turn, so the graphics card cannot move it. The shrink is a factor
+ * and not a scale, because a caller that squashes the face has to compose the two.
  */
-function turnLook(theta: (t: number) => number, t: number): { filter: string; opacity: number } {
+function turnLook(theta: (t: number) => number, t: number): { opacity: number; shrink: number } {
   const edge = Math.abs(Math.sin((theta(t) * Math.PI) / 180));
   const degreesPerMs = Math.abs(theta(t + 4) - theta(t - 4)) / 8;
-  const speedBlur = clamp(degreesPerMs * TURN_BLUR_PER_DEGREE_PER_MS, 0, TURN_SPEED_BLUR_LIMIT);
-  const blur = clamp(TURN_EDGE_BLUR * edge + speedBlur, 0, TURN_BLUR_LIMIT);
+  const speedShrink = clamp(degreesPerMs * TURN_SPEED_SCALE, 0, TURN_EDGE_SCALE);
+  const shrink = clamp(TURN_EDGE_SCALE * edge + speedShrink, 0, TURN_EDGE_SCALE);
   return {
-    filter: `blur(${blur}px) brightness(${1 - TURN_EDGE_SHADE * edge})`,
     opacity: 1 - TURN_EDGE_FADE * edge ** 1.5,
+    shrink,
   };
 }
 

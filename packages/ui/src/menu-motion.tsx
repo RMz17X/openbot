@@ -1,3 +1,4 @@
+import { EASE_OUT } from "@openbot/ui/spring-motion";
 import type { JSX } from "@solidjs/web";
 import { onCleanup, onSettled } from "solid-js";
 import { prefersReducedMotion } from "./utils";
@@ -13,8 +14,10 @@ import { prefersReducedMotion } from "./utils";
 // from a label to a card.
 
 const SWAP_MS = 200;
-const SWAP_EASE = "cubic-bezier(0.32, 0.72, 0, 1)";
-const SWAP_BLUR = "blur(2px)";
+const SWAP_EASE = EASE_OUT;
+// A blur is redrawn on every frame of the movement, so it cannot be moved by the graphics card.
+// The items of a menu fade and shrink a little instead, which the card can do on its own.
+const SWAP_SHRINK = 0.98;
 // When the size of the panel changes by more than this factor, such as from a label to a card, the
 // panel clips much of the content while it moves. The old items then leave in the first part of the
 // move, and the new items come in when the panel is almost at its new size. The offsets are parts
@@ -344,12 +347,12 @@ function handOff(from: HeldSubmenu, panel: HTMLElement): void {
     positionerOf(panel)?.animate([{ height }, { height }], timing);
     for (const [index, item] of Array.from(panel.children).entries()) {
       const width = itemWidth(from, widths[index]);
-      const hidden = { opacity: 0, filter: SWAP_BLUR, ...width };
+      const hidden = { opacity: 0, transform: `scale(${SWAP_SHRINK})`, ...width };
       item.animate(
         [
           hidden,
           ...(large ? [{ ...hidden, offset: LARGE_RESIZE_IN_START }] : []),
-          { opacity: 1, filter: "blur(0px)", ...width },
+          { opacity: 1, transform: "none", ...width },
         ],
         timing,
       );
@@ -366,9 +369,14 @@ function handOff(from: HeldSubmenu, panel: HTMLElement): void {
       const width = itemWidth(from, oldWidths[index]);
       item.animate(
         [
-          { opacity: from.moving?.itemOpacity ?? 1, filter: "blur(0px)", ...width },
-          { opacity: 0, filter: SWAP_BLUR, ...width, ...(large ? { offset: LARGE_RESIZE_OUT_END } : {}) },
-          ...(large ? [{ opacity: 0, filter: SWAP_BLUR, ...width }] : []),
+          { opacity: from.moving?.itemOpacity ?? 1, transform: "none", ...width },
+          {
+            opacity: 0,
+            transform: `scale(${SWAP_SHRINK})`,
+            ...width,
+            ...(large ? { offset: LARGE_RESIZE_OUT_END } : {}),
+          },
+          ...(large ? [{ opacity: 0, transform: `scale(${SWAP_SHRINK})`, ...width }] : []),
         ],
         { ...timing, fill: "forwards" },
       );

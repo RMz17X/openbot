@@ -1,7 +1,7 @@
 import type { DynamicIslandNotchSize } from "@openbot/contracts/ipc";
 import type { JSX } from "@solidjs/web";
 import { createEffect, createSignal, createUniqueId, onCleanup, onSettled, Show, untrack } from "solid-js";
-import { computedBlur, computedScale, type Spring, springKeyframes } from "./spring-motion";
+import { computedScale, type Spring, springKeyframes } from "./spring-motion";
 import { useText } from "./text";
 import { cx, mix, prefersReducedMotion } from "./utils";
 
@@ -83,7 +83,6 @@ const CONTENT_EXIT_DURATION = 280;
 // while the top morphed. Finishing the fade before the shell's edge arrives, and keeping the
 // content shrinking toward the notch after it, makes the panel withdraw instead of being sliced.
 const CONTENT_EXIT_FADE_OFFSET = 0.45;
-const CONTENT_BLUR = 4;
 // `data-compact-resize` marks the compact content as moving. It stays on while one resize follows
 // another, so a slider drag does not flash the motion styles on and off, and it goes at this part of
 // the spring, where the surface slows down, so the content is sharp again as the surface settles.
@@ -1067,7 +1066,7 @@ function createSpringContentTransition(options: SpringContentTransitionOptions):
       const startScale = isNewContent && entering ? 0.965 : computedScale(style.transform);
       const expandedTargets = islandMotionTargets(content);
       const compactTargets = islandMotionTargets(options.root()?.querySelector(".dynamic-island-toggle") ?? undefined);
-      const currentBlurs = captureIslandBlurs([...expandedTargets, ...compactTargets]);
+      const currentOpacities = captureIslandOpacities([...expandedTargets, ...compactTargets]);
       knownContent = content;
       for (const active of animations) active.cancel();
       animations = [];
@@ -1078,7 +1077,7 @@ function createSpringContentTransition(options: SpringContentTransitionOptions):
       const current: Animation[] = [];
 
       if (reducedMotion) {
-        for (const target of [...expandedTargets, ...compactTargets]) target.style.removeProperty("filter");
+        for (const target of [...expandedTargets, ...compactTargets]) target.style.removeProperty("opacity");
         current.push(
           animate(
             [
@@ -1118,26 +1117,26 @@ function createSpringContentTransition(options: SpringContentTransitionOptions):
 
         if (entering) {
           current.push(
-            ...animateIslandBlur(expandedTargets, 0, {
+            ...animateIslandContent(expandedTargets, 1, {
               duration: CONTENT_BLUR_OPEN_DURATION,
               delay: isNewContent ? CONTENT_ENTER_DELAY : 0,
-              initialBlur: CONTENT_BLUR,
+              initialOpacity: 0,
             }),
-            ...animateIslandBlur(compactTargets, CONTENT_BLUR, {
+            ...animateIslandContent(compactTargets, 0, {
               duration: CONTENT_BLUR_OPEN_DURATION,
-              initialBlurs: currentBlurs,
+              initialOpacities: currentOpacities,
             }),
           );
         } else {
           current.push(
-            ...animateIslandBlur(expandedTargets, CONTENT_BLUR, {
+            ...animateIslandContent(expandedTargets, 0, {
               duration: CONTENT_BLUR_CLOSE_DURATION,
-              initialBlurs: currentBlurs,
+              initialOpacities: currentOpacities,
             }),
-            ...animateIslandBlur(compactTargets, 0, {
+            ...animateIslandContent(compactTargets, 1, {
               duration: COMPACT_RETURN_DURATION,
               delay: CONTENT_EXIT_LEAD,
-              initialBlurs: currentBlurs,
+              initialOpacities: currentOpacities,
             }),
           );
         }
@@ -1147,12 +1146,12 @@ function createSpringContentTransition(options: SpringContentTransitionOptions):
         .then(() => {
           if (animations !== current) return;
           for (const target of expandedTargets) {
-            if (entering) target.style.removeProperty("filter");
-            else target.style.filter = `blur(${CONTENT_BLUR}px)`;
+            if (entering) target.style.removeProperty("opacity");
+            else target.style.opacity = "0";
           }
           for (const target of compactTargets) {
-            if (entering && !reducedMotion) target.style.filter = `blur(${CONTENT_BLUR}px)`;
-            else target.style.removeProperty("filter");
+            if (entering && !reducedMotion) target.style.opacity = "0";
+            else target.style.removeProperty("opacity");
           }
           animations = [];
           for (const active of current) active.cancel();
@@ -1177,11 +1176,13 @@ function springContentEntranceKeyframes(startOpacity: number, startScale: number
   );
 }
 
-interface IslandBlurAnimationOptions {
+interface IslandContentAnimationOptions {
   duration: number;
   delay?: number;
-  initialBlur?: number;
-  initialBlurs?: ReadonlyMap<HTMLElement, number>;
+  /** The opacity the content starts at. */
+  initialOpacity?: number;
+  /** The opacity of each target, for a content that is already on screen. */
+  initialOpacities?: ReadonlyMap<HTMLElement, number>;
 }
 
 function islandMotionTargets(root: ParentNode | undefined): HTMLElement[] {
@@ -1189,17 +1190,23 @@ function islandMotionTargets(root: ParentNode | undefined): HTMLElement[] {
   return Array.from(root.querySelectorAll<HTMLElement>("[data-island-motion-content]"));
 }
 
-function animateIslandBlur(targets: HTMLElement[], endBlur: number, options: IslandBlurAnimationOptions): Animation[] {
+/**
+ * The content of the island fades and settles as the island changes. A blur would be redrawn on
+ * every frame of the change, so the graphics card cannot move it: the content fades instead.
+ */
+function animateIslandContent(
+  targets: HTMLElement[],
+  endOpacity: number,
+  options: IslandContentAnimationOptions,
+): Animation[] {
   const animations: Animation[] = [];
-  const smoothBlur = "ease-in-out";
   for (const target of targets) {
     const animate = target.animate?.bind(target);
     if (!animate) continue;
-    const resolvedStartBlur =
-      options.initialBlur ?? options.initialBlurs?.get(target) ?? computedBlur(getComputedStyle(target).filter);
+    const resolvedStartOpacity = options.initialOpacity ?? options.initialOpacities?.get(target) ?? 1;
     const keyframes: Keyframe[] = [
-      { filter: `blur(${resolvedStartBlur}px)`, offset: 0, easing: smoothBlur },
-      { filter: `blur(${endBlur}px)`, offset: 1 },
+      { opacity: resolvedStartOpacity, transform: "none", offset: 0, easing: "ease-in-out" },
+      { opacity: endOpacity, transform: "none", offset: 1 },
     ];
     animations.push(
       animate(keyframes, {
@@ -1213,6 +1220,11 @@ function animateIslandBlur(targets: HTMLElement[], endBlur: number, options: Isl
   return animations;
 }
 
-function captureIslandBlurs(targets: HTMLElement[]): Map<HTMLElement, number> {
-  return new Map(targets.map((target) => [target, computedBlur(getComputedStyle(target).filter)]));
+function captureIslandOpacities(targets: HTMLElement[]): Map<HTMLElement, number> {
+  return new Map(
+    targets.map((target) => {
+      const opacity = Number.parseFloat(getComputedStyle(target).opacity);
+      return [target, Number.isFinite(opacity) ? opacity : 1] as const;
+    }),
+  );
 }

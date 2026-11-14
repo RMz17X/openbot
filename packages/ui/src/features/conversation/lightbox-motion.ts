@@ -1,5 +1,7 @@
 /* The motion of the image viewer. The timings and curves follow the Kobra lightbox. */
 
+import { DURATION_MICRO, DURATION_SWAP, EASE_OUT } from "@openbot/ui/spring-motion";
+
 const SPRING_STOPS = 48;
 
 /** A `linear()` easing that samples a damped spring. `frequency` is the undamped rate in rad/s. */
@@ -31,7 +33,7 @@ export const ZOOM_OUT: KeyframeAnimationOptions = {
   easing: springEasing(ZOOM_OUT_DURATION, 1, 32.4),
   fill: "forwards",
 };
-export const IMAGE_FADE_IN: KeyframeAnimationOptions = { duration: 200, easing: "cubic-bezier(0.23, 1, 0.32, 1)" };
+export const IMAGE_FADE_IN: KeyframeAnimationOptions = { duration: DURATION_SWAP, easing: EASE_OUT };
 /* The image stays on the thumbnail after it lands, then fades out over it. */
 const IMAGE_FADE_OUT_DURATION = 260;
 export const IMAGE_FADE_OUT: KeyframeAnimationOptions = {
@@ -52,17 +54,16 @@ export const BACKDROP_IN: KeyframeAnimationOptions = {
   fill: "backwards",
 };
 export const BACKDROP_OUT: KeyframeAnimationOptions = {
-  duration: 200,
-  easing: "cubic-bezier(0.33, 1, 0.68, 1)",
+  duration: DURATION_MICRO,
+  easing: EASE_OUT,
   fill: "forwards",
 };
-export const SLIDE: KeyframeAnimationOptions = { duration: 260, easing: "cubic-bezier(0.22, 1, 0.36, 1)" };
+export const SLIDE: KeyframeAnimationOptions = { duration: DURATION_SWAP, easing: EASE_OUT };
 
 const RECEDE_FADE = { duration: 380, easing: "cubic-bezier(0.25, 0.46, 0.45, 0.94)" };
-const RECEDE_MOVE = { duration: 460, easing: "cubic-bezier(0.23, 1, 0.32, 1)" };
-const RETURN_FADE = { duration: 220, easing: "cubic-bezier(0.33, 1, 0.68, 1)" };
-const RETURN_MOVE = { duration: 300, easing: "cubic-bezier(0.23, 1, 0.32, 1)" };
-const RECEDE_BLUR = 6;
+const RECEDE_MOVE = { duration: 460, easing: EASE_OUT };
+const RETURN_FADE = { duration: 220, easing: EASE_OUT };
+const RETURN_MOVE = { duration: 300, easing: EASE_OUT };
 const RECEDE_SCALE = 0.9;
 const RECEDE_MAX_SHIFT = 60;
 const RECEDE_SHIFT_PER_PIXEL = 0.25;
@@ -91,10 +92,9 @@ function tileShift(from: DOMRect, tile: DOMRect): TileShift {
 
 function tileKeyframes(shift: TileShift) {
   return {
-    fade: [
-      { opacity: 1, filter: "blur(0px)" },
-      { opacity: 0, filter: `blur(${RECEDE_BLUR}px)` },
-    ],
+    // The fade carries no blur: a blur is redrawn on every frame of the move, and the move
+    // already shrinks the tile, which the graphics card can do on its own.
+    fade: [{ opacity: 1 }, { opacity: 0 }],
     move: [
       { scale: "1", translate: "0px 0px" },
       { scale: `${RECEDE_SCALE}`, translate: `${shift.x}px ${shift.y}px` },

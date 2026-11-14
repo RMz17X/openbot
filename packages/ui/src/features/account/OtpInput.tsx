@@ -1,5 +1,6 @@
 import { ONE_TIME_CODE_ALPHABET, ONE_TIME_CODE_LENGTH } from "@openbot/contracts/validation";
 import { Input } from "@openbot/ui";
+import { DURATION_SWAP, EASE_OUT } from "@openbot/ui/spring-motion";
 import { prefersReducedMotion } from "@openbot/ui/utils";
 import { createEffect, createMemo, createSignal, createUniqueId, For, flush, Show, untrack } from "solid-js";
 import { useText } from "../../text";
@@ -97,7 +98,7 @@ export function OtpInput(props: OtpInputProps) {
           { transform: "translateX(-1px)" },
           { transform: "translateX(0)" },
         ],
-        { duration: 200, easing: "cubic-bezier(0.23, 1, 0.32, 1)" },
+        { duration: DURATION_SWAP, easing: EASE_OUT },
       );
     },
   );

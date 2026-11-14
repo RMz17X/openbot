@@ -1,4 +1,5 @@
 import { PlushMascot } from "@openbot/ui";
+import { EASE_OUT } from "@openbot/ui/spring-motion";
 import { createEffect, createSignal, onSettled } from "solid-js";
 import { prefersReducedMotion } from "../utils";
 
@@ -71,7 +72,7 @@ export function GlobalSearchPlush(props: { input: () => HTMLInputElement | undef
           { rotate: "-10deg", translate: "0 -4px", offset: 0.7 },
           { rotate: "0deg", translate: "0 0" },
         ],
-        { duration: 900, delay: 760, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
+        { duration: 900, delay: 760, easing: EASE_OUT },
       ),
     ];
   }

@@ -219,8 +219,8 @@
   inset-inline-start: 0;
 }
 
-/* The trigger swap is mostly a blur. The box does not clip it: a clip cuts the blur and the old
- * text with a hard edge while the box eases to the new width. The name clips itself instead. */
+/* The trigger swap is mostly a crossfade. The box does not clip it: a clip cuts the old text with
+ * a hard edge while the box eases to the new width. The name clips itself instead. */
 .provider-model-trigger-value .ui-swap {
   overflow: visible;
 }

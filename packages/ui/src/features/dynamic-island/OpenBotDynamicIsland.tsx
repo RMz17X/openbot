@@ -38,6 +38,7 @@ import {
   OctagonX,
   Spinner,
 } from "@openbot/ui";
+import { EASE_IN, EASE_OUT } from "@openbot/ui/spring-motion";
 import { useText } from "@openbot/ui/text";
 import { prefersReducedMotion } from "@openbot/ui/utils";
 import type { UserErrorDetails } from "@openbot/user-errors";
@@ -122,7 +123,6 @@ const IDLE_GREETING_BACKS: Record<IdleGreetingEmoji, string | undefined> = {
 const IDLE_GREETING_INTERVAL = 8_000;
 const QUESTION_SWAP_EXIT_DURATION = 200;
 const QUESTION_SWAP_ENTER_DURATION = 320;
-const QUESTION_SWAP_BLUR = 6;
 const QUESTION_SWAP_MIDPOINT_OPACITY = 0.55;
 const OPENBOT_COMPACT_HOVER_MOTION = {
   leadingScale: 1.22,
@@ -131,7 +131,6 @@ const OPENBOT_COMPACT_HOVER_MOTION = {
   translateY: 4,
 } as const;
 const QUESTION_PROGRESS_DURATION = 300;
-const QUESTION_PROGRESS_BLUR = 2;
 const COMPACT_LEADING_SIZE = 20;
 const STATUS_COMPACT_BASE_WIDTH = { notch: 412, island: 280 } as const;
 const STATUS_COMPACT_NOTCH_WIDTH = 192;
@@ -1670,7 +1669,7 @@ function QuestionProgress(props: { current: number; total: number }): JSX.Elemen
         return;
       }
 
-      const visibleFrame: Keyframe = { opacity: 1, filter: "blur(0px)", transform: "translateY(0)" };
+      const visibleFrame: Keyframe = { opacity: 1, transform: "translateY(0)" };
       const hiddenOpacity = 0.35;
       animations = [
         animateOutgoing(
@@ -1678,13 +1677,12 @@ function QuestionProgress(props: { current: number; total: number }): JSX.Elemen
             visibleFrame,
             {
               opacity: hiddenOpacity,
-              filter: `blur(${QUESTION_PROGRESS_BLUR}px)`,
-              transform: `translateY(${direction * -70}%)`,
+              transform: `translateY(${direction * -70}%) scale(0.94)`,
             },
           ],
           {
             duration: QUESTION_PROGRESS_DURATION,
-            easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+            easing: EASE_OUT,
             fill: "both",
           },
         ),
@@ -1692,14 +1690,13 @@ function QuestionProgress(props: { current: number; total: number }): JSX.Elemen
           [
             {
               opacity: hiddenOpacity,
-              filter: `blur(${QUESTION_PROGRESS_BLUR}px)`,
-              transform: `translateY(${direction * 70}%)`,
+              transform: `translateY(${direction * 70}%) scale(0.94)`,
             },
             visibleFrame,
           ],
           {
             duration: QUESTION_PROGRESS_DURATION,
-            easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+            easing: EASE_OUT,
             fill: "both",
           },
         ),
@@ -1736,10 +1733,9 @@ function animateQuestionElements(elements: HTMLElement[], phase: QuestionSwapPha
   const entering = phase === "enter";
   const hiddenFrame: Keyframe = {
     opacity: QUESTION_SWAP_MIDPOINT_OPACITY,
-    filter: `blur(${QUESTION_SWAP_BLUR}px)`,
-    transform: "none",
+    transform: "scale(0.94)",
   };
-  const visibleFrame: Keyframe = { opacity: 1, filter: "blur(0px)", transform: "none" };
+  const visibleFrame: Keyframe = { opacity: 1, transform: "none" };
   const animations: Animation[] = [];
   for (const element of elements) {
     const animate = element.animate?.bind(element);
@@ -1750,7 +1746,7 @@ function animateQuestionElements(elements: HTMLElement[], phase: QuestionSwapPha
     animations.push(
       animate(entering ? [hiddenFrame, visibleFrame] : [visibleFrame, hiddenFrame], {
         duration: entering ? QUESTION_SWAP_ENTER_DURATION : QUESTION_SWAP_EXIT_DURATION,
-        easing: entering ? "cubic-bezier(0.22, 1, 0.36, 1)" : "cubic-bezier(0.4, 0, 0.6, 1)",
+        easing: entering ? EASE_OUT : EASE_IN,
         fill: "both",
       }),
     );
@@ -1761,8 +1757,7 @@ function animateQuestionElements(elements: HTMLElement[], phase: QuestionSwapPha
 function setQuestionHidden(elements: HTMLElement[]): void {
   for (const element of elements) {
     element.style.opacity = String(QUESTION_SWAP_MIDPOINT_OPACITY);
-    element.style.filter = `blur(${QUESTION_SWAP_BLUR}px)`;
-    element.style.transform = "none";
+    element.style.transform = "scale(0.94)";
   }
 }
 

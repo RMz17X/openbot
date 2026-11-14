@@ -1,5 +1,5 @@
 import type { DynamicIslandPresentation } from "@openbot/contracts/ipc";
-import { computedBlur, computedScale, springKeyframes } from "@openbot/ui/spring-motion";
+import { computedScale, EASE_OUT, springKeyframes } from "@openbot/ui/spring-motion";
 import { mix } from "@openbot/ui/utils";
 
 const MODE_SWAP_EXIT_DURATION = 160;
@@ -7,10 +7,10 @@ const MODE_SWAP_STATIC_DURATION = 240;
 const MODE_SWAP_EXPAND_DURATION = 420;
 const MODE_SWAP_CONTRACT_DURATION = 450;
 const MODE_SWAP_REDUCED_DURATION = 120;
-const MODE_SWAP_BLUR = 4;
 const MODE_SWAP_OUTGOING_SCALE = 0.985;
 const MODE_SWAP_INCOMING_SCALE = 0.965;
-const MODE_SWAP_EASING = "cubic-bezier(0.22, 1, 0.36, 1)";
+const MODE_SWAP_CONTENT_OUTGOING_SCALE = 0.97;
+const MODE_SWAP_EASING = EASE_OUT;
 const MODE_SWAP_SPRING_SAMPLE_COUNT = 24;
 /** A critically damped spring over the whole animation: keyframe offsets are its time. */
 const MODE_SWAP_SPRING = { response: 1, dampingFraction: 1 } as const;
@@ -20,7 +20,10 @@ export type IslandModeSwapSlot = "compact-leading" | "compact-trailing" | "expan
 export interface CapturedModeLayerState {
   opacity: number;
   scale: number;
-  contentBlurs: number[];
+  /** The opacity of each content element of the layer, so a swap continues from where it is. */
+  contentOpacities: number[];
+  /** The scale of each content element of the layer, for the same reason. */
+  contentScales: number[];
   anchor?: ModeSwapPoint | undefined;
 }
 
@@ -44,13 +47,21 @@ export function captureModeLayerStates(root: HTMLElement | undefined): Map<strin
       const mode = layer.dataset.islandMode;
       if (!mode) continue;
       const style = getComputedStyle(layer);
-      const contentBlurs = Array.from(layer.querySelectorAll<HTMLElement>("[data-island-motion-content]"), (content) =>
-        computedBlur(getComputedStyle(content).filter),
+      const contentStyles = Array.from(
+        layer.querySelectorAll<HTMLElement>("[data-island-motion-content]"),
+        (content) => {
+          const contentStyle = getComputedStyle(content);
+          return {
+            opacity: readOpacity(contentStyle.opacity),
+            scale: computedScale(contentStyle.transform),
+          };
+        },
       );
       captured.set(`${slotName}:${mode}`, {
         opacity: readOpacity(style.opacity),
         scale: computedScale(style.transform),
-        contentBlurs,
+        contentOpacities: contentStyles.map((content) => content.opacity),
+        contentScales: contentStyles.map((content) => content.scale),
         anchor: modeLayerAnchor(layer),
       });
     }
@@ -176,12 +187,17 @@ export function animateModeLayers(
       for (const [index, content] of Array.from(contentElements).entries()) {
         const animateContent = content.animate?.bind(content);
         if (!animateContent) continue;
-        const startBlur = previous?.contentBlurs[index] ?? (outgoing ? 0 : MODE_SWAP_BLUR);
-        const endBlur = outgoing ? MODE_SWAP_BLUR : 0;
+        // The content fades and settles with the layer. A blur would be redrawn on every frame of
+        // the swap, so the graphics card cannot move it.
+        const startOpacity = previous?.contentOpacities[index] ?? (outgoing ? 1 : 0);
+        const startScale = previous?.contentScales[index] ?? (outgoing ? 1 : MODE_SWAP_CONTENT_OUTGOING_SCALE);
         const contentAnimation = animateContent(
           outgoing
-            ? [{ filter: `blur(${startBlur}px)` }, { filter: `blur(${endBlur}px)` }]
-            : modeSwapBlurEntranceKeyframes(startBlur),
+            ? [
+                { opacity: startOpacity, transform: `scale(${startScale})` },
+                { opacity: 0, transform: `scale(${MODE_SWAP_CONTENT_OUTGOING_SCALE})` },
+              ]
+            : modeSwapContentEntranceKeyframes(startOpacity, startScale),
           { duration, easing: outgoing ? MODE_SWAP_EASING : "linear", fill: "both" },
         );
         synchronizeModeAnimation(contentAnimation, surfaceStartTime);
@@ -250,8 +266,11 @@ function modeSwapEntranceKeyframes(
   }));
 }
 
-function modeSwapBlurEntranceKeyframes(startBlur: number): Keyframe[] {
-  return modeSwapSpringKeyframes((progress) => ({ filter: `blur(${mix(startBlur, 0, progress)}px)` }));
+function modeSwapContentEntranceKeyframes(startOpacity: number, startScale: number): Keyframe[] {
+  return modeSwapSpringKeyframes((progress) => ({
+    opacity: mix(startOpacity, 1, progress),
+    transform: `scale(${mix(startScale, 1, progress)})`,
+  }));
 }
 
 function modeSwapSpringKeyframes(frame: (progress: number) => Keyframe): Keyframe[] {

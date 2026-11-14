@@ -51,6 +51,7 @@ import {
   Zap,
 } from "@openbot/ui";
 import { ContentExitMotion } from "@openbot/ui/menu-motion";
+import { DURATION_MICRO, DURATION_SWAP, EASE_IN, EASE_OUT } from "@openbot/ui/spring-motion";
 import { cx } from "@openbot/ui/utils";
 import type { JSX } from "@solidjs/web";
 import { createEffect, createMemo, createSignal, For, onSettled, Show, untrack } from "solid-js";
@@ -189,15 +190,15 @@ export const REASONING_LABEL = {
 } as const satisfies Record<AgentReasoningEffort, AppTextKey>;
 
 /**
- * The trigger text changes mostly by a blur: a short slide, so the old and new text cross in place,
- * and a gentle curve, so the new text stays soft long enough to see.
+ * The trigger text changes mostly in place: a short slide, so the old and new text cross, and a
+ * gentle curve, so the new text stays soft long enough to see.
  */
 const TRIGGER_SWAP: SwapMotion = {
   distance: 6,
-  blur: 6,
-  enter: { duration: 320, easing: "cubic-bezier(0.33, 1, 0.68, 1)" },
+  shrink: 0.92,
+  enter: { duration: DURATION_SWAP, easing: EASE_OUT },
   // The old text fades early: the box already eases to the new width and does not clip it.
-  leave: { duration: 180, easing: "ease" },
+  leave: { duration: DURATION_MICRO, easing: EASE_IN },
 };
 
 export function ProviderModelPicker(props: ProviderModelPickerProps) {

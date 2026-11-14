@@ -23,6 +23,7 @@ import {
   TriangleAlert,
   X,
 } from "@openbot/ui";
+import { DURATION_MICRO, DURATION_SWAP, EASE_OUT } from "@openbot/ui/spring-motion";
 import { useText } from "@openbot/ui/text";
 import { prefersReducedMotion } from "@openbot/ui/utils";
 import type { JSX } from "@solidjs/web";
@@ -276,8 +277,8 @@ export function SubagentGroup(props: SubagentGroupProps) {
 }
 
 /** The morph between the card header in the chat and the bar under the chat header. */
-const DOCK_IN: KeyframeAnimationOptions = { duration: 340, easing: "cubic-bezier(0.2, 0.8, 0.2, 1)" };
-const DOCK_OUT: KeyframeAnimationOptions = { ...DOCK_IN, duration: 260 };
+const DOCK_IN: KeyframeAnimationOptions = { duration: DURATION_SWAP, easing: EASE_OUT };
+const DOCK_OUT: KeyframeAnimationOptions = { ...DOCK_IN, duration: DURATION_MICRO };
 
 /** The offset from `to` to `from`, for a FLIP transform. */
 function offset(from: DOMRect, to: DOMRect): string {

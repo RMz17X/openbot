@@ -1,3 +1,4 @@
+import { EASE_OUT } from "@openbot/ui/spring-motion";
 import { prefersReducedMotion } from "@openbot/ui/utils";
 import { onCleanup, onSettled } from "solid-js";
 
@@ -71,8 +72,5 @@ function resizeDuration(): number {
 }
 
 function resizeEasing(): string {
-  return (
-    getComputedStyle(document.documentElement).getPropertyValue("--openbot-ease-out").trim() ||
-    "cubic-bezier(0.23, 1, 0.32, 1)"
-  );
+  return getComputedStyle(document.documentElement).getPropertyValue("--openbot-ease-out").trim() || EASE_OUT;
 }

@@ -248,8 +248,8 @@ export function BrowserDock(props: BrowserDockProps) {
     parts.forEach((part, index) => {
       part.animate(
         [
-          { opacity: 0, filter: "blur(2px)" },
-          { opacity: 1, filter: "blur(0)" },
+          { opacity: 0, transform: "scale(0.97)" },
+          { opacity: 1, transform: "none" },
         ],
         { duration: REVEAL_MS, delay: index * stagger, easing: EASE_OUT, fill: "backwards" },
       );
@@ -273,8 +273,8 @@ export function BrowserDock(props: BrowserDockProps) {
     const fades = boxParts().map((part) =>
       part.animate(
         [
-          { opacity: 1, filter: "blur(0)" },
-          { opacity: 0, filter: "blur(2px)" },
+          { opacity: 1, transform: "none" },
+          { opacity: 0, transform: "scale(0.97)" },
         ],
         { duration: HIDE_FADE_MS, easing: EASE_OUT, fill: "forwards" },
       ),
@@ -316,7 +316,7 @@ export function BrowserDock(props: BrowserDockProps) {
     await Promise.all(
       tabParts().map((part) =>
         part
-          .animate([{ opacity: 1 }, { opacity: 0, filter: "blur(2px)" }], {
+          .animate([{ opacity: 1 }, { opacity: 0, transform: "scale(0.97)" }], {
             duration: TAB_FADE_MS,
             easing: EASE_OUT,
             fill: "forwards",
@@ -378,8 +378,8 @@ export function BrowserDock(props: BrowserDockProps) {
     const label = current.querySelector(".browser-dock-tab-label");
     label?.animate(
       [
-        { opacity: 0, filter: "blur(2px)" },
-        { opacity: 1, filter: "blur(0)" },
+        { opacity: 0, transform: "scale(0.97)" },
+        { opacity: 1, transform: "none" },
       ],
       { duration: REVEAL_MS, easing: EASE_OUT },
     );
