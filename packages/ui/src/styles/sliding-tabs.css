@@ -1,6 +1,6 @@
 .ui-sliding-tabs {
-  --sliding-tabs-duration: 250ms;
-  --sliding-tabs-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --sliding-tabs-duration: var(--openbot-duration-panel);
+  --sliding-tabs-ease: var(--openbot-ease-spring);
   position: relative;
   width: fit-content;
   display: inline-flex;

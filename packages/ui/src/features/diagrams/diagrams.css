@@ -100,7 +100,7 @@
   min-height: 0;
   flex: 1;
   transition: padding-inline-end var(--panel-resize-duration, var(--openbot-duration-overlay))
-    cubic-bezier(0.22, 1, 0.36, 1);
+    var(--openbot-ease-spring);
 }
 
 .diagram-view-body[data-inspector="open"] {

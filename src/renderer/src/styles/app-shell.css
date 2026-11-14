@@ -2522,7 +2522,7 @@ textarea {
 }
 
 .agent-row-agent-status-entering {
-  animation: sidebar-reply-in var(--openbot-duration-overlay) cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: sidebar-reply-in var(--openbot-duration-overlay) var(--openbot-ease-spring) both;
 }
 
 @keyframes typing-dot-pulse {

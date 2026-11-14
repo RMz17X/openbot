@@ -159,11 +159,11 @@
   }
 
   .agent-row-unread-count.agent-row-unread-count-roll-in {
-    animation: sidebar-felt-roll-in 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: sidebar-felt-roll-in var(--openbot-duration-panel) var(--openbot-ease-spring) both;
   }
 
   .agent-row-unread-count.agent-row-unread-count-roll-in-b {
-    animation: sidebar-felt-roll-in-b 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: sidebar-felt-roll-in-b var(--openbot-duration-panel) var(--openbot-ease-spring) both;
   }
 
   .agent-row-unread-count.agent-row-unread-count-roll-out {

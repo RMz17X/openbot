@@ -15,7 +15,7 @@
   --dynamic-island-external-compact-radius: 16px;
   --dynamic-island-external-expanded-radius: 24px;
   --dynamic-island-shared-duration: 450ms;
-  --dynamic-island-shared-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --dynamic-island-shared-ease: var(--openbot-ease-spring);
   position: relative;
   display: flex;
   width: min(var(--dynamic-island-expanded-width), calc(100vw - var(--openbot-space-6)));

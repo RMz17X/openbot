@@ -2,7 +2,7 @@
   --stagger-dur: 500ms;
   --stagger-distance: 12px;
   --stagger-stagger: 40ms;
-  --stagger-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --stagger-ease: var(--openbot-ease-spring);
 }
 
 /* Lines start translated down and invisible; .is-shown on the

@@ -130,13 +130,13 @@
 }
 
 :root {
-  --page-slide-dur: 250ms;
-  --page-fade-dur: 250ms;
+  --page-slide-dur: var(--openbot-duration-panel);
+  --page-fade-dur: var(--openbot-duration-panel);
   --page-slide-distance: 8px;
   --page-stagger: 0ms;
   --page-exit-enabled: 1;
-  --page-slide-ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --page-fade-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --page-slide-ease: var(--openbot-ease-spring);
+  --page-fade-ease: var(--openbot-ease-spring);
 }
 
 .t-page-slide {
@@ -195,8 +195,8 @@
 }
 
 :root {
-  --resize-dur: 300ms;
-  --resize-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --resize-dur: var(--openbot-duration-panel);
+  --resize-ease: var(--openbot-ease-spring);
 }
 
 .t-resize {
