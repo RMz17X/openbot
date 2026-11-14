@@ -80,3 +80,6 @@ keys
 # credential that was pasted in for one run, and they must never reach the repository.
 /.probe/
 /.artifacts/
+
+# Runtime lock file written by the daemon
+native-runtime.lock.json
