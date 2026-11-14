@@ -1,30 +1,26 @@
-export const STEALTH_CHROME_MAJOR = "133";
-export const STEALTH_CHROME_VERSION = "133.0.0.0";
-export const STEALTH_CHROME_FULL = "133.0.6943.98";
-
 /**
  * The browser keeps the installed Chromium major version and host platform. Chrome sends only the
- * major version in this string (`Chrome/133.0.0.0`); Electron sends the full version, which no
+ * major version in this string (`Chrome/156.0.0.0`); Electron sends the full version, which no
  * Chrome does, and some bot checks refuse it. The full version stays in `navigator.userAgentData`.
  */
 export function sessionBrowserUserAgent(userAgent: string): string {
-  const cleaned = userAgent
-    .replace(/\s(?:Electron|OpenBot)\/[^\s]+/gu, "")
-    .replace(/(\sChrome\/)\d+\.[\d.]+/u, `$1${STEALTH_CHROME_VERSION}`);
-  return cleaned.replace(/\(([^)]+)\)/u, "(Windows NT 10.0; Win64; x64)");
+  return userAgent.replace(/\s(?:Electron|OpenBot)\/[^\s]+/gu, "").replace(/(\sChrome\/\d+)\.[\d.]+/u, "$1.0.0.0");
 }
 
 /**
- * The request User-Agent must always match clean desktop Chrome identity without any
- * Electron or framework tokens, including on Google accounts authentication endpoints.
+ * Google currently rejects its account identifier step without the Electron token.
+ * Keep this exception on Google account requests; other sites use the session identity.
  */
 export function browserRequestUserAgent(url: string, userAgent: string, electronVersion: string): string {
-  void url;
-  void electronVersion;
-  return sessionBrowserUserAgent(userAgent);
+  const cleanAgent = sessionBrowserUserAgent(userAgent);
+  // Chromium requests some URLs that Node cannot parse, such as a host with an escaped space (#3775).
+  const hostname = URL.parse(url)?.hostname.replace(/\.+$/u, "");
+  if (hostname !== "accounts.google.com") return cleanAgent;
+  return cleanAgent.replace(/(Chrome\/[^\s]+)/u, `$1 Electron/${electronVersion}`);
 }
 
-// GREASE constants removed for static stealth brand definition.
+const GREASE_CHARACTERS = [" ", "(", ":", "-", ".", "/", ")", ";", "=", "?", "_"] as const;
+const GREASE_VERSIONS = ["8", "99", "24"] as const;
 
 /**
  * The brands of `navigator.userAgentData`, in Chromium's order: a GREASE brand and Chromium,
@@ -33,23 +29,22 @@ export function browserRequestUserAgent(url: string, userAgent: string, electron
  * different brands than the page reads, even when a person solves the challenge.
  */
 function browserBrandHeader(chromeVersion: string, full: boolean): string {
-  void chromeVersion;
-  const major = STEALTH_CHROME_MAJOR;
-  const version = full ? STEALTH_CHROME_FULL : major;
-  const greaseVersion = full ? "99.0.0.0" : "99";
-  const grease = `"Not(A:Brand";v="${greaseVersion}"`;
-  const googleChrome = `"Google Chrome";v="${version}"`;
-  const chromium = `"Chromium";v="${version}"`;
-  return `${grease}, ${googleChrome}, ${chromium}`;
+  const majorVersion = Number.parseInt(chromeVersion, 10);
+  const greaseVersion = GREASE_VERSIONS[majorVersion % GREASE_VERSIONS.length];
+  const grease = `"Not${GREASE_CHARACTERS[majorVersion % GREASE_CHARACTERS.length]}A${
+    GREASE_CHARACTERS[(majorVersion + 1) % GREASE_CHARACTERS.length]
+  }Brand";v="${full ? `${greaseVersion}.0.0.0` : greaseVersion}"`;
+  const chromium = `"Chromium";v="${full ? chromeVersion : majorVersion}"`;
+  return majorVersion % 2 === 0 ? `${grease}, ${chromium}` : `${chromium}, ${grease}`;
 }
 
 /** Electron has native navigator.userAgentData, but does not send client-hint headers. */
 export function browserClientHints(chromeVersion: string, platform: NodeJS.Platform): Record<string, string> {
-  void platform;
+  const platformName = platform === "darwin" ? "macOS" : platform === "win32" ? "Windows" : "Linux";
   return {
     "Sec-CH-UA": browserBrandHeader(chromeVersion, false),
     "Sec-CH-UA-Mobile": "?0",
-    "Sec-CH-UA-Platform": '"Windows"',
+    "Sec-CH-UA-Platform": `"${platformName}"`,
   };
 }
 
@@ -71,14 +66,20 @@ export function browserHighEntropyClientHints(system: BrowserHintSystem): Record
     "Sec-CH-UA-Full-Version-List": browserBrandHeader(system.chromeVersion, true),
     "Sec-CH-UA-Full-Version": `"${system.chromeVersion}"`,
     "Sec-CH-UA-Model": '""',
-    "Sec-CH-UA-Platform": '"Windows"',
-    "Sec-CH-UA-Platform-Version": '"15.0.0"',
     "Sec-CH-UA-WoW64": "?0",
     "Sec-CH-UA-Form-Factors": '"Desktop"',
-    "Sec-CH-UA-Arch": '"x86"',
-    "Sec-CH-UA-Bitness": '"64"',
   };
-  void system;
+  const arch = system.arch === "arm64" ? "arm" : system.arch === "x64" ? "x86" : undefined;
+  if (arch) {
+    hints["Sec-CH-UA-Arch"] = `"${arch}"`;
+    hints["Sec-CH-UA-Bitness"] = '"64"';
+  }
+  // Chromium prints three numbers of the OS version on macOS. On Linux the page reads an empty text.
+  const numbers = /^(\d+)(?:\.(\d+))?(?:\.(\d+))?/u.exec(system.systemVersion);
+  if (system.platform === "linux") hints["Sec-CH-UA-Platform-Version"] = '""';
+  else if (numbers && system.platform === "darwin") {
+    hints["Sec-CH-UA-Platform-Version"] = `"${numbers[1]}.${numbers[2] ?? 0}.${numbers[3] ?? 0}"`;
+  }
   return hints;
 }
 

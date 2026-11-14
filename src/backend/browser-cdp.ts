@@ -2820,7 +2820,6 @@ export class BrowserCdpEngine {
   ): Effect.fn.Return<BrowserJsonValue, BrowserOperationError> {
     return yield* this.#leaseEffect((send) =>
       Effect.gen({ self: this }, function* () {
-        yield* send("Runtime.enable");
         const result = yield* send("Runtime.evaluate", {
           expression,
           awaitPromise,
