@@ -148,11 +148,18 @@ export class ReportQueue {
       const age = now - Date.parse(report.timestamp);
       return age >= 0 && age < REPORT_TTL;
     });
+    while (retained.length > REPORT_LIMIT) {
+      let oldest = 0;
+      for (let index = 1; index < retained.length; index++) {
+        if ((retained[index]?.timestamp ?? "") < (retained[oldest]?.timestamp ?? "")) oldest = index;
+      }
+      retained.splice(oldest, 1);
+    }
+    const encoder = new TextEncoder();
     while (
-      retained.length > REPORT_LIMIT ||
-      (retained.length &&
-        new TextEncoder().encode(JSON.stringify({ version: 1, profileId: this.#profileId, reports: retained }))
-          .byteLength > REPORT_BYTES)
+      retained.length > 0 &&
+      encoder.encode(JSON.stringify({ version: 1, profileId: this.#profileId, reports: retained })).byteLength >
+        REPORT_BYTES
     ) {
       let oldest = 0;
       for (let index = 1; index < retained.length; index++) {

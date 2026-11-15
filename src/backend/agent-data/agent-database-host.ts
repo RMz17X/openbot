@@ -146,6 +146,7 @@ function openDatabase(request: AgentDatabaseStatement): DatabaseSync {
   });
   try {
     // Before the authorizer, which denies SQLITE_PRAGMA outright.
+    database.exec("PRAGMA synchronous = NORMAL");
     database.exec("PRAGMA trusted_schema = OFF");
     database.exec(`PRAGMA max_page_count = ${request.limits.maxPageCount}`);
     if (typeof database.setAuthorizer !== "function") {

@@ -96,7 +96,7 @@ export class WhatsAppAuthStore {
       db.exec("PRAGMA busy_timeout = 0");
       db.exec("PRAGMA locking_mode = EXCLUSIVE");
       db.exec("PRAGMA journal_mode = WAL");
-      db.exec("PRAGMA synchronous = FULL");
+      db.exec("PRAGMA synchronous = NORMAL");
       // The first write takes the exclusive lock and keeps it until close.
       db.exec("BEGIN IMMEDIATE");
       db.exec("COMMIT");
