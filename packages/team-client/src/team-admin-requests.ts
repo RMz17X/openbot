@@ -129,6 +129,7 @@ import {
   type BrowserProfileSummary,
   type BrowserProxyList,
   type BrowserProxySummary,
+  type BrowserProxyTestResult,
   type CancelMcpSignInInput,
   type ClearBrowserDataInput,
   type ClearStorageInput,
@@ -146,6 +147,7 @@ import {
   decodeBrowserProfileSummary,
   decodeBrowserProxyList,
   decodeBrowserProxySummary,
+  decodeBrowserProxyTestResult,
   decodeChannelStorageUsage,
   decodeCustomAgentResult,
   decodeCustomAgentSummaries,
@@ -273,6 +275,7 @@ import {
   type SignInRelayStatus,
   type SignOutMcpServerInput,
   type SubmitProviderCodeLoginInput,
+  type TestBrowserProxyInput,
   type TestMcpServerInput,
   type UninstallSkillInput,
   type UpdateAgentAdminSettingsInput,
@@ -2159,6 +2162,14 @@ export function setHostBrowserProfileProxy(
   input: SetBrowserProfileProxyInput,
 ): Effect.Effect<void, TeamAdminRequestError> {
   return adminCall(() => request("POST", BROWSER_PROXIES_ROUTES.profile, ignoreResponse, { ...input }));
+}
+
+/** Tests a proxy for reachability, latency, egress IP, ISP and country info. */
+export function testHostBrowserProxy(
+  request: TeamApiRequest,
+  input: TestBrowserProxyInput,
+): Effect.Effect<BrowserProxyTestResult, TeamAdminRequestError> {
+  return adminCall(() => request("POST", BROWSER_PROXIES_ROUTES.test, decodeBrowserProxyTestResult, { ...input }));
 }
 
 /** The host's Slack workspaces, Discord servers or Telegram chats (`connectors-v1`). */

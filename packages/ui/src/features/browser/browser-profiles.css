@@ -159,3 +159,29 @@
   margin-inline-start: auto;
   color: var(--openbot-text-muted);
 }
+
+.browser-proxy-probe-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--openbot-space-2);
+  margin-top: var(--openbot-space-1);
+  font-size: var(--openbot-text-xs);
+}
+
+.browser-proxy-probe-location {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--openbot-space-1);
+  font-weight: 500;
+  color: var(--openbot-text-primary);
+}
+
+.browser-proxy-probe-isp {
+  color: var(--openbot-text-muted);
+}
+
+.browser-proxy-probe-ip {
+  font-family: var(--openbot-font-mono, monospace);
+  color: var(--openbot-text-muted);
+}

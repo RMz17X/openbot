@@ -5,6 +5,7 @@ import {
   decodeBrowserProfileSummary,
   decodeBrowserProxyList,
   decodeBrowserProxySummary,
+  decodeBrowserProxyTestResult,
   decodeHostBrowserTabProfiles,
   type TeamRealtimeEvent,
 } from "@openbot/contracts/ipc";
@@ -49,6 +50,7 @@ export function webBrowserProfileCalls(
           profileIds: [...input.profileIds],
         }),
       setProfileProxy: (input) => post(BROWSER_PROXIES_ROUTES.profile, ignoreResponse, { ...input }),
+      test: (input) => post(BROWSER_PROXIES_ROUTES.test, decodeBrowserProxyTestResult, { ...input }),
     },
     ...(onHostEvent
       ? {

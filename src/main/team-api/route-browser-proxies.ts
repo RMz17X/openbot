@@ -2,6 +2,7 @@ import {
   parseDeleteBrowserProxyInput,
   parseSaveBrowserProxyInput,
   parseSetBrowserProfileProxyInput,
+  parseTestBrowserProxyInput,
 } from "@openbot/contracts/ipc";
 import {
   BROWSER_PROXIES_CAPABILITY,
@@ -45,6 +46,8 @@ export async function routeBrowserProxies(
       case BROWSER_PROXIES_ROUTES.delete:
         await runCauseEffect(profiles.deleteProxy(parse(() => parseDeleteBrowserProxyInput(body))));
         return json(200, {});
+      case BROWSER_PROXIES_ROUTES.test:
+        return json(200, await runCauseEffect(profiles.testProxy(parse(() => parseTestBrowserProxyInput(body)))));
       default:
         await runCauseEffect(profiles.setProfileProxy(parse(() => parseSetBrowserProfileProxyInput(body))));
         return json(200, {});

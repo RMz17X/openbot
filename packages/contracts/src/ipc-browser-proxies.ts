@@ -388,3 +388,52 @@ export function decodeBrowserComputerSharing(value: unknown): BrowserComputerSha
 export function decodeOptionalBrowserComputerSharing(value: unknown): BrowserComputerSharing | null {
   return value === null ? null : decodeBrowserComputerSharing(value);
 }
+
+/** Result of probing a proxy for reachability, latency, egress IP, and ISP/GeoIP info. */
+export interface BrowserProxyTestResult {
+  ok: boolean;
+  latencyMs?: number;
+  ip?: string;
+  country?: string;
+  countryCode?: string;
+  regionName?: string;
+  city?: string;
+  isp?: string;
+  org?: string;
+  as?: string;
+  error?: string;
+}
+
+export interface TestBrowserProxyInput {
+  proxyId?: string;
+  address?: string;
+}
+
+export function parseTestBrowserProxyInput(value: unknown): TestBrowserProxyInput {
+  if (!isDynamicRecord(value)) throw new Error("Invalid browser proxy test input.");
+  const input: TestBrowserProxyInput = {};
+  if (value.proxyId !== undefined) input.proxyId = parseBrowserProxyId(value.proxyId);
+  if (value.address !== undefined) {
+    if (!isString(value.address) || value.address.length > BROWSER_PROXY_ADDRESS_MAX)
+      throw new Error("Invalid browser proxy address.");
+    input.address = value.address;
+  }
+  return input;
+}
+
+export function decodeBrowserProxyTestResult(value: unknown): BrowserProxyTestResult {
+  if (!isDynamicRecord(value) || typeof value.ok !== "boolean") throw new Error("Invalid browser proxy test result.");
+  return {
+    ok: value.ok,
+    latencyMs: typeof value.latencyMs === "number" ? value.latencyMs : undefined,
+    ip: isString(value.ip) ? value.ip : undefined,
+    country: isString(value.country) ? value.country : undefined,
+    countryCode: isString(value.countryCode) ? value.countryCode : undefined,
+    regionName: isString(value.regionName) ? value.regionName : undefined,
+    city: isString(value.city) ? value.city : undefined,
+    isp: isString(value.isp) ? value.isp : undefined,
+    org: isString(value.org) ? value.org : undefined,
+    as: isString(value.as) ? value.as : undefined,
+    error: isString(value.error) ? value.error : undefined,
+  };
+}

@@ -232,4 +232,9 @@ export const messages = defineMessages("browser", {
   },
   "browser.proxies.changeTitle": "Change the proxy of {name}?",
   "browser.proxies.change": "Change proxy",
+  "browser.proxies.test": "Test",
+  "browser.proxies.testing": "Testing…",
+  "browser.proxies.testSuccess": "Connection working",
+  "browser.proxies.testFailed": "Connection failed",
+  "browser.proxies.latency": "{ms} ms",
 });

@@ -254,9 +254,11 @@ import type {
   BrowserComputerSharing,
   BrowserProxyList,
   BrowserProxySummary,
+  BrowserProxyTestResult,
   DeleteBrowserProxyInput,
   SaveBrowserProxyInput,
   SetBrowserProfileProxyInput,
+  TestBrowserProxyInput,
 } from "./ipc-browser-proxies";
 import type { LocalBrowserSecretResponse } from "./ipc-browser-secret";
 import type {
@@ -2155,6 +2157,7 @@ export const IPC_ENDPOINTS = {
     saveBrowserProxy: scopedRequest<SaveBrowserProxyInput, BrowserProxySummary>()("agent:admin:save-browser-proxy"),
     deleteBrowserProxy: scopedRequest<DeleteBrowserProxyInput, void>()("agent:admin:delete-browser-proxy"),
     setBrowserProfileProxy: scopedRequest<SetBrowserProfileProxyInput, void>()("agent:admin:set-browser-profile-proxy"),
+    testBrowserProxy: scopedRequest<TestBrowserProxyInput, BrowserProxyTestResult>()("agent:admin:test-browser-proxy"),
     // Whether this app shares its connection with a joined server (`browser-egress-v1`). Null for
     // this computer's own server and for a host without the capability. Turning it on also adds this
     // member's computer to the proxies of the host.

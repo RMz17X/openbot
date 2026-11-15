@@ -55,6 +55,7 @@ export function ServerBrowserProfilesPanel(
       onDelete: props.store.removeProxy,
       onSetProfileProxy: props.store.setProfileProxy,
       onSetSharing: props.store.setSharing,
+      onTest: props.store.testProxy,
     };
   };
   return (

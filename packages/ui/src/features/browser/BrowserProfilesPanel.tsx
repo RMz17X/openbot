@@ -503,6 +503,7 @@ export function BrowserProfilesPanel(props: BrowserProfilesPanelProps) {
                   proxies={proxies().list}
                   closesTabs={openTabs(editedProfiles())}
                   onSave={(address, keepPassword) => saveProxy(proxies(), address, keepPassword)}
+                  onTest={proxies().onTest}
                   onCancel={() =>
                     setDraft((state) => {
                       state.editingProxy = null;

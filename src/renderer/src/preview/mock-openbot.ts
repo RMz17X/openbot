@@ -2489,6 +2489,16 @@ export function createMockOpenBot(options: MockOpenBotOptions = {}): MockOpenBot
         }));
         emitAgentEvent({ type: "browser-profiles-changed" });
       },
+      testBrowserProxy: async () => ({
+        ok: true,
+        latencyMs: 42,
+        ip: "100.110.217.6",
+        country: "Indonesia",
+        countryCode: "ID",
+        regionName: "West Java",
+        city: "Sumedang",
+        isp: "PT Telkom Indonesia",
+      }),
       listBrowserTabProfiles: async () => [],
       updateAgentAdminSettings: async ({ agentId, access, autoApprove }) => {
         const agent = agents.find((candidate) => candidate.id === agentId);

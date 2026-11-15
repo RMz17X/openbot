@@ -487,6 +487,14 @@ function storyBrowserProfiles(
           draft.computers = draft.computers?.filter((computer) => computer.id !== proxyId);
         }),
       setProfileProxy: async (profileId, proxyId) => setState((draft) => assignStoryProxy(draft, profileId, proxyId)),
+      testProxy: async () => ({
+        ok: true,
+        latencyMs: 42,
+        ip: "100.110.217.6",
+        country: "Indonesia",
+        countryCode: "ID",
+        isp: "PT Telkom Indonesia",
+      }),
       setSharing: async (sharing, assignTo) =>
         setState((draft) => {
           draft.sharing = sharing;

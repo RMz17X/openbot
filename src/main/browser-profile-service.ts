@@ -14,6 +14,7 @@ import {
   type BrowserProxyComputer,
   type BrowserProxyList,
   type BrowserProxySummary,
+  type BrowserProxyTestResult,
   type BrowserTabProfile,
   browserProxyAddressText,
   type ClearBrowserDataInput,
@@ -22,6 +23,7 @@ import {
   parseBrowserProxyAddress,
   type SaveBrowserProxyInput,
   type SetBrowserProfileProxyInput,
+  type TestBrowserProxyInput,
   type UpdateAgentBrowserProfileInput,
   type UpdateBrowserProfileInput,
 } from "@openbot/contracts/ipc";
@@ -29,6 +31,7 @@ import { sourceText } from "@openbot/i18n/source";
 import type { AgentService } from "../backend/agent-service";
 import type { BrowserHost } from "../backend/browser-host";
 import type { BrowserProfileRecord, BrowserProfileStore } from "../backend/browser-profiles/browser-profile-store";
+import { type ProxyConnectionInfo, probeBrowserProxy } from "../backend/browser-profiles/browser-proxy-probe";
 import type {
   BrowserProxyAddressRecord,
   BrowserProxyComputerRecord,
@@ -57,7 +60,7 @@ export interface BrowserProfileServiceDependencies {
     | "ensureComputer"
   >;
   /** Encrypts a proxy password. The password is never logged and never sent back. */
-  cipher: Pick<SecretStorageCipher, "canPersist" | "encrypt">;
+  cipher: Pick<SecretStorageCipher, "canPersist" | "encrypt"> & { decrypt?: (encrypted: Buffer) => string };
   agents: Pick<AgentService, "listAgents" | "updateAgent">;
   browser: Pick<
     BrowserHost,
@@ -100,6 +103,8 @@ export interface BrowserProfileService {
   deleteProxy(input: DeleteBrowserProxyInput): Effect.Effect<void, BrowserProfileFailure>;
   /** Sets the proxy of one profile, or none, and closes its tabs when it changes. */
   setProfileProxy(input: SetBrowserProfileProxyInput): Effect.Effect<void, BrowserProfileFailure>;
+  /** Probes proxy connectivity, latency, egress IP, country, and ISP. */
+  testProxy(input: TestBrowserProxyInput): Effect.Effect<BrowserProxyTestResult, BrowserProfileFailure>;
 }
 
 /**
@@ -336,6 +341,44 @@ export function createBrowserProfileService({
     if (changed) yield* closeProfileTabs([profileId]);
   });
 
+  const testProxy = Effect.fn("BrowserProfiles.testProxy")(function* (input: TestBrowserProxyInput) {
+    const info = yield* check((): ProxyConnectionInfo => {
+      if (input.proxyId !== undefined) {
+        const proxy = requireProxy(input.proxyId);
+        if (proxy.kind === "computer") {
+          throw new BrowserProfileRejectedError(sourceText("error.backend.browserProxyNotFound"));
+        }
+        const password = proxies.password(proxy.id);
+        const decryptedPassword = password === null || !cipher.decrypt ? null : cipher.decrypt(Buffer.from(password));
+        return {
+          scheme: proxy.scheme,
+          host: proxy.host,
+          port: proxy.port,
+          username: proxy.username,
+          password: decryptedPassword,
+        };
+      }
+      if (input.address !== undefined) {
+        const parsed = parseBrowserProxyAddress(input.address);
+        if (parsed === null) {
+          throw new BrowserProfileRejectedError(sourceText("error.backend.browserProxyAddressInvalid"));
+        }
+        return {
+          scheme: parsed.scheme,
+          host: parsed.host,
+          port: parsed.port,
+          username: parsed.username,
+          password: parsed.password,
+        };
+      }
+      throw new BrowserProfileRejectedError(sourceText("error.backend.browserProxyAddressInvalid"));
+    });
+    return yield* Effect.tryPromise({
+      try: () => probeBrowserProxy(info),
+      catch: (cause) => new BrowserProfileFailure({ cause }),
+    });
+  });
+
   const create = Effect.fn("BrowserProfiles.create")(function* (name: string) {
     return yield* check(() => {
       const profiles = store.list();
@@ -437,6 +480,7 @@ export function createBrowserProfileService({
     saveProxy: (input) => serialized(saveProxy(input)),
     deleteProxy: (input) => serialized(deleteProxy(input)),
     setProfileProxy: (input) => serialized(setProfileProxy(input)),
+    testProxy: (input) => testProxy(input),
   };
 }
 

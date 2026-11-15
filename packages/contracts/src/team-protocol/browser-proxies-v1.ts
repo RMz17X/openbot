@@ -27,6 +27,7 @@ import {
   type AdminDecoder,
   adminRoute,
   boolean,
+  count,
   empty,
   fields,
   list,
@@ -44,6 +45,7 @@ export const BROWSER_PROXIES_ROUTES = {
   delete: "/v1/admin/browser-proxies/delete",
   profile: "/v1/admin/browser-profiles/proxy",
   computer: "/v1/admin/browser-proxies/computer",
+  test: "/v1/admin/browser-proxies/test",
 } as const;
 
 const hexId =
@@ -80,6 +82,24 @@ const computer = fields({
   failure: nullable(oneOf("unreachable", "signIn")),
 });
 
+const testInput = fields({}, { proxyId, address: string(2048) });
+
+const testResult = fields(
+  { ok: boolean },
+  {
+    latencyMs: count,
+    ip: nullable(string(255)),
+    country: nullable(string(255)),
+    countryCode: nullable(string(10)),
+    regionName: nullable(string(255)),
+    city: nullable(string(255)),
+    isp: nullable(string(255)),
+    org: nullable(string(255)),
+    as: nullable(string(255)),
+    error: nullable(string(2048)),
+  },
+);
+
 export const BROWSER_PROXIES_CODECS: ReadonlyMap<string, OptionalRouteCodec> = new Map([
   [
     BROWSER_PROXIES_ROUTES.list,
@@ -95,4 +115,5 @@ export const BROWSER_PROXIES_CODECS: ReadonlyMap<string, OptionalRouteCodec> = n
   [BROWSER_PROXIES_ROUTES.delete, adminRoute(fields({ proxyId, profileIds: list(profileId, 100) }), empty)],
   [BROWSER_PROXIES_ROUTES.profile, adminRoute(fields({ profileId, proxyId: nullable(proxyId) }), empty)],
   [BROWSER_PROXIES_ROUTES.computer, adminRoute(empty, computer)],
+  [BROWSER_PROXIES_ROUTES.test, adminRoute(testInput, testResult)],
 ]);

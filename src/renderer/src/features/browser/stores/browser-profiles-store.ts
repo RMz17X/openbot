@@ -4,6 +4,8 @@ import type {
   BrowserProfileSummary,
   BrowserProxyComputer,
   BrowserProxySummary,
+  BrowserProxyTestResult,
+  TestBrowserProxyInput,
 } from "@openbot/contracts/ipc";
 import { currentText } from "@openbot/ui/text";
 import { createStore } from "solid-js";
@@ -151,6 +153,7 @@ export function createBrowserProfilesStore(calls: () => BrowserProfileCalls) {
     /** Null: the proxy settings of the computer. */
     setProfileProxy: (profileId: string, proxyId: string | null) =>
       change(() => proxyCalls().setProfileProxy({ profileId, proxyId })),
+    testProxy: (input: TestBrowserProxyInput): Promise<BrowserProxyTestResult> => proxyCalls().test(input),
     assign: (agentId: string, profile: AgentBrowserProfile): Promise<AgentBrowserProfile> =>
       calls().updateAgent({ agentId, profile }),
   };

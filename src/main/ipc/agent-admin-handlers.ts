@@ -22,6 +22,7 @@ import {
   decodeBrowserProfileSummary,
   decodeBrowserProxyList,
   decodeBrowserProxySummary,
+  decodeBrowserProxyTestResult,
   decodeHostAddedAgent,
   decodeHostAgentTemplatePreview,
   decodeHostAgentTemplatePublication,
@@ -35,6 +36,7 @@ import {
   parseSaveBrowserProxyInput,
   parseSetAgentDefaultChoiceInput,
   parseSetBrowserProfileProxyInput,
+  parseTestBrowserProxyInput,
   parseUpdateAgentAdminSettingsInput,
   parseUpdateAgentBackupModelsInput,
   parseUpdateAgentBrowserProfileInput,
@@ -288,6 +290,11 @@ export function agentAdminIpcHandlers({
       setBrowserProfileProxy: scopedHandler(parseSetBrowserProfileProxyInput, {
         local: (input) => runCauseEffect(browserProfiles.setProfileProxy(input)),
         remote: (input, serverId) => remoteBrowserProxies(serverId, BROWSER_PROXIES_ROUTES.profile, input, acceptEmpty),
+      }),
+      testBrowserProxy: scopedHandler(parseTestBrowserProxyInput, {
+        local: (input) => runCauseEffect(browserProfiles.testProxy(input)),
+        remote: (input, serverId) =>
+          remoteBrowserProxies(serverId, BROWSER_PROXIES_ROUTES.test, input, decodeBrowserProxyTestResult),
       }),
       // This computer's own server has no computer proxy of this computer: its pages already use it.
       getBrowserComputerSharing: scopedQueryHandler({

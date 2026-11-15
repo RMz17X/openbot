@@ -5,12 +5,14 @@ import {
   type BrowserProfileSummary,
   type BrowserProxyList,
   type BrowserProxySummary,
+  type BrowserProxyTestResult,
   type BrowserTabProfile,
   type ClearBrowserDataInput,
   type DeleteBrowserProxyInput,
   LOCAL_SERVER_ID,
   type SaveBrowserProxyInput,
   type SetBrowserProfileProxyInput,
+  type TestBrowserProxyInput,
   type UpdateAgentBrowserProfileInput,
   type UpdateBrowserProfileInput,
 } from "@openbot/contracts/ipc";
@@ -22,6 +24,7 @@ interface BrowserProxyCalls {
   save(input: SaveBrowserProxyInput): Promise<BrowserProxySummary>;
   remove(input: DeleteBrowserProxyInput): Promise<void>;
   setProfileProxy(input: SetBrowserProfileProxyInput): Promise<void>;
+  test(input: TestBrowserProxyInput): Promise<BrowserProxyTestResult>;
   /**
    * Whether this desktop app shares its connection with the server. Absent on the web client and for
    * this computer's own server.
@@ -77,6 +80,7 @@ export function desktopBrowserProfileCalls(serverId?: string): BrowserProfileCal
       save: (input) => agent().saveBrowserProxy(input, serverId),
       remove: (input) => agent().deleteBrowserProxy(input, serverId),
       setProfileProxy: (input) => agent().setBrowserProfileProxy(input, serverId),
+      test: (input) => agent().testBrowserProxy(input, serverId),
       ...(serverId === undefined || serverId === LOCAL_SERVER_ID
         ? {}
         : {

@@ -4,10 +4,12 @@ import {
   type BrowserProxyFailure,
   type BrowserProxyNameParts,
   type BrowserProxySummary,
+  type BrowserProxyTestResult,
   browserProxyName,
   browserProxySaveAddress,
   editableBrowserProxyAddress,
   parseBrowserProxyAddress,
+  type TestBrowserProxyInput,
 } from "@openbot/contracts/ipc";
 import {
   Badge,
@@ -27,6 +29,7 @@ import {
   ItemGroup,
   ItemMedia,
   ItemTitle,
+  LoaderCircle,
   Monitor,
   Pencil,
   Plus,
@@ -34,9 +37,10 @@ import {
   Text,
   Trash2,
   Waypoints,
+  Zap,
 } from "@openbot/ui";
 import type { JSX } from "@solidjs/web";
-import { createStore, For, Show, untrack } from "solid-js";
+import { createSignal, createStore, For, Show, untrack } from "solid-js";
 import { useText } from "../../text";
 
 /**
@@ -73,6 +77,8 @@ export interface BrowserProfileProxies {
   onSetProfileProxy: (profileId: string, proxyId: string | null) => Promise<void>;
   /** On also adds the computer of this member. `assignTo`: the named profile that uses it at once. */
   onSetSharing?: (sharing: boolean, assignTo?: string) => Promise<void>;
+  /** Probes proxy connectivity, latency, egress IP, country, and ISP. */
+  onTest?: (input: TestBrowserProxyInput) => Promise<BrowserProxyTestResult>;
 }
 
 /** A saved proxy or the computer of a member, as one choice for a profile. */
@@ -292,6 +298,12 @@ export function BrowserProxyClosesTabs(props: { count: number }) {
   );
 }
 
+function countryFlag(code?: string): string {
+  if (code?.length !== 2) return "🌐";
+  const upper = code.toUpperCase();
+  return String.fromCodePoint(127397 + upper.charCodeAt(0), 127397 + upper.charCodeAt(1));
+}
+
 /**
  * Adds or changes a proxy with one address field. A saved password shows as a mask: when the mask
  * stays, the password stays. `closesTabs`: the open tabs that the save closes. An edit that does not
@@ -304,12 +316,43 @@ export function BrowserProxyDialog(props: {
   closesTabs: number;
   onSave: (address: string, keepPassword: boolean) => Promise<void>;
   onCancel: () => void;
+  onTest?: (input: TestBrowserProxyInput) => Promise<BrowserProxyTestResult>;
 }) {
   const { t, errorMessage } = useText();
   const initial = untrack(() => editableBrowserProxyAddress(props.proxy));
   const [form, setForm] = createStore({ address: initial, error: "" });
+  const [testing, setTesting] = createSignal(false);
+  const [testResult, setTestResult] = createSignal<BrowserProxyTestResult | null>(null);
   const changed = () => props.proxy === null || form.address.trim() !== initial;
   const closesTabs = () => (changed() ? props.closesTabs : 0);
+
+  async function testCurrent(): Promise<void> {
+    if (!props.onTest) return;
+    const parsed = parseBrowserProxyAddress(form.address);
+    if (parsed === null) {
+      setForm((draft) => {
+        draft.error = t("error.backend.browserProxyAddressInvalid");
+      });
+      return;
+    }
+    setTesting(true);
+    setTestResult(null);
+    try {
+      const res = await props.onTest(
+        props.proxy && !changed() ? { proxyId: props.proxy.id } : { address: form.address },
+      );
+      setTestResult(res);
+    } catch (error) {
+      setTestResult({
+        ok: false,
+        latencyMs: 0,
+        error: error instanceof Error ? error.message : "Test failed",
+      });
+    } finally {
+      setTesting(false);
+    }
+  }
+
   async function save(): Promise<void> {
     if (!changed()) {
       props.onCancel();
@@ -358,14 +401,61 @@ export function BrowserProxyDialog(props: {
           spellcheck={false}
           autocomplete="off"
           maxlength={BROWSER_PROXY_ADDRESS_MAX}
-          onValueChange={(value) =>
+          onValueChange={(value) => {
+            setTestResult(null);
             setForm((draft) => {
               draft.address = value;
               draft.error = "";
-            })
-          }
+            });
+          }}
         />
       </Field>
+      <Show when={props.onTest}>
+        <div class="mt-2 flex flex-col gap-2">
+          <div class="flex items-center justify-between">
+            <Button
+              size="xs"
+              variant="outline"
+              disabled={testing() || !form.address.trim()}
+              onClick={() => void testCurrent()}
+            >
+              <Show when={testing()} fallback={<Zap aria-hidden="true" />}>
+                <LoaderCircle class="animate-spin" aria-hidden="true" />
+              </Show>
+              {testing() ? t("browser.proxies.testing") : t("browser.proxies.test")}
+            </Button>
+          </div>
+          <Show when={testResult()}>
+            {(result) => (
+              <div class="browser-proxy-probe-meta">
+                <Show
+                  when={result().ok}
+                  fallback={
+                    <Badge variant="destructive-light">{result().error || t("browser.proxies.testFailed")}</Badge>
+                  }
+                >
+                  <span class="browser-proxy-probe-location">
+                    <span>{countryFlag(result().countryCode)}</span>
+                    <span>
+                      {result().country}
+                      {result().city ? `, ${result().city}` : ""}
+                    </span>
+                  </span>
+                  <Show when={result().isp || result().org}>
+                    <span class="browser-proxy-probe-isp">• {result().isp || result().org}</span>
+                  </Show>
+                  <Show when={result().ip}>
+                    <span class="browser-proxy-probe-ip">• {result().ip}</span>
+                  </Show>
+                  <Badge variant={(result().latencyMs ?? 0) < 500 ? "success-light" : "warning-light"}>
+                    {t("browser.proxies.latency", { ms: result().latencyMs ?? 0 })}
+                  </Badge>
+                </Show>
+              </div>
+            )}
+          </Show>
+        </div>
+      </Show>
     </ConfirmDialog>
   );
 }
@@ -383,6 +473,32 @@ export function BrowserProxyList(props: {
   onStopSharing: () => void;
 }) {
   const { t } = useText();
+  const [tests, setTests] = createStore<Record<string, { testing?: boolean; result?: BrowserProxyTestResult }>>({});
+
+  async function runTest(proxyId: string): Promise<void> {
+    if (!props.proxies.onTest) return;
+    setTests((draft) => {
+      draft[proxyId] = { testing: true };
+    });
+    try {
+      const res = await props.proxies.onTest({ proxyId });
+      setTests((draft) => {
+        draft[proxyId] = { testing: false, result: res };
+      });
+    } catch (error) {
+      setTests((draft) => {
+        draft[proxyId] = {
+          testing: false,
+          result: {
+            ok: false,
+            latencyMs: 0,
+            error: error instanceof Error ? error.message : "Test failed",
+          },
+        };
+      });
+    }
+  }
+
   const choice = (proxy: BrowserProxySummary): BrowserProxyChoice => ({
     id: proxy.id,
     name: browserProxyName(proxy, props.proxies.list),
@@ -417,8 +533,52 @@ export function BrowserProxyList(props: {
                       profiles: t("browser.proxies.profiles", { count: proxy.profileIds.length }),
                     })}
                   </ItemDescription>
+                  <Show when={tests[proxy.id]?.result}>
+                    {(result) => (
+                      <div class="browser-proxy-probe-meta">
+                        <Show
+                          when={result().ok}
+                          fallback={
+                            <Badge variant="destructive-light">
+                              {result().error || t("browser.proxies.testFailed")}
+                            </Badge>
+                          }
+                        >
+                          <span class="browser-proxy-probe-location">
+                            <span>{countryFlag(result().countryCode)}</span>
+                            <span>
+                              {result().country}
+                              {result().city ? `, ${result().city}` : ""}
+                            </span>
+                          </span>
+                          <Show when={result().isp || result().org}>
+                            <span class="browser-proxy-probe-isp">• {result().isp || result().org}</span>
+                          </Show>
+                          <Show when={result().ip}>
+                            <span class="browser-proxy-probe-ip">• {result().ip}</span>
+                          </Show>
+                          <Badge variant={(result().latencyMs ?? 0) < 500 ? "success-light" : "warning-light"}>
+                            {t("browser.proxies.latency", { ms: result().latencyMs ?? 0 })}
+                          </Badge>
+                        </Show>
+                      </div>
+                    )}
+                  </Show>
                 </ItemContent>
                 <ItemActions>
+                  <Show when={props.proxies.onTest}>
+                    <Button
+                      size="xs"
+                      variant="outline"
+                      disabled={props.disabled || tests[proxy.id]?.testing}
+                      onClick={() => void runTest(proxy.id)}
+                    >
+                      <Show when={tests[proxy.id]?.testing} fallback={<Zap aria-hidden="true" />}>
+                        <LoaderCircle class="animate-spin" aria-hidden="true" />
+                      </Show>
+                      {tests[proxy.id]?.testing ? t("browser.proxies.testing") : t("browser.proxies.test")}
+                    </Button>
+                  </Show>
                   <Show when={proxy.failure !== null}>
                     <BrowserProxyBadge proxy={choice(proxy)} />
                   </Show>
