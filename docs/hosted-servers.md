@@ -680,6 +680,17 @@ back before the OOM killer acts. The other half of the active cache counts as us
 be program code that runs). Each turn that started in the last 60 s counts 300 MB more, so routines that start together
 do not all pass the check before their processes grow. A start that fails counts nothing.
 
+The total that the levels use is also the smaller of the machine memory and the limit of the unit.
+A unit limit that is too small therefore lowers the `low` threshold and the free memory at the same
+time, and the two effects do not cancel each other. With a 3G limit on a host with 16 GB of memory,
+the total is 3 GB, the `low` threshold is 512 MB, and the free memory is at most 3 GB minus the
+memory of the unit. Two active turns reserve 600 MB, so the free memory stays below 512 MB and the
+level stays `low`. The daemon then holds every new turn, the messages stay in the queue, and the
+log shows `agent-error` with the code `host_memory_low` and `drain-scheduler` with the reason
+`machine`. Give the unit a limit that leaves room for the turns: 6G on a 16 GB host. A held turn
+is not lost, but the unit can also fail fast on its own limit, and then the queued message is gone
+with the restart.
+
 | Level | When | What happens |
 | --- | --- | --- |
 | `ok` | Other times. After `low`, only at 256 MB above the `low` limit. | Turns start. |

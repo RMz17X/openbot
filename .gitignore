@@ -83,3 +83,10 @@ keys
 
 # Runtime lock file written by the daemon
 native-runtime.lock.json
+
+# The generated native folders of the mobile app. `expo prebuild` writes them, and the native
+# project is not in the repository. The typed routes and the config plugins are the source.
+apps/mobile/android/
+apps/mobile/ios/
+apps/mobile/.expo/
+apps/mobile/expo-env.d.ts

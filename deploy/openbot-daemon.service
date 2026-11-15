@@ -16,8 +16,14 @@ Environment="XDG_RUNTIME_DIR=/run/openbot"
 WorkingDirectory=/home/openbot
 
 # Fail-Fast Anti-Hang Memory Policy:
-# Avoid MemoryHigh CPU-throttling stall. Hard cap at 5500M so OOM kills and systemd auto-restarts cleanly.
-MemoryMax=5500M
+# Avoid MemoryHigh CPU-throttling stall. Hard cap so OOM kills and systemd auto-restarts cleanly.
+# The memory guard (src/main/server-memory.ts) measures free memory as the smaller of MemAvailable
+# and the free memory of this unit's cgroup, so this cap is also the ceiling of the memory levels.
+# A cap that is too small makes the free memory stay under the low threshold (max(512 MiB, 12% of
+# the ceiling)) once the turns reserve 300 MiB each. Then the daemon holds every new turn and the
+# messages stay in the queue. 6G leaves room for the browser tabs and the agent processes on a
+# 16 GB host that also runs the farm.
+MemoryMax=6G
 TasksMax=infinity
 LimitNOFILE=65536
 
