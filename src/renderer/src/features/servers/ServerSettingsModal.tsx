@@ -533,7 +533,7 @@ export function ServerSettingsModal(props: ServerSettingsModalProps) {
       case "desktop":
         return remoteDesktopSection();
       case "mcp":
-        return Boolean(props.mcpServers);
+        return false;
       case "storage":
         return Boolean(props.storage);
       case "sites":
@@ -744,7 +744,6 @@ export function ServerSettingsModal(props: ServerSettingsModalProps) {
         value === "roles" ||
         value === "audit" ||
         value === "desktop" ||
-        value === "mcp" ||
         value === "storage" ||
         value === "sites" ||
         value === "providers" ||
@@ -969,7 +968,7 @@ export function ServerSettingsModal(props: ServerSettingsModalProps) {
             />
           </Tabs.Content>
         </Show>
-        <Show when={props.mcpServers}>
+        <Show when={sectionSupported("mcp") && props.mcpServers}>
           {(servers) => (
             <Tabs.Content value="mcp" class="settings-modal-tab-panel server-settings-panel" data-tab="mcp">
               <ServerMcpPanel

@@ -295,9 +295,9 @@ export function localCodeSignInProviders(platform: string | undefined): readonly
  * `mcp-servers-v1`, or as a member of a joined server with `mcp-member-access-v1`. The host lets a
  * member change only the servers that the member added, and refuses the others.
  */
-export function serverCanManageMcp(server: ServerSummary | undefined): server is ServerSummary {
-  if (!server || !serverSupportsCapability(server, "mcp-servers-v1")) return false;
-  return serverRoleCanAdminister(server) || serverSupportsCapability(server, "mcp-member-access-v1");
+export function serverCanManageMcp(_server: ServerSummary | undefined): _server is ServerSummary {
+  // MCP is centrally managed via mcporter; disabled from UI to avoid per-session memory leaks.
+  return false;
 }
 
 /** `server` when it is a joined server this account may manage through `capability`, otherwise undefined. */
