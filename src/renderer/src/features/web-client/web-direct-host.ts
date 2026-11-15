@@ -1,4 +1,4 @@
-import type { TeamMemberSummary } from "@openbot/contracts/ipc";
+import type { InviteSummary, TeamInviteSummary, TeamMemberSummary } from "@openbot/contracts/ipc";
 import { isDynamicRecord, isString } from "@openbot/contracts/runtime-values";
 import { TEAM_API_ROUTES } from "@openbot/contracts/team-api-routes";
 import { getHttpPeerSessionToken, teamProtocolHeaders } from "@openbot/team-client";
@@ -144,5 +144,50 @@ export function decodeDirectMember(value: unknown): TeamMemberSummary {
     role: value.role,
     createdAt: value.createdAt,
     disabled: value.disabled,
+  };
+}
+
+/**
+ * One invite of the local team, in the shape the workspace reads.
+ */
+export function decodeDirectInvite(value: unknown): TeamInviteSummary {
+  if (
+    !isDynamicRecord(value) ||
+    !isString(value.id) ||
+    (value.role !== "admin" && value.role !== "member") ||
+    !isString(value.expiresAt) ||
+    (value.usedAt !== null && !isString(value.usedAt)) ||
+    (value.email !== null && value.email !== undefined && !isString(value.email)) ||
+    (value.permanent !== undefined && typeof value.permanent !== "boolean") ||
+    (value.useCount !== undefined && typeof value.useCount !== "number")
+  ) {
+    throw new Error("The Team API returned an invalid invite.");
+  }
+  return {
+    id: value.id,
+    role: value.role,
+    expiresAt: value.expiresAt,
+    usedAt: value.usedAt ?? null,
+    email: value.email ?? null,
+    permanent: value.permanent ?? false,
+    useCount: value.useCount ?? 0,
+  };
+}
+
+export function decodeDirectInvites(value: unknown): TeamInviteSummary[] {
+  if (!Array.isArray(value)) {
+    throw new Error("The Team API returned an invalid invite list.");
+  }
+  return value.map((entry) => decodeDirectInvite(entry));
+}
+
+export function decodeDirectCreatedInvite(value: unknown): InviteSummary {
+  const base = decodeDirectInvite(value);
+  if (!isDynamicRecord(value) || !isString(value.inviteUrl)) {
+    throw new Error("The Team API returned an invite without a link.");
+  }
+  return {
+    ...base,
+    inviteUrl: value.inviteUrl,
   };
 }

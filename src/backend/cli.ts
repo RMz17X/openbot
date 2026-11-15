@@ -445,9 +445,11 @@ export const resolveHermesCli: (input?: {
       const attempt = yield* Effect.result(
         Effect.gen(function* () {
           const { stdout, launch } = yield* readCliVersion(candidate, "hermes");
+          const version = parseHermesVersion(stdout);
+          yield* checkHermesAcp(candidate.executable, launch);
           return {
             executable: candidate.executable,
-            version: parseHermesVersion(stdout),
+            version,
             source: "system" as const,
             ...launch,
           };
@@ -466,6 +468,44 @@ export const resolveHermesCli: (input?: {
   },
   Effect.catchDefect((cause) => Effect.fail(providerFailure(cause))),
 );
+
+/**
+ * Hermes Agent must support ACP mode (`hermes acp --check`) to serve as an OpenBot provider.
+ */
+const checkHermesAcp = Effect.fn("Cli.checkHermesAcp")(function* (candidate: string, launch: { launchPath?: string }) {
+  const target = process.platform === "win32" && [".bat", ".cmd"].includes(extname(candidate).toLowerCase());
+  const timeout = providerCheckTimeoutMs(CLI_VERSION_TIMEOUT_MS);
+  yield* providerCall(() =>
+    target
+      ? execFileAsync(
+          process.env.ComSpec?.trim() || "cmd.exe",
+          ["/d", "/s", "/c", `""${candidate.replaceAll("%", "%%")}" acp --check"`],
+          {
+            timeout,
+            maxBuffer: 64 * 1024,
+            windowsHide: true,
+            windowsVerbatimArguments: true,
+          },
+        )
+      : execFileAsync(candidate, ["acp", "--check"], {
+          timeout,
+          maxBuffer: 64 * 1024,
+          windowsHide: process.platform === "win32",
+          env: { ...process.env, ...cliPathEnvironment(launch) },
+        }),
+  ).pipe(
+    Effect.mapError((failure) =>
+      isDynamicRecord(failure.cause) && failure.cause.killed === true
+        ? providerFailure(
+            new CodexCliError(
+              sourceText("error.provider.cliTimedOutRefresh", { provider: agentProviderName("hermes") }),
+              "timeout",
+            ),
+          )
+        : failure,
+    ),
+  );
+});
 
 /**
  * Hermes prints its release and its build on the first line, such as

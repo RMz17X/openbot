@@ -13,7 +13,12 @@ import { markIncompleteMediaGeneration } from "./image-generation";
 import type { MailboxSync } from "./mailbox-sync";
 import type { ProviderRuntime } from "./provider-runtime";
 import { stopRunningSubagents } from "./subagent-updates";
-import { isCodexMissingRollout, isCodexRolloutPending, providerForAgent } from "./thread-items";
+import {
+  isCodexMissingRollout,
+  isCodexRolloutPending,
+  isMissingProviderSessionError,
+  providerForAgent,
+} from "./thread-items";
 import type { ThreadLifecycle } from "./thread-lifecycle";
 
 type UnresolvedDelivery = DeliveryContext["delivery"];
@@ -380,14 +385,22 @@ export class BootRecovery {
         }).pipe(
           Effect.catch((failure) =>
             Effect.sync(() => {
-              if (unreadableHistory(failure)) this.#unreadableHistory.add(historyKey);
+              if (unreadableHistory(failure, session.provider)) this.#unreadableHistory.add(historyKey);
               try {
                 this.#refreshBackfilledConversation(agent.id, publicThreadId);
               } catch (refreshFailure) {
                 this.#hooks.emitError("provider_history_backfill_pending", refreshFailure, agent.id);
               }
               // No rollout, or none saved yet, means no history to import, so it is not an error to show.
-              if (!containsCause(failure, (cause) => isCodexMissingRollout(cause) || isCodexRolloutPending(cause)))
+              if (
+                !containsCause(
+                  failure,
+                  (cause) =>
+                    isCodexMissingRollout(cause) ||
+                    isCodexRolloutPending(cause) ||
+                    isMissingProviderSessionError(cause, session.provider),
+                )
+              )
                 this.#hooks.emitError("provider_history_backfill_pending", failure.cause, agent.id);
             }),
           ),
@@ -421,8 +434,14 @@ class BootRecoveryFailed extends Schema.TaggedError<BootRecoveryFailed>()("BootR
 
 const { sync: recoveryStep, rewrap: toBootRecoveryFailed } = causeHelpers(BootRecoveryFailed);
 
-function unreadableHistory(failure: unknown): boolean {
-  return containsCause(failure, (cause) => cause instanceof LineTooLongError || isCodexMissingRollout(cause));
+function unreadableHistory(failure: unknown, provider?: AgentProvider): boolean {
+  return containsCause(
+    failure,
+    (cause) =>
+      cause instanceof LineTooLongError ||
+      isCodexMissingRollout(cause) ||
+      (provider ? isMissingProviderSessionError(cause, provider) : false),
+  );
 }
 
 function containsCause(value: unknown, matches: (cause: unknown) => boolean): boolean {

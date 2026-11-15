@@ -235,7 +235,7 @@ import { currentText } from "@openbot/ui/text";
 import { referenceFrom } from "@openbot/user-errors";
 import { Effect } from "effect";
 import type { ServerAdminPort } from "../servers/servers-port";
-import { decodeDirectMember, listDirectHosts } from "./web-direct-host";
+import { decodeDirectCreatedInvite, decodeDirectInvites, decodeDirectMember, listDirectHosts } from "./web-direct-host";
 import {
   createWebHostConnections,
   type WebHostConnections,
@@ -934,11 +934,23 @@ export function createWebWorkspaceRuntime(
       },
       listMembers,
       async listInvites() {
+        if (useDirect) {
+          const value = await request("GET", TEAM_API_ROUTES.team.invites);
+          return decodeDirectInvites(value);
+        }
         return (await runTeamEffect(directory.listInvites(requireHost().hostId)))
           .filter((invite) => invite.revokedAt === null)
           .map(toTeamInvite);
       },
       async createInvite(input) {
+        if (useDirect) {
+          const value = await request("POST", TEAM_API_ROUTES.team.invites, {
+            role: input.role,
+            ...(input.email !== undefined ? { email: input.email } : {}),
+            ...(input.permanent !== undefined ? { permanent: input.permanent } : {}),
+          });
+          return decodeDirectCreatedInvite(value);
+        }
         const host = requireHost();
         const invite = input.email
           ? await runTeamEffect(directory.sendInviteEmail(host, { role: input.role, email: input.email }))
@@ -957,6 +969,15 @@ export function createWebWorkspaceRuntime(
       // The account service returns nothing useful, so the member is read back. The read before the
       // change refuses an owner, as the desktop does.
       async updateMember(input) {
+        if (useDirect) {
+          const current = (await listMembers()).find((member) => member.id === input.memberId);
+          if (!current || current.role === "owner") throw new Error(currentText().t("webClient.error.memberNotFound"));
+          const patch: { role?: "admin" | "member"; disabled?: boolean } = {};
+          if (input.role) patch.role = input.role;
+          if (input.disabled !== undefined) patch.disabled = input.disabled;
+          const updated = await request("PATCH", TEAM_API_ROUTES.team.member(input.memberId), patch);
+          return decodeDirectMember(updated);
+        }
         const hostId = requireHost().hostId;
         const current = (await listMembers()).find((member) => member.id === input.memberId);
         if (!current || current.role === "owner") throw new Error(currentText().t("webClient.error.memberNotFound"));
@@ -969,8 +990,20 @@ export function createWebWorkspaceRuntime(
         if (!updated) throw new Error(currentText().t("webClient.error.memberNotFound"));
         return updated;
       },
-      removeMember: (memberId) => runTeamEffect(directory.leaveHost(requireHost().hostId, memberId)),
-      revokeInvite: (inviteId) => runTeamEffect(directory.revokeInvite(inviteId)),
+      removeMember: async (memberId) => {
+        if (useDirect) {
+          await request("DELETE", TEAM_API_ROUTES.team.member(memberId));
+          return;
+        }
+        await runTeamEffect(directory.leaveHost(requireHost().hostId, memberId));
+      },
+      revokeInvite: async (inviteId) => {
+        if (useDirect) {
+          await request("DELETE", TEAM_API_ROUTES.team.invite(inviteId));
+          return;
+        }
+        await runTeamEffect(directory.revokeInvite(inviteId));
+      },
     },
   };
   const routinesOnce = () => capabilities.includes(ROUTINES_ONCE_CAPABILITY);
@@ -1376,7 +1409,12 @@ export function createWebWorkspaceRuntime(
       if (useDirect) return listDirectHosts();
       return runTeamEffect(directory.listHosts());
     },
-    leaveHost: (hostId, membershipId) => runTeamEffect(directory.leaveHost(hostId, membershipId)),
+    leaveHost: (hostId, membershipId) => {
+      if (useDirect) {
+        return request("POST", TEAM_API_ROUTES.team.leave).then(() => undefined);
+      }
+      return runTeamEffect(directory.leaveHost(hostId, membershipId));
+    },
     async removeOwnedHost(hostId) {
       const response = await accountFetch(`/api/browser/v2/remote/hosts/${encodeURIComponent(hostId)}`, {
         method: "DELETE",
